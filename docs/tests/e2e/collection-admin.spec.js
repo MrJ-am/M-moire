@@ -19,6 +19,7 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
   await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'error');
   await page.reload();
   await expect(page.locator('#grade')).toHaveValue('1');
+  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'error');
   await page.unroute('**/api/sessions/**');
   await page.getByRole('button', { name: 'Réessayer l’enregistrement' }).click();
   await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'saved');

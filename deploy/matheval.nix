@@ -12,17 +12,24 @@ let
       archive="/srv/matheval/incoming/$id.tar.gz"
       target="/srv/matheval/releases/$id"
       if [[ ! -d "$target" ]]; then
-        mkdir "$target"
-        tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$target"
-        test "$(cat "$target/RELEASE")" = "$id"
-        npm --prefix "$target/server" ci --omit=dev --ignore-scripts
+        staging="$(mktemp -d "/srv/matheval/releases/.prepare-$id.XXXXXX")"
+        trap 'rm -rf -- "$staging"' EXIT
+        tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$staging"
+        test "$(cat "$staging/RELEASE")" = "$id"
+        npm --prefix "$staging/server" ci --omit=dev --ignore-scripts
+        chmod 0755 "$staging"
+        mv "$staging" "$target"
+        trap - EXIT
       fi
-      previous="$(readlink -f /srv/matheval/current || true)"
+      previous=""
+      if [[ -L /srv/matheval/current && -d /srv/matheval/current ]]; then
+        previous="$(readlink -f /srv/matheval/current)"
+      fi
       ln -sfn "$target" /srv/matheval/next
       mv -Tf /srv/matheval/next /srv/matheval/current
       sudo -n ${pkgs.systemd}/bin/systemctl restart matheval.service
       for _attempt in $(seq 1 30); do
-        if curl --fail --silent http://127.0.0.1:3000/matheval/api/health >/dev/null; then
+        if curl --fail --silent --max-time 2 http://127.0.0.1:3000/matheval/api/health >/dev/null; then
           echo "Version $id active"
           exit 0
         fi
