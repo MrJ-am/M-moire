@@ -57,7 +57,7 @@ async function finishBySkipping(page) {
   }
 }
 
-test('trois curseurs indépendants, note révisable et export traçable', async ({ page }) => {
+test('trois curseurs indépendants, note révisable et enregistrement traçable', async ({ page }) => {
   await start(page);
   await expect(page.locator('reading-card input')).toHaveCount(1);
   await expect(page.locator('#grade')).toHaveAttribute('step', '0.25');

@@ -146,7 +146,7 @@ export function createApp({ pool, origin = 'http://127.0.0.1:4173', prefix = '/m
   });
   api.get('/admin/exports/responses.csv', async (req, res) => { res.type('text/csv').attachment('matheval-reponses.csv').send(csv(await answerRows(req.query))); });
   api.use((req, res) => res.status(404).json({ error: 'Ressource inconnue.' }));
-  if (prefix) app.get(prefix, (req, res) => res.redirect(308, `${prefix}/`));
+  if (prefix) app.get(prefix, (req, res, next) => req.path === prefix ? res.redirect(308, `${prefix}/${req.url.slice(prefix.length)}`) : next());
   app.use(`${prefix}/admin`, (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
   app.use(prefix || '/', express.static(fileURLToPath(new URL('../../docs/site', import.meta.url)), { dotfiles: 'deny', index: 'index.html', setHeaders: res => res.set('Cache-Control', 'no-cache') }));
   app.use((error, req, res, next) => {

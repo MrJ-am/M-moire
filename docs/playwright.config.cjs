@@ -8,6 +8,7 @@ module.exports = defineConfig({
   timeout: 30000,
   workers: 1,
   retries: 0,
+  maxFailures: process.env.CI ? 5 : 0,
   reporter: [['list']],
   use: {
     baseURL: `${origin}/matheval/`,

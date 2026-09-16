@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 
 export const digest = value => createHash('sha256').update(value).digest('hex');
 export function connect(connectionString = process.env.DATABASE_URL) {
-  return new pg.Pool(connectionString ? { connectionString, max: 10 } : { host: '/run/postgresql', database: 'matheval', user: 'matheval', max: 10 });
+  return new pg.Pool(connectionString ? { connectionString, max: 10, options: '-c timezone=UTC' } : { host: '/run/postgresql', database: 'matheval', user: 'matheval', max: 10, options: '-c timezone=UTC' });
 }
 export async function transaction(pool, work) {
   const client = await pool.connect();

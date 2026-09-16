@@ -13,11 +13,12 @@ Playwright lance le service Node.js au port 4173 sous ~/matheval/~, avec une bas
 Les tests navigateur sont obligatoires aussi pour une modification des seules données. Dans ce cas, les données sont copiées dans le site sans recompiler Elm. Après le déploiement, ~check-published-site.py~ compare les pages, les scripts, les styles et les données servis en HTTPS aux empreintes des fichiers qui ont passé les tests. Un fichier absent ou une ancienne version fait échouer le contrôle de publication. Les erreurs 404 et les versions mélangées sont couvertes par ~python3 -m unittest discover -s docs/tests -p 'test_published_site.py'~ depuis la racine du dépôt.
 
 | Fichier | Parcours vérifié |
-| ~survey.spec.js~ | Clavier, animations réduites, coordonnées indépendantes, révisions, export et disposition des petits écrans |
+| ~collection-admin.spec.js~ | Reprise après rechargement et coupure réseau, connexion administrateur, corpus, statistiques et réponses individuelles |
+| ~survey.spec.js~ | Clavier, animations réduites, coordonnées indépendantes, révisions, enregistrement et disposition des petits écrans |
 | ~survey-gestures.spec.js~ | Souris, animations actives, tutoriel puis session entière sans saut de question, coordonnées conservées au centre, maintien d’une bille surélevée sous le pointeur, synchronisation de la note |
 | ~survey.touch.spec.js~ | Gestes tactiles Chromium : tutoriel, glissement horizontal, défilement vertical, annulation de geste, ouverture d’une rédaction et navigation |
 
-Les gestes tactiles sont injectés avec ~Input.dispatchTouchEvent~ : ils passent par le traitement des pointeurs et du défilement du navigateur. Réduire seulement la taille de la fenêtre ne simule pas ces gestes. Les tests attendent la fin des animations de lecture avant de saisir une bille ; ils inspectent aussi sa position *pendant* le glissement. Le parcours complet compare les réponses exportées aux notes et coordonnées observées dans l’interface.
+Les gestes tactiles sont injectés avec ~Input.dispatchTouchEvent~ : ils passent par le traitement des pointeurs et du défilement du navigateur. Réduire seulement la taille de la fenêtre ne simule pas ces gestes. Les tests attendent la fin des animations de lecture avant de saisir une bille ; ils inspectent aussi sa position *pendant* le glissement. Le parcours complet compare les réponses enregistrées en base aux notes et coordonnées observées dans l’interface.
 
 Le contrôle de présentation couvre les largeurs 390, 820 et 1363 pixels : vignettes au-dessus des contrôles, panneau des curseurs compact lorsqu’il est au-dessus de la scène, hauteur commune lorsqu’ils sont côte à côte, scène sans cadre et numéro centré dans une bille proportionnée à sa taille. Il conserve une capture de chaque disposition, puis vérifie la réouverture d’une vignette et le passage à la suivante.
 

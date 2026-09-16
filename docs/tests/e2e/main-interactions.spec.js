@@ -219,7 +219,7 @@ test('le plateau occupe l espace restant et conserve les positions relatives apr
 
 
 test('contenu externe Markdown + LaTeX charge et rendu par KaTeX', async ({ page, request }) => {
-  const response = await request.get('/data/exercise-001.json');
+  const response = await request.get('data/exercise-001.json');
   expect(response.ok()).toBe(true);
 
   const data = await response.json();
