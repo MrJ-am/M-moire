@@ -19,7 +19,7 @@ module.exports = defineConfig({
   webServer: {
     command: 'node ../server/src/index.mjs',
     url: `${origin}/matheval/api/health`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: { ...process.env, PORT: '4173', PUBLIC_ORIGIN: origin, BASE_PATH: '/matheval', NODE_ENV: 'test', DATABASE_URL: process.env.BROWSER_DATABASE_URL || 'postgres://postgres@127.0.0.1:55432/matheval_browser_test', ADMIN_SETUP_TOKEN_HASH: createHash('sha256').update('a'.repeat(64)).digest('hex') },
     timeout: 30000
   },

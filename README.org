@@ -14,7 +14,10 @@ La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 
 | ~docs/src/Survey/Model.elm~ | Données, coordonnées, complétude et sérialisation |
 | ~docs/site/space.js~ | Projection SVG, billes, rotation et gestes |
 | ~docs/site/session.js~ | Tirage reproductible des questions et des rédactions |
-| ~docs/site/enquete.js~ | Éléments de navigateur, animations et export |
+| ~docs/site/enquete.js~ | Éléments de navigateur et animations |
+| ~docs/site/collection.js~ | Sauvegarde progressive, validation et reprise |
+| ~server/~ | API de collecte, PostgreSQL et accès administrateur |
+| ~docs/site/admin/~ | Tableau de bord et consultation des réponses |
 | ~docs/site/enquete.css~ | Design et adaptation aux écrans |
 | ~docs/site/index.html~, ~enquete.html~ | Deux entrées identiques du parcours |
 | ~docs/src/Main.elm~, ~docs/site/prototype.html~ | Prototype antérieur conservé |
@@ -38,7 +41,14 @@ npm run build:main
 npm run dev -- --host 0.0.0.0
 #+end_src
 
-La compilation met à jour le prototype historique et le parcours Regards, puis construit la banque publique. L’aperçu Vite utilise le port 4173 ; le site publié est statique et n’en dépend pas.
+La compilation met à jour le prototype historique et le parcours Regards, puis construit la banque publique. L’aperçu Vite utilise le port 4173 et transmet l’API au service Node.js sur le port 3000. Dans un second terminal, depuis la racine du dépôt, installer les dépendances de ~server/~ puis lancer le service avec l’URL d’une base PostgreSQL de développement :
+
+#+begin_src sh
+npm --prefix server ci
+DATABASE_URL='postgresql://utilisateur:mot-de-passe@127.0.0.1/matheval_dev' PUBLIC_ORIGIN='http://127.0.0.1:4173' npm --prefix server start
+#+end_src
+
+Remplacer l’URL de base par les paramètres locaux. ~PUBLIC_ORIGIN~ doit correspondre exactement à l’origine ouverte dans le navigateur, notamment si l’aperçu est consulté depuis un autre appareil. Le site publié utilise Nginx et Node.js ; Vite n’y intervient pas.
 
 #+begin_src sh
 npm run build:data
@@ -50,7 +60,7 @@ npm run test:e2e:install
 npm run test:e2e
 #+end_src
 
-Les tests de navigateur lancent automatiquement un serveur statique si nécessaire. Pour Guix, utiliser ~npm run test:e2e:guix~. Les commandes standard n’appliquent pas de correctif spécifique à Guix.
+Les tests de navigateur lancent leur propre service Node.js, avec une base PostgreSQL définie par ~BROWSER_DATABASE_URL~ dont le nom se termine par ~_test~. Arrêter l’aperçu Vite avant de les lancer : un service déjà présent sur le port 4173 est refusé. Les bases et commandes de test sont détaillées dans [[file:deploy/README.org][le guide de déploiement]]. Pour Guix, utiliser ~npm run test:e2e:guix~. Les commandes standard n’appliquent pas de correctif spécifique à Guix.
 
 Éditer uniquement les textes et tableaux dans [[file:research/questions.org][questions.org]], et les définitions dans [[file:research/contrats.org][contrats.org]]. Après modification, ~npm run build:data~ produit les JSON, l’audit, les effectifs et les renvois des contrats aux rédactions. Les blocs générés sont balisés. ~npm run dev~ régénère les données avant d’ouvrir l’aperçu.
 
