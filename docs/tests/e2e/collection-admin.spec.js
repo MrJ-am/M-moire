@@ -24,6 +24,36 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
   await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'saved');
 });
 
+test('une confirmation perdue se retrouve au rechargement sans créer une seconde participation', async ({ page }) => {
+  const d = await driver(page);
+  await start(page, d);
+  while (await page.getByRole('button', { name: 'Passer cette question', exact: true }).count()) {
+    await page.locator('#grade').evaluate(el => { el.value = '1.5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.locator('#place-button').click();
+    await expect(page.locator('reading-card')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Passer cette question', exact: true }).click();
+    await expect(page.locator('reading-card, .finish-panel')).toBeVisible();
+  }
+  const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);
+  await page.route('**/api/sessions/**', async route => {
+    if (route.request().method() === 'PUT' && route.request().postDataJSON().final) {
+      const response = await route.fetch();
+      expect(response.status()).toBe(200);
+      expect((await response.json()).completedAt).toBeTruthy();
+      await route.abort('failed');
+    } else await route.continue();
+  });
+  await page.getByRole('button', { name: 'Valider ma participation', exact: true }).click();
+  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'submit-error');
+  await expect(page.getByRole('button', { name: 'Revenir aux questions', exact: true })).toBeDisabled();
+  await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toHaveCount(0);
+  await page.unroute('**/api/sessions/**');
+  await page.reload();
+  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'completed');
+  await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id)).toBe(id);
+});
+
 test('administration : connexion, statistiques, corpus complet, réponses et déconnexion', async ({ page }) => {
   const origin = new URL(test.info().project.use.baseURL || 'http://127.0.0.1:4173').origin;
   const headers = { Origin: origin, 'X-Matheval-Request': '1' };

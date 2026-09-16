@@ -1,6 +1,6 @@
 /* Browser integration only. Survey state and coordinate invariants live in Elm. */
 import { createSeed } from './session.js?v=44fc617998f1';
-import { Collection } from './collection.js?v=b6440c644ef4';
+import { Collection } from './collection.js?v=74a6e0c9ba96';
 import './space.js?v=68e5e5433449';
 import './sliders.js?v=e690453bfce2';
 const root = document.getElementById('app');

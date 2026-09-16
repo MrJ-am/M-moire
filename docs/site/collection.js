@@ -60,7 +60,7 @@ export class Collection {
     const session = this.record.session;
     if (!this.record.snapshot?.progress) return { ...session, new: true };
     setTimeout(() => this.flush(), 300);
-    return { ...session, snapshot: this.record.snapshot, saveStatus: session.completedAt ? 'completed' : this.record.revision > this.record.savedRevision ? 'saving' : 'saved' };
+    return { ...session, snapshot: this.record.snapshot, saveStatus: session.completedAt ? 'completed' : this.record.final ? 'submitting' : this.record.revision > this.record.savedRevision ? 'saving' : 'saved' };
   }
   event(entry) {
     if (!this.record || this.record.session?.completedAt) return;
@@ -74,7 +74,7 @@ export class Collection {
     this.record.snapshot = snapshot; this.changed();
   }
   changed() {
-    this.record.revision++; this.persist();
+    this.record.revision++; this.status(this.record.final ? 'submitting' : 'saving'); this.persist();
     clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 350);
   }
   submit(snapshot) {
