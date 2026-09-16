@@ -6,7 +6,17 @@ import './sliders.js?v=e690453bfce2';
 const root = document.getElementById('app');
 let application, bank, starting = false;
 const collection = new Collection(message => send(message));
-function send(message) { application?.ports.incoming.send(message); }
+function send(message) {
+  application?.ports.incoming.send(message);
+  if (message.type === 'save-state') requestAnimationFrame(() => {
+    document.querySelector('reading-card')?.layout?.();
+    positionComparison();
+  });
+}
+function saveNoticeSpace() {
+  const notice = document.querySelector('.save-status:is([data-status="error"],[data-status="submit-error"])');
+  return notice ? `${Math.ceil(notice.getBoundingClientRect().height) + 24}px` : '';
+}
 function showQuestion() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -16,7 +26,10 @@ function showQuestion() {
 }
 function positionComparison() {
   const layer = document.querySelector('.comparison-layer');
-  if (layer) layer.style.paddingTop = `${Math.max(12, (document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140) + 14)}px`;
+  if (layer) {
+    layer.style.paddingTop = `${Math.max(12, (document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140) + 14)}px`;
+    layer.style.paddingBottom = saveNoticeSpace();
+  }
 }
 window.addEventListener('resize', positionComparison);
 window.addEventListener('scroll', positionComparison, true);
@@ -36,6 +49,7 @@ class ReadingCard extends HTMLElement {
       const coach = document.querySelector('.coach-card');
       const top = coach ? Math.min(innerHeight - 250, bottom + coach.offsetHeight + 38) : Math.max(12, bottom + 14);
       this.closest('.reader-layer').style.paddingTop = `${top}px`;
+      this.closest('.reader-layer').style.paddingBottom = saveNoticeSpace();
     };
     this.resize = new ResizeObserver(this.layout);
     const questionPanel = document.querySelector('#question-panel'); if (questionPanel) this.resize.observe(questionPanel);
@@ -43,7 +57,7 @@ class ReadingCard extends HTMLElement {
     window.addEventListener('regards-layout', this.layout);
     this.onKey = e => {
       if (e.key !== 'Tab') return;
-      const controls = [...this.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]'), ...document.querySelectorAll('.coach-card button')];
+      const controls = [...this.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]'), ...document.querySelectorAll('.coach-card button, .save-status button')];
       const first = controls[0], last = controls.at(-1);
       if (e.shiftKey && (document.activeElement === first || document.activeElement === this)) { last?.focus(); e.preventDefault(); }
       if (!e.shiftKey && document.activeElement === last) { first?.focus(); e.preventDefault(); }

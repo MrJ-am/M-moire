@@ -6,6 +6,7 @@ const { driver } = require('./gestures.cjs');
 test.use({ reducedMotion: 'reduce' });
 
 test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais un enregistrement', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   const d = await driver(page);
   await start(page, d);
   await page.locator('#grade').evaluate(el => { el.value = '2'; el.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -20,6 +21,8 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
   await page.reload();
   await expect(page.locator('#grade')).toHaveValue('1');
   await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'error');
+  await expect.poll(() => page.evaluate(() => document.querySelector('reading-card').getBoundingClientRect().bottom <= document.querySelector('.save-status').getBoundingClientRect().top)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('reprise-reseau-mobile.png'), fullPage: true });
   await page.unroute('**/api/sessions/**');
   await page.getByRole('button', { name: 'Réessayer l’enregistrement' }).click();
   await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'saved');
