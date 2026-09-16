@@ -1,0 +1,35 @@
+#+title: Exploiter Matheval sur NixOS
+
+* Adresses et services
+Le questionnaire est servi sous https://principiipetit.io/matheval/ et l'administration sous /matheval/admin/. Nginx termine HTTPS et transmet ce préfixe à Node.js, lié à 127.0.0.1:3000. PostgreSQL est accessible par socket Unix ; aucun port de base de données n'est publié.
+
+Le module [[file:matheval.nix][matheval.nix]] s'importe dans la configuration NixOS existante. Activer ~services.matheval.enable~ et déclarer la clé publique de l'utilisateur de déploiement dans ~services.matheval.deploymentPublicKeys~. Lire la configuration existante avant de l'appliquer, afin de préserver les autres services et l'accès SSH.
+
+* Premier démarrage et administrateur
+Créer /var/lib/matheval/secrets.env, lisible uniquement par root et le service, contenant ~ADMIN_SETUP_TOKEN_HASH=<SHA-256 d'un secret aléatoire de 32 octets encodé en hexadécimal>~. Le secret original est remis au propriétaire par un lien privé ~https://principiipetit.io/matheval/admin/#activation=<secret>~.
+
+Le fragment n'est pas transmis dans l'URL des requêtes ; l'interface le retire de l'historique, puis l'envoie uniquement lors de la création du compte en HTTPS. Une seule activation est possible, sous verrou PostgreSQL. Le propriétaire choisit son identifiant et son mot de passe (14 caractères minimum). Les mots de passe sont dérivés par scrypt ; les sessions ont une durée de huit heures et un cookie HttpOnly, Secure et SameSite=Strict. Le jeton d'activation, les mots de passe et les clés privées ne doivent jamais être committés.
+
+* Publication
+GitHub Actions construit et teste les données, Elm, l'API PostgreSQL et les parcours Playwright, puis crée l'archive matheval-release. La publication est activée par la variable ~MATHEVAL_HOST~ et les secrets ~MATHEVAL_SSH_KEY~ et ~MATHEVAL_KNOWN_HOSTS~, dans l'environnement ~matheval-production~. La clé CI appartient à l'utilisateur ~matheval-deploy~ ; son unique opération sudo de déploiement est le redémarrage de matheval.service.
+
+Chaque version occupe /srv/matheval/releases/<commit>. La commande ~matheval-release <commit>~ prépare les dépendances, bascule le lien /srv/matheval/current et contrôle la santé de l'API. En cas d'échec de démarrage elle tente de rétablir le lien précédent. La base est extérieure aux versions du site. Les évolutions de schéma doivent rester compatibles avec la version précédente ; une restauration de la base n'est pas un retour arrière applicatif.
+
+Les contrôles après publication comparent les empreintes des pages, scripts, styles, données et polices aux fichiers ayant passé les tests. Le site historique GitHub Pages n'est plus publié par ce workflow.
+
+* Corpus et statistiques
+Les fichiers Org restent les sources éditoriales. Au démarrage, le service importe une copie du corpus interne et de son référentiel en base. Une version existante dont le contenu a changé est refusée : changer BANK_VERSION pour toute évolution éditoriale. Les anciens corpus restent disponibles dans l'administration et les réponses demeurent liées à leur version.
+
+Les participations ont un identifiant aléatoire et un secret de reprise propre au navigateur, conservés localement. Les données sont sauvegardées progressivement, et la validation finale fige la participation. Les révisions et les retransmissions sont contrôlées en transaction. Les exercices du tutoriel sont exclus. Les effectifs de personnes distinctes ne sont pas déductibles de ces identifiants : une personne peut participer plusieurs fois.
+
+Les moyennes et quantiles excluent les réponses absentes. Une note zéro compte comme une note ; un axe zéro compte uniquement s'il figure parmi les axes évalués. Les filtres de date portent sur le début de participation en UTC. Le filtre de niveau porte sur les niveaux déclarés ; plusieurs niveaux peuvent être associés à une même participation.
+
+* Sauvegardes et restauration
+NixOS produit une sauvegarde PostgreSQL quotidienne dans /var/backup/postgresql. Pour les copies hors VPS, créer une paire de clés age, conserver la clé privée hors du serveur et déclarer sa clé publique dans ~services.matheval.backupRecipient~. La variable GitHub ~MATHEVAL_BACKUPS=true~ active le workflow quotidien : le serveur chiffre le dump avant son transfert et GitHub conserve quatorze jours de copies chiffrées.
+
+La clé privée age doit être conservée par le propriétaire dans un emplacement durable indépendant du VPS. Le fichier chiffré seul ne permet pas de restaurer les réponses. Pour contrôler une restauration, déchiffrer dans un répertoire privé, créer une base temporaire distincte, lancer ~pg_restore --exit-on-error~ vers cette base et vérifier les effectifs et les contraintes. Ne jamais tester une restauration en écrasant la base en production.
+
+* Développement et tests
+Installer les dépendances avec ~npm --prefix docs ci~ et ~npm --prefix server ci~. PostgreSQL 17 est utilisé pour les validations CI, avec deux bases distinctes : matheval_api_test et matheval_browser_test. Définir TEST_DATABASE_URL et BROWSER_DATABASE_URL, puis lancer ~npm --prefix server test~ et ~npm --prefix docs run test:e2e~. Les tests API refusent une base dont le nom ne se termine pas par _test.
+
+La construction et les tests Elm utilisent un répertoire temporaire Linux et /tmp/memoire-elm-cache ; ils ne compilent pas sur le stockage Android partagé. Sur Android, la compilation fonctionne avec @lydell/elm. PostgreSQL peut être bloqué par l'absence de mémoire partagée du noyau ; les tests avec une vraie base sont alors exécutés en CI, sans les remplacer par une simulation SQL.

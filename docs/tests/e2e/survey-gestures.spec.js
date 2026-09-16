@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const fs = require('node:fs');
+const { submitted } = require('./collection.cjs');
 const { thumb, center, settled, driver, drag, note, close, start } = require('./gestures.cjs');
 
 test.use({ reducedMotion: 'no-preference' });
@@ -41,9 +41,7 @@ test('parcours entier à la souris : suivant valide aussi les coordonnées conse
     if (await page.locator('reading-card').count()) await settled(page.locator('reading-card'));
   }
   expect(answers.size).toBeGreaterThan(3);
-  const download = page.waitForEvent('download');
-  await d.click(page.getByRole('button', { name: 'Exporter mes réponses', exact: true }));
-  const result = JSON.parse(fs.readFileSync(await (await download).path(), 'utf8'));
+  const result = await submitted(page, () => d.click(page.getByRole('button', { name: 'Valider ma participation', exact: true })));
   expect(result.skippedQuestions).toEqual([]);
   expect(Object.keys(result.answers)).toHaveLength(answers.size);
   for (const [id, answer] of answers) {

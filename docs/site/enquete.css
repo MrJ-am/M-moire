@@ -26,3 +26,7 @@ evaluation-space{position:relative;display:block;width:100%;height:clamp(340px,c
   .rating{min-width:0;flex:0;width:100%}.rating>label{font-size:.75rem}.grade-track{margin-top:3px;gap:10px}.grade-track>span{font-size:.75rem}
   .reader-footer .place-button{width:100%;font-size:.75rem;min-height:40px;padding:9px 10px;gap:5px;flex-shrink:0}
 }
+/* A persistent receipt is distinct from the final participation validation. */
+.save-status{max-width:960px;margin:20px auto;padding:12px 20px;font-size:.85rem;color:#526560;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.save-status[data-status="error"]{color:#8c3c16;background:#fff2e9;border-radius:16px}
+.save-status[data-status="completed"]{color:#087f71;font-weight:600}

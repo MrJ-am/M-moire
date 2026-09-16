@@ -4,7 +4,7 @@
 
 Regards propose aux enseignants de lire et noter des rédactions, puis de les situer sur trois axes indépendants : Confus–Lisible, Vague–Précis et Fautif–Valide. Le parcours comprend un essai guidé, une lecture progressive, trois barres à billes numérotées et une vue libre en trois dimensions.
 
-La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 en interne ; les axes affichent seulement le repère du milieu. Le zéro correspond à un attendu contextualisé. Les réponses restent dans la page jusqu’à leur export JSON ; aucun envoi automatique n’est effectué.
+La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 en interne ; les axes affichent seulement le repère du milieu. Le zéro correspond à un attendu contextualisé. Les réponses sont sauvegardées progressivement dans PostgreSQL par le service de collecte. Une copie locale permet la reprise dans le même navigateur et les retransmissions après une interruption réseau. La validation finale confirme leur réception.
 
 * Organisation
 
@@ -24,9 +24,9 @@ La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 
 | [[file:research/protocole.org][research/protocole.org]] | Méthode ; effectifs et liste des paires générés |
 | ~docs/scripts/~ | Construction et validation des données |
 | ~docs/tests/~ | Tests Elm et tests de navigateur |
-| ~.github/workflows/compile-test.yml~ | Vérifications et publication GitHub Pages |
+| ~.github/workflows/compile-test.yml~ | Vérifications et publication sur le VPS |
 
-Seul ~docs/site/~ est publié par GitHub Pages. La construction de la banque publique conserve une liste explicite de champs et exclut les codes, corrigés et annotations de recherche. Le dépôt source étant public, cette exclusion ne constitue pas une confidentialité des sources internes.
+Le serveur public sert uniquement les ressources de ~docs/site/~ ; les résultats passent par l’API protégée. La construction de la banque publique conserve une liste explicite de champs et exclut les codes, corrigés et annotations de recherche. Le dépôt source étant public, cette exclusion ne constitue pas une confidentialité des sources internes.
 
 * Développer et vérifier
 
@@ -56,9 +56,9 @@ Les tests de navigateur lancent automatiquement un serveur statique si nécessai
 
 ~npm run check:data~ reconstruit les sorties en mémoire, vérifie les liens relatifs et les pages PDF, et échoue si un fichier généré diverge. Ce contrôle est exécuté en CI avant toute reconstruction : une correction manuelle du JSON ne peut donc pas masquer une source Org restée ancienne. Les erreurs de structure, de code, de cellule ou d’appariement bloquent la génération. Les identifiants de question et rédaction doivent rester stables au sein d’une version ; un changement de corpus exige une nouvelle version pour l’analyse des exports.
 
-* Données exportées
+* Collecte et administration
 
-Le schéma 2 précise ~interactionMode: axis-sliders~ et contient la version de banque, les niveaux, la graine et les ordres de présentation, les notes initiales et révisées, les coordonnées et leurs axes évalués, les questions passées et un journal horodaté des interactions. L’essai guidé est exclu. Une coordonnée à zéro dont l’axe n’est pas dans ~evaluatedAxes~ représente une absence de jugement, pas une réponse zéro.
+La collecte conserve la version de banque, les niveaux, la graine et les ordres de présentation, les notes initiales et révisées, les coordonnées et leurs axes évalués, les questions passées et un journal horodaté des interactions. L’essai guidé est exclu. Une coordonnée à zéro dont l’axe n’est pas dans ~evaluatedAxes~ représente une absence de jugement, pas une réponse zéro.
 
 Le détail des choix méthodologiques et des limites de collecte se trouve dans ~research/protocole.org~.
 
@@ -69,3 +69,7 @@ Les propriétés ~CUSTOM_ID~, ~NIVEAU~, ~DOMAINE~ et ~FAMILLE~ identifient les q
 Les blocs ~verse~ conservent exactement les espaces et les retours à la ligne. Le sous-ensemble accepté est décrit par la structure de [[file:research/questions.org][questions.org]] : titres, propriétés explicites, tableaux, blocs verse et paragraphes d’analyse. Le compilateur n’exécute aucun code Babel et refuse les structures de données inattendues. Dans les textes publics, le rendu prend en charge les paragraphes, lignes, listes simples, gras Markdown et formules LaTeX déjà utilisés par le site ; il ne réalise pas un export général d’Org.
 
 Les ancres inter-fichiers utilisent ~CUSTOM_ID~ ; les liens PDF paginés utilisent ~docview~. Ces syntaxes sont décrites dans les [[https://orgmode.org/manual/External-Links.html][liens externes du manuel Org]]. Le lien ordinaire portant le titre d’une source reste utilisable avec un autre lecteur de PDF.
+
+* Hébergement sur VPS
+
+Le questionnaire est prévu sous https://principiipetit.io/matheval/ et son administration sous /matheval/admin/. Le service Node.js et PostgreSQL sont décrits dans [[file:deploy/README.org][le guide de déploiement et de sauvegarde]]. Le tableau de bord expose les effectifs, les statistiques par rédaction, les corpus versionnés et les réponses individuelles.

@@ -519,11 +519,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.bt.aP === region.bP.aP)
+	if (region.bw.aS === region.bR.aS)
 	{
-		return 'on line ' + region.bt.aP;
+		return 'on line ' + region.bw.aS;
 	}
-	return 'on lines ' + region.bt.aP + ' through ' + region.bP.aP;
+	return 'on lines ' + region.bw.aS + ' through ' + region.bR.aS;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.da,
-		impl.dT,
-		impl.dK,
+		impl.dc,
+		impl.dV,
+		impl.dM,
 		function() { return function() {} }
 	);
 });
@@ -2719,9 +2719,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		j: func(record.j),
-		bu: record.bu,
-		bq: record.bq
+		i: func(record.i),
+		bx: record.bx,
+		bt: record.bt
 	}
 });
 
@@ -2989,11 +2989,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.j;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bu;
+		var message = !tag ? value : tag < 3 ? value.a : value.i;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bx;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.bq) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.bt) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3943,11 +3943,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.da,
-		impl.dT,
-		impl.dK,
+		impl.dc,
+		impl.dV,
+		impl.dM,
 		function(sendToApp, initialModel) {
-			var view = impl.dU;
+			var view = impl.dW;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3979,12 +3979,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.da,
-		impl.dT,
-		impl.dK,
+		impl.dc,
+		impl.dV,
+		impl.dM,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.bs && impl.bs(sendToApp)
-			var view = impl.dU;
+			var divertHrefToApp = impl.bv && impl.bv(sendToApp)
+			var view = impl.dW;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3992,12 +3992,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cR);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cT);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.dQ) && (_VirtualDom_doc.title = title = doc.dQ);
+				(title !== doc.dS) && (_VirtualDom_doc.title = title = doc.dS);
 			});
 		}
 	);
@@ -4053,12 +4053,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.du;
-	var onUrlRequest = impl.dv;
+	var onUrlChange = impl.dw;
+	var onUrlRequest = impl.dx;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		bs: function(sendToApp)
+		bv: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4074,9 +4074,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.ch === next.ch
-							&& curr.bX === next.bX
-							&& curr.ce.a === next.ce.a
+							&& curr.cj === next.cj
+							&& curr.bZ === next.bZ
+							&& curr.cg.a === next.cg.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4084,13 +4084,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		da: function(flags)
+		dc: function(flags)
 		{
-			return A3(impl.da, flags, _Browser_getUrl(), key);
+			return A3(impl.dc, flags, _Browser_getUrl(), key);
 		},
-		dU: impl.dU,
-		dT: impl.dT,
-		dK: impl.dK
+		dW: impl.dW,
+		dV: impl.dV,
+		dM: impl.dM
 	});
 }
 
@@ -4156,17 +4156,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { c8: 'hidden', cU: 'visibilitychange' }
+		? { da: 'hidden', cW: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { c8: 'mozHidden', cU: 'mozvisibilitychange' }
+		? { da: 'mozHidden', cW: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { c8: 'msHidden', cU: 'msvisibilitychange' }
+		? { da: 'msHidden', cW: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { c8: 'webkitHidden', cU: 'webkitvisibilitychange' }
-		: { c8: 'hidden', cU: 'visibilitychange' };
+		? { da: 'webkitHidden', cW: 'webkitvisibilitychange' }
+		: { da: 'hidden', cW: 'visibilitychange' };
 }
 
 
@@ -4247,12 +4247,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		cp: _Browser_getScene(),
-		cF: {
-			bC: _Browser_window.pageXOffset,
-			bD: _Browser_window.pageYOffset,
-			cH: _Browser_doc.documentElement.clientWidth,
-			bW: _Browser_doc.documentElement.clientHeight
+		cr: _Browser_getScene(),
+		cH: {
+			bE: _Browser_window.pageXOffset,
+			bF: _Browser_window.pageYOffset,
+			cJ: _Browser_doc.documentElement.clientWidth,
+			bY: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4262,8 +4262,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		cH: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		bW: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		cJ: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		bY: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4286,15 +4286,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			cp: {
-				cH: node.scrollWidth,
-				bW: node.scrollHeight
+			cr: {
+				cJ: node.scrollWidth,
+				bY: node.scrollHeight
 			},
-			cF: {
-				bC: node.scrollLeft,
-				bD: node.scrollTop,
-				cH: node.clientWidth,
-				bW: node.clientHeight
+			cH: {
+				bE: node.scrollLeft,
+				bF: node.scrollTop,
+				cJ: node.clientWidth,
+				bY: node.clientHeight
 			}
 		};
 	});
@@ -4324,18 +4324,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			cp: _Browser_getScene(),
-			cF: {
-				bC: x,
-				bD: y,
-				cH: _Browser_doc.documentElement.clientWidth,
-				bW: _Browser_doc.documentElement.clientHeight
+			cr: _Browser_getScene(),
+			cH: {
+				bE: x,
+				bF: y,
+				cJ: _Browser_doc.documentElement.clientWidth,
+				bY: _Browser_doc.documentElement.clientHeight
 			},
-			c1: {
-				bC: x + rect.left,
-				bD: y + rect.top,
-				cH: rect.width,
-				bW: rect.height
+			c3: {
+				bE: x + rect.left,
+				bF: y + rect.top,
+				cJ: rect.width,
+				bY: rect.height
 			}
 		};
 	});
@@ -4451,7 +4451,7 @@ var $elm$core$Basics$EQ = 1;
 var $elm$core$Basics$GT = 2;
 var $elm$core$Basics$LT = 0;
 var $author$project$Survey$Close = {$: 4};
-var $author$project$Survey$NoOp = {$: 20};
+var $author$project$Survey$NoOp = {$: 21};
 var $author$project$Survey$Receive = function (a) {
 	return {$: 2, a: a};
 };
@@ -4781,25 +4781,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.n) {
+		if (!builder.o) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.q),
+				$elm$core$Elm$JsArray$length(builder.r),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.q);
+				builder.r);
 		} else {
-			var treeLen = builder.n * $elm$core$Array$branchFactor;
+			var treeLen = builder.o * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.r) : builder.r;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.n);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.s) : builder.s;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.o);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.q) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.r) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.q);
+				builder.r);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4812,7 +4812,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{r: nodeList, n: (len / $elm$core$Array$branchFactor) | 0, q: tail});
+					{s: nodeList, o: (len / $elm$core$Array$branchFactor) | 0, r: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4880,7 +4880,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bR: fragment, bX: host, cc: path, ce: port_, ch: protocol, ci: query};
+		return {bT: fragment, bZ: host, ce: path, cg: port_, cj: protocol, ck: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5185,8 +5185,8 @@ var $elm$core$Result$withDefault = F2(
 var $author$project$Survey$init = function (flags) {
 	return _Utils_Tuple2(
 		{
-			i: $elm$core$Dict$empty,
-			bc: A2(
+			h: $elm$core$Dict$empty,
+			bf: A2(
 				$elm$core$Result$withDefault,
 				_List_Nil,
 				A2(
@@ -5196,20 +5196,22 @@ var $author$project$Survey$init = function (flags) {
 						'levels',
 						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
 					flags)),
-			E: false,
-			ag: false,
-			aJ: '',
-			B: $elm$core$Dict$empty,
-			C: 0,
-			Q: _List_Nil,
-			j: '',
-			f: 0,
-			w: _List_Nil,
-			l: false,
-			c: '',
-			ad: _List_Nil,
-			e: -1,
-			bA: A2(
+			F: false,
+			ah: false,
+			aM: '',
+			w: $elm$core$Dict$empty,
+			x: 0,
+			R: _List_Nil,
+			i: '',
+			e: 0,
+			D: _List_Nil,
+			k: false,
+			am: '',
+			m: 'idle',
+			b: '',
+			Z: _List_Nil,
+			f: -1,
+			aF: A2(
 				$elm$core$Result$withDefault,
 				'',
 				A2(
@@ -5226,7 +5228,7 @@ var $elm$browser$Browser$Events$MySub = F3(
 	});
 var $elm$browser$Browser$Events$State = F2(
 	function (subs, pids) {
-		return {cd: pids, cz: subs};
+		return {cf: pids, cB: subs};
 	});
 var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
 	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
@@ -5456,7 +5458,7 @@ var $elm$core$Dict$merge = F6(
 	});
 var $elm$browser$Browser$Events$Event = F2(
 	function (key, event) {
-		return {bQ: event, b$: key};
+		return {bS: event, b1: key};
 	});
 var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
 var $elm$browser$Browser$Events$spawn = F3(
@@ -5531,7 +5533,7 @@ var $elm$browser$Browser$Events$onEffects = F3(
 			stepLeft,
 			stepBoth,
 			stepRight,
-			state.cd,
+			state.cf,
 			$elm$core$Dict$fromList(newSubs),
 			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
 		var deadPids = _v0.a;
@@ -5577,8 +5579,8 @@ var $elm$core$List$filterMap = F2(
 	});
 var $elm$browser$Browser$Events$onSelfMsg = F3(
 	function (router, _v0, state) {
-		var key = _v0.b$;
-		var event = _v0.bQ;
+		var key = _v0.b1;
+		var event = _v0.bS;
 		var toMessage = function (_v2) {
 			var subKey = _v2.a;
 			var _v3 = _v2.b;
@@ -5587,7 +5589,7 @@ var $elm$browser$Browser$Events$onSelfMsg = F3(
 			var decoder = _v3.c;
 			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
 		};
-		var messages = A2($elm$core$List$filterMap, toMessage, state.cz);
+		var messages = A2($elm$core$List$filterMap, toMessage, state.cB);
 		return A2(
 			$elm$core$Task$andThen,
 			function (_v1) {
@@ -5618,14 +5620,187 @@ var $elm$browser$Browser$Events$on = F3(
 			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
 	});
 var $elm$browser$Browser$Events$onKeyDown = A2($elm$browser$Browser$Events$on, 0, 'keydown');
-var $author$project$Survey$Closed = {$: 5};
-var $author$project$Survey$Finish = {$: 12};
-var $author$project$Survey$Finished = 3;
-var $author$project$Survey$GoQuestion = function (a) {
-	return {$: 10, a: a};
+var $author$project$Survey$action = _Platform_outgoingPort('action', $elm$core$Basics$identity);
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(0),
+			pairs));
 };
-var $author$project$Survey$Running = 2;
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Survey$emit = F2(
+	function (kind, fields) {
+		return $author$project$Survey$action(
+			$elm$json$Json$Encode$object(
+				A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string(kind)),
+					fields)));
+	});
+var $author$project$Survey$Finished = 3;
 var $author$project$Survey$Training = 1;
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Encode$float = _Json_wrap;
+var $author$project$Survey$Model$encodePoint = function (p) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'x',
+				$elm$json$Json$Encode$float(p.bE)),
+				_Utils_Tuple2(
+				'y',
+				$elm$json$Json$Encode$float(p.bF)),
+				_Utils_Tuple2(
+				'z',
+				$elm$json$Json$Encode$float(p.bG))
+			]));
+};
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(0),
+				entries));
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Survey$Model$encodeAnswer = function (a) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'note',
+				A2(
+					$elm$core$Maybe$withDefault,
+					$elm$json$Json$Encode$null,
+					A2($elm$core$Maybe$map, $elm$json$Json$Encode$float, a.y))),
+				_Utils_Tuple2(
+				'initialNote',
+				A2(
+					$elm$core$Maybe$withDefault,
+					$elm$json$Json$Encode$null,
+					A2($elm$core$Maybe$map, $elm$json$Json$Encode$float, a.a3))),
+				_Utils_Tuple2(
+				'coordinates',
+				$author$project$Survey$Model$encodePoint(a.aA)),
+				_Utils_Tuple2(
+				'evaluatedAxes',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, a.Q))
+			]));
+};
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$core$Tuple$mapSecond = F2(
+	function (func, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return _Utils_Tuple2(
+			x,
+			func(y));
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Survey$encodeSnapshot = function (m) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'answers',
+				$elm$json$Json$Encode$object(
+					A2(
+						$elm$core$List$map,
+						$elm$core$Tuple$mapSecond($author$project$Survey$Model$encodeAnswer),
+						A2(
+							$elm$core$List$filter,
+							function (_v0) {
+								var k = _v0.a;
+								return !A2($elm$core$String$startsWith, 'practice', k);
+							},
+							$elm$core$Dict$toList(m.h))))),
+				_Utils_Tuple2(
+				'skippedQuestions',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, m.Z)),
+				_Utils_Tuple2(
+				'progress',
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'mode',
+							$elm$json$Json$Encode$string(
+								(m.e === 1) ? 'training' : ((m.e === 3) ? 'finished' : 'running'))),
+							_Utils_Tuple2(
+							'index',
+							$elm$json$Json$Encode$int(m.x)),
+							_Utils_Tuple2(
+							'selected',
+							$elm$json$Json$Encode$string(m.b)),
+							_Utils_Tuple2(
+							'exposed',
+							$elm$json$Json$Encode$object(
+								A2(
+									$elm$core$List$map,
+									$elm$core$Tuple$mapSecond($elm$json$Json$Encode$int),
+									$elm$core$Dict$toList(m.w)))),
+							_Utils_Tuple2(
+							'reader',
+							$elm$json$Json$Encode$bool(m.k)),
+							_Utils_Tuple2(
+							'tour',
+							$elm$json$Json$Encode$int(m.f))
+						])))
+			]));
+};
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (!ra.$) {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -5647,7 +5822,27 @@ var $elm$core$List$any = F2(
 			}
 		}
 	});
-var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Survey$Closed = {$: 5};
+var $author$project$Survey$Finish = {$: 12};
+var $author$project$Survey$GoQuestion = function (a) {
+	return {$: 10, a: a};
+};
+var $author$project$Survey$Running = 2;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$core$Basics$clamp = F3(
 	function (low, high, number) {
 		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
@@ -5657,7 +5852,6 @@ var $elm$core$Basics$composeL = F3(
 		return g(
 			f(x));
 	});
-var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
 		return !A2(
@@ -5696,26 +5890,6 @@ var $elm$core$Dict$get = F2(
 			}
 		}
 	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Survey$Model$complete = F2(
 	function (answers, question) {
 		return A2(
@@ -5727,11 +5901,11 @@ var $author$project$Survey$Model$complete = F2(
 					A2(
 						$elm$core$Maybe$map,
 						function (a) {
-							return (!_Utils_eq(a.v, $elm$core$Maybe$Nothing)) && ($elm$core$List$length(a.P) === 3);
+							return (!_Utils_eq(a.y, $elm$core$Maybe$Nothing)) && ($elm$core$List$length(a.Q) === 3);
 						},
-						A2($elm$core$Dict$get, p.b, answers)));
+						A2($elm$core$Dict$get, p.c, answers)));
 			},
-			question.H);
+			question.L);
 	});
 var $elm$core$List$drop = F2(
 	function (n, list) {
@@ -5764,29 +5938,74 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $author$project$Survey$practice = {
-	c$: 'Un essai pour prendre la main',
-	b: 'practice',
-	b2: 'Entraînement',
-	H: _List_fromArray(
+	c1: 'Un essai pour prendre la main',
+	c: 'practice',
+	b4: 'Entraînement',
+	L: _List_fromArray(
 		[
-			{ar: 'Notons $x$ la largeur, en centimètres. La longueur est $x+3$.\n\nLe périmètre donne $2x+2(x+3)=30$, donc $4x=24$ et $x=6$.\n\nLe rectangle mesure donc $6$ cm sur $9$ cm. Ces dimensions donnent bien un périmètre de $30$ cm.', b: 'practice-1'}
+			{at: 'Notons $x$ la largeur, en centimètres. La longueur est $x+3$.\n\nLe périmètre donne $2x+2(x+3)=30$, donc $4x=24$ et $x=6$.\n\nLe rectangle mesure donc $6$ cm sur $9$ cm. Ces dimensions donnent bien un périmètre de $30$ cm.', c: 'practice-1'}
 		]),
-	cw: 'Un rectangle a un périmètre de $30$ cm. Sa longueur dépasse sa largeur de $3$ cm. Déterminer ses dimensions en justifiant.'
+	cy: 'Un rectangle a un périmètre de $30$ cm. Sa longueur dépasse sa largeur de $3$ cm. Déterminer ses dimensions en justifiant.'
 };
 var $author$project$Survey$current = function (m) {
-	return (m.f === 1) ? $author$project$Survey$practice : A2(
+	return (m.e === 1) ? $author$project$Survey$practice : A2(
 		$elm$core$Maybe$withDefault,
 		$author$project$Survey$practice,
 		$elm$core$List$head(
-			A2($elm$core$List$drop, m.C, m.w)));
+			A2($elm$core$List$drop, m.x, m.D)));
 };
+var $author$project$Survey$Model$Answer = F4(
+	function (note, initialNote, point, judged) {
+		return {a3: initialNote, Q: judged, y: note, aA: point};
+	});
+var $author$project$Survey$Model$Point = F3(
+	function (x, y, z) {
+		return {bE: x, bF: y, bG: z};
+	});
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $elm$json$Json$Decode$map4 = _Json_map4;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $author$project$Survey$Model$decodeAnswer = A5(
+	$elm$json$Json$Decode$map4,
+	$author$project$Survey$Model$Answer,
+	A2(
+		$elm$json$Json$Decode$field,
+		'note',
+		$elm$json$Json$Decode$nullable($elm$json$Json$Decode$float)),
+	A2(
+		$elm$json$Json$Decode$field,
+		'initialNote',
+		$elm$json$Json$Decode$nullable($elm$json$Json$Decode$float)),
+	A2(
+		$elm$json$Json$Decode$field,
+		'coordinates',
+		A4(
+			$elm$json$Json$Decode$map3,
+			$author$project$Survey$Model$Point,
+			A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$float),
+			A2($elm$json$Json$Decode$field, 'y', $elm$json$Json$Decode$float),
+			A2($elm$json$Json$Decode$field, 'z', $elm$json$Json$Decode$float))),
+	A2(
+		$elm$json$Json$Decode$field,
+		'evaluatedAxes',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$string)));
 var $author$project$Survey$Model$Production = F2(
 	function (id, content) {
-		return {ar: content, b: id};
+		return {at: content, c: id};
 	});
 var $author$project$Survey$Model$Question = F5(
 	function (id, level, domain, statement, productions) {
-		return {c$: domain, b: id, b2: level, H: productions, cw: statement};
+		return {c1: domain, c: id, b4: level, L: productions, cy: statement};
 	});
 var $elm$json$Json$Decode$map5 = _Json_map5;
 var $author$project$Survey$Model$decodeQuestion = A6(
@@ -5805,85 +6024,16 @@ var $author$project$Survey$Model$decodeQuestion = A6(
 				$author$project$Survey$Model$Production,
 				A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
 				A2($elm$json$Json$Decode$field, 'content', $elm$json$Json$Decode$string)))));
-var $author$project$Survey$action = _Platform_outgoingPort('action', $elm$core$Basics$identity);
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(0),
-			pairs));
-};
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Survey$emit = F2(
-	function (kind, fields) {
-		return $author$project$Survey$action(
-			$elm$json$Json$Encode$object(
-				A2(
-					$elm$core$List$cons,
-					_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string(kind)),
-					fields)));
-	});
-var $elm$json$Json$Encode$float = _Json_wrap;
-var $author$project$Survey$Model$encodePoint = function (p) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'x',
-				$elm$json$Json$Encode$float(p.bC)),
-				_Utils_Tuple2(
-				'y',
-				$elm$json$Json$Encode$float(p.bD)),
-				_Utils_Tuple2(
-				'z',
-				$elm$json$Json$Encode$float(p.bE))
-			]));
-};
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(0),
-				entries));
-	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
-var $author$project$Survey$Model$encodeAnswer = function (a) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'note',
-				A2(
-					$elm$core$Maybe$withDefault,
-					$elm$json$Json$Encode$null,
-					A2($elm$core$Maybe$map, $elm$json$Json$Encode$float, a.v))),
-				_Utils_Tuple2(
-				'initialNote',
-				A2(
-					$elm$core$Maybe$withDefault,
-					$elm$json$Json$Encode$null,
-					A2($elm$core$Maybe$map, $elm$json$Json$Encode$float, a.a0))),
-				_Utils_Tuple2(
-				'coordinates',
-				$author$project$Survey$Model$encodePoint(a.ay)),
-				_Utils_Tuple2(
-				'evaluatedAxes',
-				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, a.P))
-			]));
+var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
+var $elm$json$Json$Decode$dict = function (decoder) {
+	return A2(
+		$elm$json$Json$Decode$map,
+		$elm$core$Dict$fromList,
+		$elm$json$Json$Decode$keyValuePairs(decoder));
 };
 var $author$project$Survey$event = F3(
 	function (m, kind, fields) {
-		return (m.f === 2) ? A2(
+		return (m.e === 2) ? A2(
 			$author$project$Survey$emit,
 			'event',
 			A2(
@@ -5896,34 +6046,15 @@ var $author$project$Survey$event = F3(
 					_Utils_Tuple2(
 						'questionId',
 						$elm$json$Json$Encode$string(
-							$author$project$Survey$current(m).b)),
+							$author$project$Survey$current(m).c)),
 					A2(
 						$elm$core$List$cons,
 						_Utils_Tuple2(
 							'productionId',
-							$elm$json$Json$Encode$string(m.c)),
+							$elm$json$Json$Encode$string(m.b)),
 						fields)))) : $elm$core$Platform$Cmd$none;
 	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$Basics$ge = _Utils_ge;
-var $author$project$Survey$Model$Answer = F4(
-	function (note, initialNote, point, judged) {
-		return {a0: initialNote, P: judged, v: note, ay: point};
-	});
-var $author$project$Survey$Model$Point = F3(
-	function (x, y, z) {
-		return {bC: x, bD: y, bE: z};
-	});
 var $author$project$Survey$Model$point = A3($author$project$Survey$Model$Point, 0, 0, 0);
 var $author$project$Survey$Model$answer = A4($author$project$Survey$Model$Answer, $elm$core$Maybe$Nothing, $elm$core$Maybe$Nothing, $author$project$Survey$Model$point, _List_Nil);
 var $author$project$Survey$getAnswer = F2(
@@ -5931,8 +6062,9 @@ var $author$project$Survey$getAnswer = F2(
 		return A2(
 			$elm$core$Maybe$withDefault,
 			$author$project$Survey$Model$answer,
-			A2($elm$core$Dict$get, id, m.i));
+			A2($elm$core$Dict$get, id, m.h));
 	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -5940,23 +6072,6 @@ var $elm$core$List$isEmpty = function (xs) {
 		return false;
 	}
 };
-var $elm$core$Tuple$mapSecond = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			x,
-			func(y));
-	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
 var $author$project$Survey$Model$move = F3(
 	function (axis, value, previous) {
 		var bounded = A3($elm$core$Basics$clamp, -10, 10, value);
@@ -5964,15 +6079,15 @@ var $author$project$Survey$Model$move = F3(
 			case 'x':
 				return _Utils_update(
 					previous,
-					{bC: bounded});
+					{bE: bounded});
 			case 'y':
 				return _Utils_update(
 					previous,
-					{bD: bounded});
+					{bF: bounded});
 			case 'z':
 				return _Utils_update(
 					previous,
-					{bE: bounded});
+					{bG: bounded});
 			default:
 				return previous;
 		}
@@ -6356,33 +6471,33 @@ var $author$project$Survey$openQuestion = F2(
 			$elm$core$Maybe$withDefault,
 			$author$project$Survey$practice,
 			$elm$core$List$head(
-				A2($elm$core$List$drop, idx, m.w)));
+				A2($elm$core$List$drop, idx, m.D)));
 		var first = A2(
 			$elm$core$Maybe$withDefault,
 			'',
 			A2(
 				$elm$core$Maybe$map,
 				function ($) {
-					return $.b;
+					return $.c;
 				},
-				$elm$core$List$head(q.H)));
+				$elm$core$List$head(q.L)));
 		return _Utils_update(
 			m,
 			{
-				E: false,
-				ag: false,
-				B: A3(
+				F: false,
+				ah: false,
+				w: A3(
 					$elm$core$Dict$update,
-					q.b,
+					q.c,
 					function (old) {
 						return $elm$core$Maybe$Just(
 							A2($elm$core$Maybe$withDefault, 1, old));
 					},
-					m.B),
-				C: idx,
-				j: '',
-				l: true,
-				c: first
+					m.w),
+				x: idx,
+				i: '',
+				k: true,
+				b: first
 			});
 	});
 var $elm$core$Basics$round = _Basics_round;
@@ -6525,9 +6640,9 @@ var $author$project$Survey$Model$touchAxis = F2(
 			_List_fromArray(
 				['x', 'y', 'z'])) && (!A2($elm$core$List$member, axis, previous))) ? A2($elm$core$List$cons, axis, previous) : previous;
 	});
-var $author$project$Survey$update = F2(
+var $author$project$Survey$updateCore = F2(
 	function (msg, m) {
-		update:
+		updateCore:
 		while (true) {
 			switch (msg.$) {
 				case 0:
@@ -6537,18 +6652,18 @@ var $author$project$Survey$update = F2(
 						_Utils_update(
 							m,
 							{
-								Q: checked ? A2($elm$core$List$cons, level, m.Q) : A2(
+								R: checked ? A2($elm$core$List$cons, level, m.R) : A2(
 									$elm$core$List$filter,
 									$elm$core$Basics$neq(level),
-									m.Q),
-								j: ''
+									m.R),
+								i: ''
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 1:
-					return $elm$core$List$isEmpty(m.Q) ? _Utils_Tuple2(
+					return $elm$core$List$isEmpty(m.R) ? _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{j: 'Choisissez au moins un niveau pour continuer.'}),
+							{i: 'Choisissez au moins un niveau pour continuer.'}),
 						$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 						m,
 						A2(
@@ -6558,7 +6673,7 @@ var $author$project$Survey$update = F2(
 								[
 									_Utils_Tuple2(
 									'levels',
-									A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, m.Q))
+									A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, m.R))
 								])));
 				case 2:
 					var raw = msg.a;
@@ -6566,10 +6681,138 @@ var $author$project$Survey$update = F2(
 						$elm$json$Json$Decode$decodeValue,
 						A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
 						raw);
-					_v1$3:
+					_v1$6:
 					while (true) {
 						if (!_v1.$) {
 							switch (_v1.a) {
+								case 'save-state':
+									return _Utils_Tuple2(
+										_Utils_update(
+											m,
+											{
+												am: A2(
+													$elm$core$Result$withDefault,
+													'',
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2($elm$json$Json$Decode$field, 'message', $elm$json$Json$Decode$string),
+														raw)),
+												m: A2(
+													$elm$core$Result$withDefault,
+													'error',
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2($elm$json$Json$Decode$field, 'status', $elm$json$Json$Decode$string),
+														raw))
+											}),
+										$elm$core$Platform$Cmd$none);
+								case 'error':
+									return _Utils_Tuple2(
+										_Utils_update(
+											m,
+											{
+												i: A2(
+													$elm$core$Result$withDefault,
+													'La connexion est indisponible.',
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2($elm$json$Json$Decode$field, 'message', $elm$json$Json$Decode$string),
+														raw)),
+												m: 'error'
+											}),
+										$elm$core$Platform$Cmd$none);
+								case 'restore':
+									var qs = A2(
+										$elm$core$Result$withDefault,
+										_List_Nil,
+										A2(
+											$elm$json$Json$Decode$decodeValue,
+											A2(
+												$elm$json$Json$Decode$field,
+												'questions',
+												$elm$json$Json$Decode$list($author$project$Survey$Model$decodeQuestion)),
+											raw));
+									var progress = F3(
+										function (name, decoder, fallback) {
+											return A2(
+												$elm$core$Result$withDefault,
+												fallback,
+												A2(
+													$elm$json$Json$Decode$decodeValue,
+													A2(
+														$elm$json$Json$Decode$at,
+														_List_fromArray(
+															['snapshot', 'progress', name]),
+														decoder),
+													raw));
+										});
+									var restoredMode = A3(progress, 'mode', $elm$json$Json$Decode$string, 'training');
+									var field = F2(
+										function (name, decoder) {
+											return A2(
+												$elm$json$Json$Decode$decodeValue,
+												A2(
+													$elm$json$Json$Decode$at,
+													_List_fromArray(
+														['snapshot', name]),
+													decoder),
+												raw);
+										});
+									return _Utils_Tuple2(
+										_Utils_update(
+											m,
+											{
+												h: A2(
+													$elm$core$Result$withDefault,
+													$elm$core$Dict$empty,
+													A2(
+														field,
+														'answers',
+														$elm$json$Json$Decode$dict($author$project$Survey$Model$decodeAnswer))),
+												w: A3(
+													progress,
+													'exposed',
+													$elm$json$Json$Decode$dict($elm$json$Json$Decode$int),
+													$elm$core$Dict$empty),
+												x: A3(progress, 'index', $elm$json$Json$Decode$int, 0),
+												R: A2(
+													$elm$core$Result$withDefault,
+													_List_Nil,
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2(
+															$elm$json$Json$Decode$field,
+															'levels',
+															$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+														raw)),
+												e: (restoredMode === 'training') ? 1 : ((restoredMode === 'finished') ? 3 : 2),
+												D: qs,
+												k: (restoredMode === 'training') ? true : A3(progress, 'reader', $elm$json$Json$Decode$bool, false),
+												m: A2(
+													$elm$core$Result$withDefault,
+													'saved',
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2($elm$json$Json$Decode$field, 'saveStatus', $elm$json$Json$Decode$string),
+														raw)),
+												b: (restoredMode === 'training') ? 'practice-1' : A3(progress, 'selected', $elm$json$Json$Decode$string, ''),
+												Z: A2(
+													$elm$core$Result$withDefault,
+													_List_Nil,
+													A2(
+														field,
+														'skippedQuestions',
+														$elm$json$Json$Decode$list($elm$json$Json$Decode$string))),
+												f: (restoredMode === 'training') ? 0 : (-1),
+												aF: A2(
+													$elm$core$Result$withDefault,
+													m.aF,
+													A2(
+														$elm$json$Json$Decode$decodeValue,
+														A2($elm$json$Json$Decode$field, 'bankVersion', $elm$json$Json$Decode$string),
+														raw))
+											}),
+										$elm$core$Platform$Cmd$none);
 								case 'session':
 									var _v2 = A2(
 										$elm$json$Json$Decode$decodeValue,
@@ -6583,28 +6826,35 @@ var $author$project$Survey$update = F2(
 										return $elm$core$List$isEmpty(qs) ? _Utils_Tuple2(
 											_Utils_update(
 												m,
-												{j: 'Aucune question disponible pour cette sélection.'}),
+												{i: 'Aucune question disponible pour cette sélection.'}),
 											$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 											_Utils_update(
 												m,
 												{
-													i: $elm$core$Dict$empty,
-													E: false,
-													B: A2($elm$core$Dict$singleton, 'practice', 1),
-													C: 0,
-													f: 1,
-													w: qs,
-													l: true,
-													c: 'practice-1',
-													ad: _List_Nil,
-													e: 0
+													h: $elm$core$Dict$empty,
+													F: false,
+													w: A2($elm$core$Dict$singleton, 'practice', 1),
+													x: 0,
+													e: 1,
+													D: qs,
+													k: true,
+													b: 'practice-1',
+													Z: _List_Nil,
+													f: 0,
+													aF: A2(
+														$elm$core$Result$withDefault,
+														m.aF,
+														A2(
+															$elm$json$Json$Decode$decodeValue,
+															A2($elm$json$Json$Decode$field, 'bankVersion', $elm$json$Json$Decode$string),
+															raw))
 												}),
 											$elm$core$Platform$Cmd$none);
 									} else {
 										return _Utils_Tuple2(
 											_Utils_update(
 												m,
-												{j: 'Impossible de préparer les questions.'}),
+												{i: 'Impossible de préparer les questions.'}),
 											$elm$core$Platform$Cmd$none);
 									}
 								case 'closed':
@@ -6612,20 +6862,20 @@ var $author$project$Survey$update = F2(
 										$temp$m = m;
 									msg = $temp$msg;
 									m = $temp$m;
-									continue update;
+									continue updateCore;
 								case 'orbit':
 									return _Utils_Tuple2(
 										_Utils_update(
 											m,
 											{
-												e: (m.e === 5) ? 6 : m.e
+												f: (m.f === 5) ? 6 : m.f
 											}),
 										A3($author$project$Survey$event, m, 'orbit', _List_Nil));
 								default:
-									break _v1$3;
+									break _v1$6;
 							}
 						} else {
-							break _v1$3;
+							break _v1$6;
 						}
 					}
 					return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
@@ -6636,21 +6886,21 @@ var $author$project$Survey$update = F2(
 						var n = _v3.a;
 						var grade = $elm$core$Basics$round(
 							A3($elm$core$Basics$clamp, 0, 3, n) * 4) / 4;
-						var a = A2($author$project$Survey$getAnswer, m.c, m);
+						var a = A2($author$project$Survey$getAnswer, m.b, m);
 						var next = _Utils_update(
 							a,
 							{
-								v: $elm$core$Maybe$Just(grade)
+								y: $elm$core$Maybe$Just(grade)
 							});
 						return _Utils_eq(
-							a.v,
+							a.y,
 							$elm$core$Maybe$Just(grade)) ? _Utils_Tuple2(m, $elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 							_Utils_update(
 								m,
 								{
-									i: A3($elm$core$Dict$insert, m.c, next, m.i),
-									j: '',
-									e: (!m.e) ? 1 : m.e
+									h: A3($elm$core$Dict$insert, m.b, next, m.h),
+									i: '',
+									f: (!m.f) ? 1 : m.f
 								}),
 							A3(
 								$author$project$Survey$event,
@@ -6664,43 +6914,43 @@ var $author$project$Survey$update = F2(
 										_Utils_Tuple2(
 										'initial',
 										$elm$json$Json$Encode$bool(
-											_Utils_eq(a.a0, $elm$core$Maybe$Nothing)))
+											_Utils_eq(a.a3, $elm$core$Maybe$Nothing)))
 									])));
 					} else {
 						return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 					}
 				case 4:
-					if (m.ag) {
+					if (m.ah) {
 						return _Utils_Tuple2(
 							_Utils_update(
 								m,
-								{ag: false}),
+								{ah: false}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						if ((!m.l) || m.E) {
+						if ((!m.k) || m.F) {
 							return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 						} else {
 							if (_Utils_eq(
-								A2($author$project$Survey$getAnswer, m.c, m).v,
+								A2($author$project$Survey$getAnswer, m.b, m).y,
 								$elm$core$Maybe$Nothing)) {
 								return _Utils_Tuple2(
 									_Utils_update(
 										m,
-										{j: 'Donnez d’abord une note à cette rédaction.'}),
+										{i: 'Donnez d’abord une note à cette rédaction.'}),
 									$elm$core$Platform$Cmd$none);
 							} else {
-								var a = A2($author$project$Survey$getAnswer, m.c, m);
+								var a = A2($author$project$Survey$getAnswer, m.b, m);
 								var rated = _Utils_update(
 									a,
 									{
-										a0: _Utils_eq(a.a0, $elm$core$Maybe$Nothing) ? a.v : a.a0
+										a3: _Utils_eq(a.a3, $elm$core$Maybe$Nothing) ? a.y : a.a3
 									});
 								return _Utils_Tuple2(
 									_Utils_update(
 										m,
 										{
-											i: A3($elm$core$Dict$insert, m.c, rated, m.i),
-											E: true
+											h: A3($elm$core$Dict$insert, m.b, rated, m.h),
+											F: true
 										}),
 									A2(
 										$author$project$Survey$emit,
@@ -6709,7 +6959,7 @@ var $author$project$Survey$update = F2(
 											[
 												_Utils_Tuple2(
 												'id',
-												$elm$json$Json$Encode$string(m.c))
+												$elm$json$Json$Encode$string(m.b))
 											])));
 							}
 						}
@@ -6719,10 +6969,10 @@ var $author$project$Survey$update = F2(
 						_Utils_update(
 							m,
 							{
-								E: false,
-								j: '',
-								l: false,
-								e: (m.e === 1) ? 2 : m.e
+								F: false,
+								i: '',
+								k: false,
+								f: (m.f === 1) ? 2 : m.f
 							}),
 						A3($author$project$Survey$event, m, 'close', _List_Nil));
 				case 6:
@@ -6733,7 +6983,7 @@ var $author$project$Survey$update = F2(
 					var valid = A2(
 						$elm$core$List$any,
 						function (v) {
-							return _Utils_eq(v.b, id);
+							return _Utils_eq(v.c, id);
 						},
 						A2(
 							$elm$core$List$take,
@@ -6742,34 +6992,34 @@ var $author$project$Survey$update = F2(
 								1,
 								A2(
 									$elm$core$Dict$get,
-									$author$project$Survey$current(m).b,
-									m.B)),
-							$author$project$Survey$current(m).H));
+									$author$project$Survey$current(m).c,
+									m.w)),
+							$author$project$Survey$current(m).L));
 					var a = A2($author$project$Survey$getAnswer, id, m);
 					var next = _Utils_update(
 						a,
 						{
-							P: committed ? A2($author$project$Survey$Model$touchAxis, axis, a.P) : a.P,
-							ay: A3($author$project$Survey$Model$move, axis, value, a.ay)
+							Q: committed ? A2($author$project$Survey$Model$touchAxis, axis, a.Q) : a.Q,
+							aA: A3($author$project$Survey$Model$move, axis, value, a.aA)
 						});
 					return (valid && (A2(
 						$elm$core$List$member,
 						axis,
 						_List_fromArray(
-							['x', 'y', 'z'])) && ((!_Utils_eq(a.v, $elm$core$Maybe$Nothing)) && (!m.l)))) ? _Utils_Tuple2(
+							['x', 'y', 'z'])) && ((!_Utils_eq(a.y, $elm$core$Maybe$Nothing)) && (!m.k)))) ? _Utils_Tuple2(
 						_Utils_update(
 							m,
 							{
-								i: A3($elm$core$Dict$insert, id, next, m.i),
-								j: '',
-								c: id,
-								e: (committed && (((m.e === 2) && (axis === 'x')) || (((m.e === 3) && (axis === 'y')) || ((m.e === 4) && (axis === 'z'))))) ? (m.e + 1) : m.e
+								h: A3($elm$core$Dict$insert, id, next, m.h),
+								i: '',
+								b: id,
+								f: (committed && (((m.f === 2) && (axis === 'x')) || (((m.f === 3) && (axis === 'y')) || ((m.f === 4) && (axis === 'z'))))) ? (m.f + 1) : m.f
 							}),
 						committed ? A3(
 							$author$project$Survey$event,
 							_Utils_update(
 								m,
-								{c: id}),
+								{b: id}),
 							'place',
 							_List_fromArray(
 								[
@@ -6778,25 +7028,25 @@ var $author$project$Survey$update = F2(
 									$elm$json$Json$Encode$string(axis)),
 									_Utils_Tuple2(
 									'coordinates',
-									$author$project$Survey$Model$encodePoint(next.ay))
+									$author$project$Survey$Model$encodePoint(next.aA))
 								])) : $elm$core$Platform$Cmd$none) : _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 				case 7:
-					var a = A2($author$project$Survey$getAnswer, m.c, m);
-					return ((!_Utils_eq(a.v, $elm$core$Maybe$Nothing)) && ((!m.l) && (m.f !== 1))) ? _Utils_Tuple2(
+					var a = A2($author$project$Survey$getAnswer, m.b, m);
+					return ((!_Utils_eq(a.y, $elm$core$Maybe$Nothing)) && ((!m.k) && (m.e !== 1))) ? _Utils_Tuple2(
 						_Utils_update(
 							m,
 							{
-								i: A3(
+								h: A3(
 									$elm$core$Dict$insert,
-									m.c,
+									m.b,
 									_Utils_update(
 										a,
 										{
-											P: _List_fromArray(
+											Q: _List_fromArray(
 												['x', 'y', 'z'])
 										}),
-									m.i),
-								j: ''
+									m.h),
+								i: ''
 							}),
 						A3(
 							$author$project$Survey$event,
@@ -6806,14 +7056,14 @@ var $author$project$Survey$update = F2(
 								[
 									_Utils_Tuple2(
 									'coordinates',
-									$author$project$Survey$Model$encodePoint(a.ay))
+									$author$project$Survey$Model$encodePoint(a.aA))
 								]))) : _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 				case 8:
 					var id = msg.a;
 					return A2(
 						$elm$core$List$any,
 						function (v) {
-							return _Utils_eq(v.b, id);
+							return _Utils_eq(v.c, id);
 						},
 						A2(
 							$elm$core$List$take,
@@ -6822,23 +7072,23 @@ var $author$project$Survey$update = F2(
 								1,
 								A2(
 									$elm$core$Dict$get,
-									$author$project$Survey$current(m).b,
-									m.B)),
-							$author$project$Survey$current(m).H)) ? _Utils_Tuple2(
+									$author$project$Survey$current(m).c,
+									m.w)),
+							$author$project$Survey$current(m).L)) ? _Utils_Tuple2(
 						_Utils_update(
 							m,
 							{
-								E: false,
-								j: '',
-								l: true,
-								c: id,
-								e: (m.e === 6) ? 7 : m.e
+								F: false,
+								i: '',
+								k: true,
+								b: id,
+								f: (m.f === 6) ? 7 : m.f
 							}),
 						A3(
 							$author$project$Survey$event,
 							_Utils_update(
 								m,
-								{c: id}),
+								{b: id}),
 							'open',
 							_List_Nil)) : _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 				case 9:
@@ -6846,9 +7096,9 @@ var $author$project$Survey$update = F2(
 					var count = A2(
 						$elm$core$Maybe$withDefault,
 						1,
-						A2($elm$core$Dict$get, q.b, m.B));
-					var a = A2($author$project$Survey$getAnswer, m.c, m);
-					var confirmation = ($elm$core$List$length(a.P) < 3) ? A3(
+						A2($elm$core$Dict$get, q.c, m.w));
+					var a = A2($author$project$Survey$getAnswer, m.b, m);
+					var confirmation = ($elm$core$List$length(a.Q) < 3) ? A3(
 						$author$project$Survey$event,
 						m,
 						'confirm-position',
@@ -6856,7 +7106,7 @@ var $author$project$Survey$update = F2(
 							[
 								_Utils_Tuple2(
 								'coordinates',
-								$author$project$Survey$Model$encodePoint(a.ay)),
+								$author$project$Survey$Model$encodePoint(a.aA)),
 								_Utils_Tuple2(
 								'source',
 								$elm$json$Json$Encode$string('next-production'))
@@ -6864,49 +7114,49 @@ var $author$project$Survey$update = F2(
 					var confirmed = _Utils_update(
 						m,
 						{
-							i: A3(
+							h: A3(
 								$elm$core$Dict$insert,
-								m.c,
+								m.b,
 								_Utils_update(
 									a,
 									{
-										P: _List_fromArray(
+										Q: _List_fromArray(
 											['x', 'y', 'z'])
 									}),
-								m.i)
+								m.h)
 						});
-					if ((m.f === 1) || (m.l || m.E)) {
+					if ((m.e === 1) || (m.k || m.F)) {
 						return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 					} else {
-						if (_Utils_eq(a.v, $elm$core$Maybe$Nothing)) {
+						if (_Utils_eq(a.y, $elm$core$Maybe$Nothing)) {
 							return _Utils_Tuple2(
 								_Utils_update(
 									m,
-									{j: 'Donnez d’abord une note à cette rédaction.', l: true}),
+									{i: 'Donnez d’abord une note à cette rédaction.', k: true}),
 								$elm$core$Platform$Cmd$none);
 						} else {
 							if (_Utils_cmp(
 								count,
-								$elm$core$List$length(q.H)) < 0) {
+								$elm$core$List$length(q.L)) < 0) {
 								var id = A2(
 									$elm$core$Maybe$withDefault,
 									'',
 									A2(
 										$elm$core$Maybe$map,
 										function ($) {
-											return $.b;
+											return $.c;
 										},
 										$elm$core$List$head(
-											A2($elm$core$List$drop, count, q.H))));
+											A2($elm$core$List$drop, count, q.L))));
 								return _Utils_Tuple2(
 									_Utils_update(
 										confirmed,
 										{
-											E: false,
-											B: A3($elm$core$Dict$insert, q.b, count + 1, m.B),
-											j: '',
-											l: true,
-											c: id
+											F: false,
+											w: A3($elm$core$Dict$insert, q.c, count + 1, m.w),
+											i: '',
+											k: true,
+											b: id
 										}),
 									$elm$core$Platform$Cmd$batch(
 										_List_fromArray(
@@ -6916,18 +7166,18 @@ var $author$project$Survey$update = F2(
 												$author$project$Survey$event,
 												_Utils_update(
 													m,
-													{c: id}),
+													{b: id}),
 												'reveal',
 												_List_Nil)
 											])));
 							} else {
-								if (A2($author$project$Survey$Model$complete, confirmed.i, q)) {
+								if (A2($author$project$Survey$Model$complete, confirmed.h, q)) {
 									var _v4 = (_Utils_cmp(
-										m.C + 1,
-										$elm$core$List$length(m.w)) < 0) ? A2(
-										$author$project$Survey$update,
-										$author$project$Survey$GoQuestion(m.C + 1),
-										confirmed) : A2($author$project$Survey$update, $author$project$Survey$Finish, confirmed);
+										m.x + 1,
+										$elm$core$List$length(m.D)) < 0) ? A2(
+										$author$project$Survey$updateCore,
+										$author$project$Survey$GoQuestion(m.x + 1),
+										confirmed) : A2($author$project$Survey$updateCore, $author$project$Survey$Finish, confirmed);
 									var advanced = _v4.a;
 									var command = _v4.b;
 									return _Utils_Tuple2(
@@ -6939,23 +7189,23 @@ var $author$project$Survey$update = F2(
 									var remaining = A2(
 										$elm$core$List$filter,
 										function (p) {
-											var answer = A2($author$project$Survey$getAnswer, p.b, confirmed);
-											return _Utils_eq(answer.v, $elm$core$Maybe$Nothing) || ($elm$core$List$length(answer.P) < 3);
+											var answer = A2($author$project$Survey$getAnswer, p.c, confirmed);
+											return _Utils_eq(answer.y, $elm$core$Maybe$Nothing) || ($elm$core$List$length(answer.Q) < 3);
 										},
-										q.H);
+										q.L);
 									var id = A2(
 										$elm$core$Maybe$withDefault,
-										m.c,
+										m.b,
 										A2(
 											$elm$core$Maybe$map,
 											function ($) {
-												return $.b;
+												return $.c;
 											},
 											$elm$core$List$head(remaining)));
 									return _Utils_Tuple2(
 										_Utils_update(
 											confirmed,
-											{E: false, j: 'Terminez l’évaluation de cette rédaction pour poursuivre.', l: true, c: id}),
+											{F: false, i: 'Terminez l’évaluation de cette rédaction pour poursuivre.', k: true, b: id}),
 										$elm$core$Platform$Cmd$batch(
 											_List_fromArray(
 												[
@@ -6964,7 +7214,7 @@ var $author$project$Survey$update = F2(
 													$author$project$Survey$event,
 													_Utils_update(
 														m,
-														{c: id}),
+														{b: id}),
 													'open',
 													_List_Nil)
 												])));
@@ -6976,7 +7226,7 @@ var $author$project$Survey$update = F2(
 					var idx = msg.a;
 					if ((idx >= 0) && (_Utils_cmp(
 						idx,
-						$elm$core$List$length(m.w)) < 0)) {
+						$elm$core$List$length(m.D)) < 0)) {
 						var next = A2($author$project$Survey$openQuestion, idx, m);
 						return _Utils_Tuple2(
 							next,
@@ -6988,18 +7238,18 @@ var $author$project$Survey$update = F2(
 					var next = _Utils_update(
 						m,
 						{
-							ad: A2(
+							Z: A2(
 								$elm$core$List$member,
-								$author$project$Survey$current(m).b,
-								m.ad) ? m.ad : A2(
+								$author$project$Survey$current(m).c,
+								m.Z) ? m.Z : A2(
 								$elm$core$List$cons,
-								$author$project$Survey$current(m).b,
-								m.ad)
+								$author$project$Survey$current(m).c,
+								m.Z)
 						});
 					if (_Utils_cmp(
-						m.C + 1,
-						$elm$core$List$length(m.w)) < 0) {
-						var following = A2($author$project$Survey$openQuestion, m.C + 1, next);
+						m.x + 1,
+						$elm$core$List$length(m.D)) < 0) {
+						var following = A2($author$project$Survey$openQuestion, m.x + 1, next);
 						return _Utils_Tuple2(
 							following,
 							$elm$core$Platform$Cmd$batch(
@@ -7012,131 +7262,88 @@ var $author$project$Survey$update = F2(
 						return _Utils_Tuple2(
 							_Utils_update(
 								next,
-								{f: 3, l: false}),
+								{e: 3, k: false}),
 							A3($author$project$Survey$event, m, 'skip', _List_Nil));
 					}
 				case 12:
 					return _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{f: 3, l: false}),
+							{e: 3, k: false}),
 						A3($author$project$Survey$event, m, 'finish', _List_Nil));
 				case 13:
 					return _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{f: 2, l: false}),
+							{e: 2, k: false}),
 						$elm$core$Platform$Cmd$none);
-				case 15:
-					return _Utils_Tuple2(
-						_Utils_update(
-							m,
-							{j: '', f: 0, l: false}),
-						$elm$core$Platform$Cmd$none);
-				case 14:
-					return _Utils_Tuple2(
-						m,
-						A2(
-							$author$project$Survey$emit,
-							'export',
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'bankVersion',
-									$elm$json$Json$Encode$string(m.bA)),
-									_Utils_Tuple2(
-									'levels',
-									A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, m.Q)),
-									_Utils_Tuple2(
-									'questionOrder',
-									A2(
-										$elm$json$Json$Encode$list,
-										A2(
-											$elm$core$Basics$composeL,
-											$elm$json$Json$Encode$string,
-											function ($) {
-												return $.b;
-											}),
-										m.w)),
-									_Utils_Tuple2(
-									'productionOrder',
-									$elm$json$Json$Encode$object(
-										A2(
-											$elm$core$List$map,
-											function (q) {
-												return _Utils_Tuple2(
-													q.b,
-													A2(
-														$elm$json$Json$Encode$list,
-														A2(
-															$elm$core$Basics$composeL,
-															$elm$json$Json$Encode$string,
-															function ($) {
-																return $.b;
-															}),
-														q.H));
-											},
-											m.w))),
-									_Utils_Tuple2(
-									'answers',
-									$elm$json$Json$Encode$object(
-										A2(
-											$elm$core$List$map,
-											$elm$core$Tuple$mapSecond($author$project$Survey$Model$encodeAnswer),
-											A2(
-												$elm$core$List$filter,
-												function (_v5) {
-													var k = _v5.a;
-													return !A2($elm$core$String$startsWith, 'practice', k);
-												},
-												$elm$core$Dict$toList(m.i))))),
-									_Utils_Tuple2(
-									'skippedQuestions',
-									A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, m.ad))
-								])));
 				case 16:
 					return _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{
-								i: A2($elm$core$Dict$remove, 'practice-1', m.i),
-								E: false,
-								B: A3($elm$core$Dict$insert, 'practice', 1, m.B),
-								j: '',
-								f: 1,
-								l: true,
-								c: 'practice-1',
-								e: 0
-							}),
-						$elm$core$Platform$Cmd$none);
+							{i: '', e: 0, k: false, am: '', m: 'idle'}),
+						A2($author$project$Survey$emit, 'restart', _List_Nil));
+				case 14:
+					return _Utils_Tuple2(
+						_Utils_update(
+							m,
+							{am: '', m: 'submitting'}),
+						A2(
+							$author$project$Survey$emit,
+							'submit',
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'snapshot',
+									$author$project$Survey$encodeSnapshot(m))
+								])));
+				case 15:
+					return _Utils_Tuple2(
+						m,
+						A2($author$project$Survey$emit, 'retry-save', _List_Nil));
 				case 17:
-					var next = A2(
-						$author$project$Survey$openQuestion,
-						m.C,
+					return _Utils_Tuple2(
 						_Utils_update(
 							m,
 							{
-								i: A2($elm$core$Dict$remove, 'practice-1', m.i),
-								f: 2,
-								e: -1
+								h: A2($elm$core$Dict$remove, 'practice-1', m.h),
+								F: false,
+								w: A3($elm$core$Dict$insert, 'practice', 1, m.w),
+								i: '',
+								e: 1,
+								k: true,
+								b: 'practice-1',
+								f: 0
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 18:
+					var next = A2(
+						$author$project$Survey$openQuestion,
+						m.x,
+						_Utils_update(
+							m,
+							{
+								h: A2($elm$core$Dict$remove, 'practice-1', m.h),
+								e: 2,
+								f: -1
 							}));
 					return _Utils_Tuple2(
 						next,
 						A3($author$project$Survey$event, next, 'question', _List_Nil));
-				case 18:
+				case 19:
 					var other = A2(
 						$elm$core$Maybe$withDefault,
-						m.c,
+						m.b,
 						A2(
 							$elm$core$Maybe$map,
 							function ($) {
-								return $.b;
+								return $.c;
 							},
 							$elm$core$List$head(
 								A2(
 									$elm$core$List$filter,
 									function (v) {
-										return !_Utils_eq(v.b, m.c);
+										return !_Utils_eq(v.c, m.b);
 									},
 									A2(
 										$elm$core$List$take,
@@ -7145,27 +7352,89 @@ var $author$project$Survey$update = F2(
 											1,
 											A2(
 												$elm$core$Dict$get,
-												$author$project$Survey$current(m).b,
-												m.B)),
-										$author$project$Survey$current(m).H)))));
+												$author$project$Survey$current(m).c,
+												m.w)),
+										$author$project$Survey$current(m).L)))));
 					return _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{ag: true, aJ: other}),
+							{ah: true, aM: other}),
 						A3($author$project$Survey$event, m, 'compare', _List_Nil));
-				case 19:
+				case 20:
 					var id = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							m,
-							{aJ: id}),
+							{aM: id}),
 						$elm$core$Platform$Cmd$none);
 				default:
 					return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 			}
 		}
 	});
-var $author$project$Survey$Help = {$: 16};
+var $author$project$Survey$update = F2(
+	function (msg, m) {
+		var persist = function () {
+			switch (msg.$) {
+				case 2:
+					var raw = msg.a;
+					return A2(
+						$elm$core$Result$withDefault,
+						false,
+						A2(
+							$elm$core$Result$map,
+							function (kind) {
+								return A2(
+									$elm$core$List$member,
+									kind,
+									_List_fromArray(
+										['session', 'closed', 'orbit']));
+							},
+							A2(
+								$elm$json$Json$Decode$decodeValue,
+								A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string),
+								raw)));
+				case 6:
+					var committed = msg.d;
+					return committed;
+				case 14:
+					return false;
+				case 15:
+					return false;
+				default:
+					return true;
+			}
+		}();
+		var _v0 = A2($author$project$Survey$updateCore, msg, m);
+		var next = _v0.a;
+		var command = _v0.b;
+		return _Utils_Tuple2(
+			next,
+			$elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						command,
+						(persist && ((!(!next.e)) && (next.m !== 'completed'))) ? A2(
+						$author$project$Survey$emit,
+						'checkpoint',
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'snapshot',
+								$author$project$Survey$encodeSnapshot(next))
+							])) : $elm$core$Platform$Cmd$none
+					])));
+	});
+var $author$project$Survey$Help = {$: 17};
+var $author$project$Survey$RetrySave = {$: 15};
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7175,14 +7444,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(
 		_VirtualDom_noScript(tag));
@@ -7260,9 +7521,9 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $author$project$Survey$Export = {$: 14};
-var $author$project$Survey$Restart = {$: 15};
+var $author$project$Survey$Restart = {$: 16};
 var $author$project$Survey$Return = {$: 13};
+var $author$project$Survey$Submit = {$: 14};
 var $author$project$Survey$btn = F3(
 	function (cls, txt, msg) {
 		return A2(
@@ -7284,8 +7545,8 @@ var $author$project$Survey$viewFinish = function (m) {
 	var done = $elm$core$List$length(
 		A2(
 			$elm$core$List$filter,
-			$author$project$Survey$Model$complete(m.i),
-			m.w));
+			$author$project$Survey$Model$complete(m.h),
+			m.D));
 	return A2(
 		$elm$html$Html$section,
 		_List_fromArray(
@@ -7331,7 +7592,7 @@ var $author$project$Survey$viewFinish = function (m) {
 					[
 						$elm$html$Html$text(
 						$elm$core$String$fromInt(done) + (' question' + (((done > 1) ? 's' : '') + (' entièrement évaluée' + (((done > 1) ? 's' : '') + (' sur ' + ($elm$core$String$fromInt(
-							$elm$core$List$length(m.w)) + '.')))))))
+							$elm$core$List$length(m.D)) + '.')))))))
 					])),
 				A2(
 				$elm$html$Html$p,
@@ -7341,9 +7602,10 @@ var $author$project$Survey$viewFinish = function (m) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Vous pouvez encore revenir sur vos réponses. Exportez-les pour les conserver avant de quitter cette page.')
+						$elm$html$Html$text(
+						(m.m === 'completed') ? 'Vos réponses ont bien été reçues. Merci pour votre participation.' : 'Vous pouvez encore revoir vos réponses, puis valider votre participation.')
 					])),
-				A2(
+				(m.m === 'completed') ? A3($author$project$Survey$btn, 'quiet', 'Nouvelle participation', $author$project$Survey$Restart) : A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
@@ -7356,16 +7618,28 @@ var $author$project$Survey$viewFinish = function (m) {
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('primary'),
-								$elm$html$Html$Events$onClick($author$project$Survey$Export)
+								$elm$html$Html$Events$onClick($author$project$Survey$Submit),
+								$elm$html$Html$Attributes$disabled(m.m === 'submitting')
 							]),
 						_List_fromArray(
 							[
-								$author$project$Survey$icon('download'),
-								$elm$html$Html$text('Exporter mes réponses')
+								$author$project$Survey$icon('check'),
+								$elm$html$Html$text(
+								(m.m === 'submitting') ? 'Validation en cours…' : 'Valider ma participation')
 							])),
-						A3($author$project$Survey$btn, 'secondary', 'Revenir aux questions', $author$project$Survey$Return)
-					])),
-				A3($author$project$Survey$btn, 'quiet', 'Nouvelle session', $author$project$Survey$Restart)
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('secondary'),
+								$elm$html$Html$Events$onClick($author$project$Survey$Return),
+								$elm$html$Html$Attributes$disabled((m.m === 'submitting') || (m.m === 'submit-error'))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Revenir aux questions')
+							]))
+					]))
 			]));
 };
 var $author$project$Survey$Begin = {$: 1};
@@ -7391,11 +7665,6 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -7463,7 +7732,7 @@ var $author$project$Survey$viewSetup = function (m) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Vos réponses restent dans cette page jusqu’à leur export. Un rechargement les efface.')
+										$elm$html$Html$text('Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche.')
 									]))
 							]))
 					])),
@@ -7501,7 +7770,7 @@ var $author$project$Survey$viewSetup = function (m) {
 													_Utils_Tuple2('level-option', true),
 													_Utils_Tuple2(
 													'checked',
-													A2($elm$core$List$member, l, m.Q))
+													A2($elm$core$List$member, l, m.R))
 												]))
 										]),
 									_List_fromArray(
@@ -7512,7 +7781,7 @@ var $author$project$Survey$viewSetup = function (m) {
 												[
 													$elm$html$Html$Attributes$type_('checkbox'),
 													$elm$html$Html$Attributes$checked(
-													A2($elm$core$List$member, l, m.Q)),
+													A2($elm$core$List$member, l, m.R)),
 													$elm$html$Html$Events$onCheck(
 													$author$project$Survey$ToggleLevel(l))
 												]),
@@ -7539,7 +7808,7 @@ var $author$project$Survey$viewSetup = function (m) {
 											$author$project$Survey$icon('check')
 										]));
 							},
-							m.bc)),
+							m.bf)),
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
@@ -7561,12 +7830,12 @@ var $author$project$Survey$viewSetup = function (m) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(m.j)
+								$elm$html$Html$text(m.i)
 							]))
 					]))
 			]));
 };
-var $author$project$Survey$Compare = {$: 18};
+var $author$project$Survey$Compare = {$: 19};
 var $author$project$Survey$Confirm = {$: 7};
 var $author$project$Survey$NextProduction = {$: 9};
 var $author$project$Survey$Open = function (a) {
@@ -7583,10 +7852,8 @@ var $author$project$Survey$Model$axes = _List_fromArray(
 		_Utils_Tuple3('y', 'Vague', 'Précis'),
 		_Utils_Tuple3('z', 'Fautif', 'Valide')
 	]);
-var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$json$Json$Decode$map4 = _Json_map4;
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -7612,12 +7879,12 @@ var $author$project$Survey$number = F2(
 						$elm$core$List$filter,
 						function (_v0) {
 							var v = _v0.b;
-							return _Utils_eq(v.b, id);
+							return _Utils_eq(v.c, id);
 						},
 						A2(
 							$elm$core$List$indexedMap,
 							$elm$core$Tuple$pair,
-							$author$project$Survey$current(m).H)))));
+							$author$project$Survey$current(m).L)))));
 	});
 var $author$project$Survey$rich = function (content) {
 	return A3(
@@ -7629,7 +7896,6 @@ var $author$project$Survey$rich = function (content) {
 			]),
 		_List_Nil);
 };
-var $elm$json$Json$Encode$int = _Json_wrap;
 var $author$project$Survey$spacePayload = F2(
 	function (m, shown) {
 		return A2(
@@ -7640,43 +7906,43 @@ var $author$project$Survey$spacePayload = F2(
 					[
 						_Utils_Tuple2(
 						'selected',
-						$elm$json$Json$Encode$string(m.c)),
+						$elm$json$Json$Encode$string(m.b)),
 						_Utils_Tuple2(
 						'reader',
-						$elm$json$Json$Encode$bool(m.l)),
+						$elm$json$Json$Encode$bool(m.k)),
 						_Utils_Tuple2(
 						'question',
 						$elm$json$Json$Encode$string(
-							$author$project$Survey$current(m).b)),
+							$author$project$Survey$current(m).c)),
 						_Utils_Tuple2(
 						'points',
 						A2(
 							$elm$json$Json$Encode$list,
 							function (v) {
-								var a = A2($author$project$Survey$getAnswer, v.b, m);
+								var a = A2($author$project$Survey$getAnswer, v.c, m);
 								return $elm$json$Json$Encode$object(
 									_List_fromArray(
 										[
 											_Utils_Tuple2(
 											'id',
-											$elm$json$Json$Encode$string(v.b)),
+											$elm$json$Json$Encode$string(v.c)),
 											_Utils_Tuple2(
 											'number',
 											$elm$json$Json$Encode$int(
-												A2($author$project$Survey$number, v.b, m))),
+												A2($author$project$Survey$number, v.c, m))),
 											_Utils_Tuple2(
 											'content',
-											$elm$json$Json$Encode$string(v.ar)),
+											$elm$json$Json$Encode$string(v.at)),
 											_Utils_Tuple2(
 											'point',
-											$author$project$Survey$Model$encodePoint(a.ay)),
+											$author$project$Survey$Model$encodePoint(a.aA)),
 											_Utils_Tuple2(
 											'judged',
-											A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, a.P)),
+											A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, a.Q)),
 											_Utils_Tuple2(
 											'graded',
 											$elm$json$Json$Encode$bool(
-												!_Utils_eq(a.v, $elm$core$Maybe$Nothing)))
+												!_Utils_eq(a.y, $elm$core$Maybe$Nothing)))
 										]));
 							},
 							shown))
@@ -7685,20 +7951,20 @@ var $author$project$Survey$spacePayload = F2(
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Survey$CompareWith = function (a) {
-	return {$: 19, a: a};
+	return {$: 20, a: a};
 };
 var $elm$html$Html$article = _VirtualDom_node('article');
 var $author$project$Survey$chosen = function (m) {
 	return A2(
 		$elm$core$Maybe$withDefault,
-		{ar: '', b: ''},
+		{at: '', c: ''},
 		$elm$core$List$head(
 			A2(
 				$elm$core$List$filter,
 				function (v) {
-					return _Utils_eq(v.b, m.c);
+					return _Utils_eq(v.c, m.b);
 				},
-				$author$project$Survey$current(m).H)));
+				$author$project$Survey$current(m).L)));
 };
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -7740,7 +8006,7 @@ var $author$project$Survey$viewCompare = F2(
 				A2(
 					$elm$core$List$filter,
 					function (v) {
-						return _Utils_eq(v.b, m.aJ);
+						return _Utils_eq(v.c, m.aM);
 					},
 					shown)));
 		return A2(
@@ -7815,10 +8081,10 @@ var $author$project$Survey$viewCompare = F2(
 												[
 													$elm$html$Html$text(
 													'Rédaction ' + $elm$core$String$fromInt(
-														A2($author$project$Survey$number, m.c, m)))
+														A2($author$project$Survey$number, m.b, m)))
 												])),
 											$author$project$Survey$rich(
-											$author$project$Survey$chosen(m).ar)
+											$author$project$Survey$chosen(m).at)
 										])),
 									A2(
 									$elm$html$Html$article,
@@ -7839,19 +8105,19 @@ var $author$project$Survey$viewCompare = F2(
 														$elm$html$Html$option,
 														_List_fromArray(
 															[
-																$elm$html$Html$Attributes$value(v.b),
+																$elm$html$Html$Attributes$value(v.c),
 																$elm$html$Html$Attributes$selected(
-																_Utils_eq(v.b, other.b))
+																_Utils_eq(v.c, other.c))
 															]),
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
 																'Rédaction ' + $elm$core$String$fromInt(
-																	A2($author$project$Survey$number, v.b, m)))
+																	A2($author$project$Survey$number, v.c, m)))
 															]));
 												},
 												shown)),
-											$author$project$Survey$rich(other.ar)
+											$author$project$Survey$rich(other.at)
 										]))
 								]))
 						]))
@@ -7873,7 +8139,7 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $author$project$Survey$viewReader = function (m) {
-	var a = A2($author$project$Survey$getAnswer, m.c, m);
+	var a = A2($author$project$Survey$getAnswer, m.b, m);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7897,7 +8163,7 @@ var $author$project$Survey$viewReader = function (m) {
 					[
 						$elm$html$Html$Attributes$class('reader'),
 						$elm$html$Html$Attributes$id('reading-card'),
-						A2($elm$html$Html$Attributes$attribute, 'production-id', m.c),
+						A2($elm$html$Html$Attributes$attribute, 'production-id', m.b),
 						A2($elm$html$Html$Attributes$attribute, 'role', 'dialog'),
 						A2($elm$html$Html$Attributes$attribute, 'aria-modal', 'true'),
 						A2($elm$html$Html$Attributes$attribute, 'aria-labelledby', 'reader-title'),
@@ -7938,7 +8204,7 @@ var $author$project$Survey$viewReader = function (m) {
 											[
 												$elm$html$Html$text(
 												'Rédaction ' + $elm$core$String$fromInt(
-													A2($author$project$Survey$number, m.c, m)))
+													A2($author$project$Survey$number, m.b, m)))
 											]))
 									])),
 								A2(
@@ -7964,7 +8230,7 @@ var $author$project$Survey$viewReader = function (m) {
 						_List_fromArray(
 							[
 								$author$project$Survey$rich(
-								$author$project$Survey$chosen(m).ar)
+								$author$project$Survey$chosen(m).at)
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -8017,11 +8283,11 @@ var $author$project$Survey$viewReader = function (m) {
 														$elm$html$Html$Attributes$attribute,
 														'value',
 														$elm$core$String$fromFloat(
-															A2($elm$core$Maybe$withDefault, 1.5, a.v))),
+															A2($elm$core$Maybe$withDefault, 1.5, a.y))),
 														A2(
 														$elm$html$Html$Attributes$attribute,
 														'ungraded',
-														_Utils_eq(a.v, $elm$core$Maybe$Nothing) ? 'true' : 'false')
+														_Utils_eq(a.y, $elm$core$Maybe$Nothing) ? 'true' : 'false')
 													]),
 												_List_fromArray(
 													[
@@ -8036,7 +8302,7 @@ var $author$project$Survey$viewReader = function (m) {
 																$elm$html$Html$Attributes$step('0.25'),
 																$elm$html$Html$Attributes$value(
 																$elm$core$String$fromFloat(
-																	A2($elm$core$Maybe$withDefault, 1.5, a.v))),
+																	A2($elm$core$Maybe$withDefault, 1.5, a.y))),
 																$elm$html$Html$Events$onInput($author$project$Survey$Grade),
 																A2(
 																$elm$html$Html$Events$on,
@@ -8054,7 +8320,7 @@ var $author$project$Survey$viewReader = function (m) {
 																	[
 																		_Utils_Tuple2(
 																		'ungraded',
-																		_Utils_eq(a.v, $elm$core$Maybe$Nothing))
+																		_Utils_eq(a.y, $elm$core$Maybe$Nothing))
 																	])),
 																A2($elm$html$Html$Attributes$attribute, 'aria-label', 'Note sur 3'),
 																A2($elm$html$Html$Attributes$attribute, 'aria-describedby', 'grade-help')
@@ -8079,7 +8345,7 @@ var $author$project$Survey$viewReader = function (m) {
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												_Utils_eq(a.v, $elm$core$Maybe$Nothing) ? 'Choisissez une note pour poursuivre.' : 'Vous pourrez revenir sur cette note.')
+												_Utils_eq(a.y, $elm$core$Maybe$Nothing) ? 'Choisissez une note pour poursuivre.' : 'Vous pourrez revenir sur cette note.')
 											]))
 									])),
 								A2(
@@ -8090,7 +8356,7 @@ var $author$project$Survey$viewReader = function (m) {
 										$elm$html$Html$Attributes$id('place-button'),
 										$elm$html$Html$Events$onClick($author$project$Survey$Close),
 										$elm$html$Html$Attributes$disabled(
-										_Utils_eq(a.v, $elm$core$Maybe$Nothing) || m.E)
+										_Utils_eq(a.y, $elm$core$Maybe$Nothing) || m.F)
 									]),
 								_List_fromArray(
 									[
@@ -8106,16 +8372,16 @@ var $author$project$Survey$viewReader = function (m) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text(m.j)
+										$elm$html$Html$text(m.i)
 									]))
 							]))
 					]))
 			]));
 };
-var $author$project$Survey$TourNext = {$: 17};
+var $author$project$Survey$TourNext = {$: 18};
 var $author$project$Survey$viewTour = function (m) {
 	var _v0 = function () {
-		var _v1 = m.e;
+		var _v1 = m.f;
 		switch (_v1) {
 			case 0:
 				return _Utils_Tuple3('#reading-card', 'D’abord, votre note', 'Lisez cette rédaction, puis attrapez la bille pour lui donner une note. Les deux traits intermédiaires marquent un et deux points. Le déplacement avance par quarts de point, indépendamment des trois axes.');
@@ -8147,7 +8413,7 @@ var $author$project$Survey$viewTour = function (m) {
 				A2(
 				$elm$html$Html$Attributes$attribute,
 				'step',
-				$elm$core$String$fromInt(m.e))
+				$elm$core$String$fromInt(m.f))
 			]),
 		_List_fromArray(
 			[
@@ -8173,7 +8439,7 @@ var $author$project$Survey$viewTour = function (m) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										'PRISE EN MAIN · ' + ($elm$core$String$fromInt(m.e + 1) + ' / 8'))
+										'PRISE EN MAIN · ' + ($elm$core$String$fromInt(m.f + 1) + ' / 8'))
 									])),
 								A2(
 								$elm$html$Html$div,
@@ -8190,7 +8456,7 @@ var $author$project$Survey$viewTour = function (m) {
 														[
 															_Utils_Tuple2(
 															'done',
-															_Utils_cmp(i, m.e) < 1)
+															_Utils_cmp(i, m.f) < 1)
 														]))
 												]),
 											_List_Nil);
@@ -8211,7 +8477,7 @@ var $author$project$Survey$viewTour = function (m) {
 							[
 								$elm$html$Html$text(body)
 							])),
-						(m.e === 7) ? A3($author$project$Survey$btn, 'primary', 'Commencer mes questions', $author$project$Survey$TourNext) : A2(
+						(m.f === 7) ? A3($author$project$Survey$btn, 'primary', 'Commencer mes questions', $author$project$Survey$TourNext) : A2(
 						$elm$html$Html$p,
 						_List_fromArray(
 							[
@@ -8232,17 +8498,17 @@ var $author$project$Survey$viewWorkspace = function (m) {
 		A2(
 			$elm$core$Maybe$withDefault,
 			1,
-			A2($elm$core$Dict$get, q.b, m.B)),
-		q.H);
+			A2($elm$core$Dict$get, q.c, m.w)),
+		q.L);
 	var isLast = _Utils_eq(
 		$elm$core$List$length(shown),
-		$elm$core$List$length(q.H));
+		$elm$core$List$length(q.L));
 	var done = $elm$core$List$length(
 		A2(
 			$elm$core$List$filter,
-			$author$project$Survey$Model$complete(m.i),
-			m.w));
-	var a = A2($author$project$Survey$getAnswer, m.c, m);
+			$author$project$Survey$Model$complete(m.h),
+			m.D));
+	var a = A2($author$project$Survey$getAnswer, m.b, m);
 	return A2(
 		$elm$html$Html$section,
 		_List_fromArray(
@@ -8277,8 +8543,8 @@ var $author$project$Survey$viewWorkspace = function (m) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										(m.f === 1) ? 'Essai guidé' : ('Question ' + ($elm$core$String$fromInt(m.C + 1) + (' / ' + $elm$core$String$fromInt(
-											$elm$core$List$length(m.w))))))
+										(m.e === 1) ? 'Essai guidé' : ('Question ' + ($elm$core$String$fromInt(m.x + 1) + (' / ' + $elm$core$String$fromInt(
+											$elm$core$List$length(m.D))))))
 									])),
 								A2(
 								$elm$html$Html$span,
@@ -8288,10 +8554,10 @@ var $author$project$Survey$viewWorkspace = function (m) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text(q.b2)
+										$elm$html$Html$text(q.b4)
 									]))
 							])),
-						$author$project$Survey$rich(q.cw),
+						$author$project$Survey$rich(q.cy),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -8312,7 +8578,7 @@ var $author$project$Survey$viewWorkspace = function (m) {
 											(100 * done) / A2(
 												$elm$core$Basics$max,
 												1,
-												$elm$core$List$length(m.w))) + '%')
+												$elm$core$List$length(m.D))) + '%')
 									]),
 								_List_Nil)
 							]))
@@ -8337,15 +8603,15 @@ var $author$project$Survey$viewWorkspace = function (m) {
 											_Utils_Tuple2('production-chip', true),
 											_Utils_Tuple2(
 											'selected',
-											_Utils_eq(v.b, m.c))
+											_Utils_eq(v.c, m.b))
 										])),
 									$elm$html$Html$Events$onClick(
-									$author$project$Survey$Open(v.b)),
+									$author$project$Survey$Open(v.c)),
 									A2(
 									$elm$html$Html$Attributes$attribute,
 									'aria-label',
 									'Relire la rédaction ' + $elm$core$String$fromInt(
-										A2($author$project$Survey$number, v.b, m)))
+										A2($author$project$Survey$number, v.c, m)))
 								]),
 							_List_fromArray(
 								[
@@ -8356,11 +8622,11 @@ var $author$project$Survey$viewWorkspace = function (m) {
 										[
 											$elm$html$Html$text(
 											$elm$core$String$fromInt(
-												A2($author$project$Survey$number, v.b, m)))
+												A2($author$project$Survey$number, v.c, m)))
 										])),
 									$elm$html$Html$text('Rédaction'),
 									($elm$core$List$length(
-									A2($author$project$Survey$getAnswer, v.b, m).P) === 3) ? $author$project$Survey$icon('check') : $elm$html$Html$text('')
+									A2($author$project$Survey$getAnswer, v.c, m).Q) === 3) ? $author$project$Survey$icon('check') : $elm$html$Html$text('')
 								]));
 					},
 					shown)),
@@ -8408,7 +8674,7 @@ var $author$project$Survey$viewWorkspace = function (m) {
 											[
 												$elm$html$Html$text(
 												'Rédaction ' + $elm$core$String$fromInt(
-													A2($author$project$Survey$number, m.c, m)))
+													A2($author$project$Survey$number, m.b, m)))
 											]))
 									])),
 								A2(
@@ -8473,7 +8739,7 @@ var $author$project$Survey$viewWorkspace = function (m) {
 											_List_Nil);
 									},
 									$author$project$Survey$Model$axes)),
-								($elm$core$List$length(a.P) < 3) ? A2(
+								($elm$core$List$length(a.Q) < 3) ? A2(
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
@@ -8481,7 +8747,7 @@ var $author$project$Survey$viewWorkspace = function (m) {
 										$elm$html$Html$Attributes$id('confirm-position'),
 										$elm$html$Html$Events$onClick($author$project$Survey$Confirm),
 										$elm$html$Html$Attributes$disabled(
-										_Utils_eq(a.v, $elm$core$Maybe$Nothing) || (m.f === 1))
+										_Utils_eq(a.y, $elm$core$Maybe$Nothing) || (m.e === 1))
 									]),
 								_List_fromArray(
 									[
@@ -8570,14 +8836,14 @@ var $author$project$Survey$viewWorkspace = function (m) {
 										$elm$html$Html$Attributes$class('primary next-production'),
 										$elm$html$Html$Attributes$id('next-production'),
 										$elm$html$Html$Events$onClick($author$project$Survey$NextProduction),
-										$elm$html$Html$Attributes$disabled(m.f === 1)
+										$elm$html$Html$Attributes$disabled(m.e === 1)
 									]),
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
 										isLast ? (_Utils_eq(
-											m.C + 1,
-											$elm$core$List$length(m.w)) ? 'Terminer la session' : 'Question suivante') : 'Rédaction suivante'),
+											m.x + 1,
+											$elm$core$List$length(m.D)) ? 'Terminer la session' : 'Question suivante') : 'Rédaction suivante'),
 										$author$project$Survey$icon('arrow')
 									]))
 							]))
@@ -8596,8 +8862,8 @@ var $author$project$Survey$viewWorkspace = function (m) {
 							[
 								$elm$html$Html$Attributes$class('quiet'),
 								$elm$html$Html$Events$onClick(
-								$author$project$Survey$GoQuestion(m.C - 1)),
-								$elm$html$Html$Attributes$disabled((!m.C) || (m.f === 1))
+								$author$project$Survey$GoQuestion(m.x - 1)),
+								$elm$html$Html$Attributes$disabled((!m.x) || (m.e === 1))
 							]),
 						_List_fromArray(
 							[
@@ -8613,7 +8879,7 @@ var $author$project$Survey$viewWorkspace = function (m) {
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
-								(m.j !== '') ? m.j : ((m.f === 1) ? 'Cet essai ne fait pas partie de vos réponses.' : 'Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier.'))
+								(m.i !== '') ? m.i : ((m.e === 1) ? 'Cet essai ne fait pas partie de vos réponses.' : 'Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier.'))
 							])),
 						A2(
 						$elm$html$Html$button,
@@ -8621,16 +8887,16 @@ var $author$project$Survey$viewWorkspace = function (m) {
 							[
 								$elm$html$Html$Attributes$class('quiet'),
 								$elm$html$Html$Events$onClick($author$project$Survey$Skip),
-								$elm$html$Html$Attributes$disabled(m.f === 1)
+								$elm$html$Html$Attributes$disabled(m.e === 1)
 							]),
 						_List_fromArray(
 							[
 								$elm$html$Html$text('Passer cette question')
 							]))
 					])),
-				m.l ? $author$project$Survey$viewReader(m) : $elm$html$Html$text(''),
-				m.ag ? A2($author$project$Survey$viewCompare, m, shown) : $elm$html$Html$text(''),
-				(m.f === 1) ? $author$project$Survey$viewTour(m) : $elm$html$Html$text('')
+				m.k ? $author$project$Survey$viewReader(m) : $elm$html$Html$text(''),
+				m.ah ? A2($author$project$Survey$viewCompare, m, shown) : $elm$html$Html$text(''),
+				(m.e === 1) ? $author$project$Survey$viewTour(m) : $elm$html$Html$text('')
 			]));
 };
 var $author$project$Survey$view = function (m) {
@@ -8642,7 +8908,7 @@ var $author$project$Survey$view = function (m) {
 			]),
 		_List_fromArray(
 			[
-				(!m.f) ? $elm$html$Html$text('') : A2(
+				(!m.e) ? $elm$html$Html$text('') : A2(
 				$elm$html$Html$header,
 				_List_fromArray(
 					[
@@ -8651,13 +8917,13 @@ var $author$project$Survey$view = function (m) {
 				_List_fromArray(
 					[
 						$author$project$Survey$brand,
-						((m.f === 2) || (m.f === 1)) ? A2(
+						((m.e === 2) || (m.e === 1)) ? A2(
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('quiet help-button'),
 								$elm$html$Html$Events$onClick($author$project$Survey$Help),
-								$elm$html$Html$Attributes$disabled(m.f === 1)
+								$elm$html$Html$Attributes$disabled(m.e === 1)
 							]),
 						_List_fromArray(
 							[
@@ -8675,7 +8941,7 @@ var $author$project$Survey$view = function (m) {
 							]))
 					])),
 				function () {
-				var _v0 = m.f;
+				var _v0 = m.e;
 				switch (_v0) {
 					case 0:
 						return $author$project$Survey$viewSetup(m);
@@ -8684,13 +8950,38 @@ var $author$project$Survey$view = function (m) {
 					default:
 						return $author$project$Survey$viewWorkspace(m);
 				}
-			}()
+			}(),
+				(!(!m.e)) ? A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('save-status'),
+						A2($elm$html$Html$Attributes$attribute, 'role', 'status'),
+						A2($elm$html$Html$Attributes$attribute, 'aria-live', 'polite'),
+						A2($elm$html$Html$Attributes$attribute, 'data-status', m.m)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						(m.am !== '') ? m.am : ((m.m === 'completed') ? 'Participation enregistrée et validée.' : ((m.m === 'saved') ? 'Réponses enregistrées.' : (((m.m === 'error') || (m.m === 'submit-error')) ? 'Enregistrement en attente. Vos réponses sont conservées sur cet appareil.' : 'Enregistrement en cours…')))),
+						((m.m === 'error') || (m.m === 'submit-error')) ? A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('quiet'),
+								$elm$html$Html$Events$onClick($author$project$Survey$RetrySave)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Réessayer l’enregistrement')
+							])) : $elm$html$Html$text('')
+					])) : $elm$html$Html$text('')
 			]));
 };
 var $author$project$Survey$main = $elm$browser$Browser$element(
 	{
-		da: $author$project$Survey$init,
-		dK: function (_v0) {
+		dc: $author$project$Survey$init,
+		dM: function (_v0) {
 			return $elm$core$Platform$Sub$batch(
 				_List_fromArray(
 					[
@@ -8704,7 +8995,7 @@ var $author$project$Survey$main = $elm$browser$Browser$element(
 							A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string)))
 					]));
 		},
-		dT: $author$project$Survey$update,
-		dU: $author$project$Survey$view
+		dV: $author$project$Survey$update,
+		dW: $author$project$Survey$view
 	});
 _Platform_export({'Survey':{'init':$author$project$Survey$main($elm$json$Json$Decode$value)(0)}});}(this));

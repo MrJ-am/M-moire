@@ -17,7 +17,7 @@ function expectCentersClose(a, b, tolerance = 1.5) {
 }
 
 test('drag de carte conserve 4 cartes uniques et ne declenche pas le zoom', async ({ page }) => {
-  await page.goto('/prototype.html');
+  await page.goto('prototype.html');
   await page.waitForTimeout(200);
 
   const cardA = page.getByTestId('card-A');
@@ -38,7 +38,7 @@ test('drag de carte conserve 4 cartes uniques et ne declenche pas le zoom', asyn
 });
 
 test('zoom: meme noeud DOM, centre anime vers le viewport, plein ecran et fermeture par la carte', async ({ page }) => {
-  await page.goto('/prototype.html');
+  await page.goto('prototype.html');
   await page.waitForTimeout(220);
 
   const cardB = page.getByTestId('card-B');
@@ -98,7 +98,7 @@ test('zoom: meme noeud DOM, centre anime vers le viewport, plein ecran et fermet
 });
 
 test('une seule carte peut etre ouverte globalement', async ({ page }) => {
-  await page.goto('/prototype.html');
+  await page.goto('prototype.html');
   await page.waitForTimeout(220);
 
   const cardA = page.getByTestId('card-A');
@@ -121,7 +121,7 @@ test.describe('mobile emulation', () => {
   });
 
   test('mobile: tap ouvre presque plein ecran et retap sur la carte referme', async ({ page }) => {
-    await page.goto('/prototype.html');
+    await page.goto('prototype.html');
     await page.waitForTimeout(220);
 
     const cardC = page.getByTestId('card-C');
@@ -148,7 +148,7 @@ test.describe('mobile emulation', () => {
   });
 
   test('mobile: une carte ouverte reste scrollable si son contenu devient long', async ({ page }) => {
-    await page.goto('/prototype.html');
+    await page.goto('prototype.html');
     await page.waitForTimeout(220);
 
     const cardD = page.getByTestId('card-D');
@@ -182,7 +182,7 @@ test.describe('mobile emulation', () => {
 
 test('le plateau occupe l espace restant et conserve les positions relatives apres rotation', async ({ page }) => {
   await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto('/prototype.html');
+  await page.goto('prototype.html');
   await page.waitForTimeout(260);
 
   async function geometry() {
@@ -227,7 +227,7 @@ test('contenu externe Markdown + LaTeX charge et rendu par KaTeX', async ({ page
   expect(data.productions[1].content).toContain('\\frac');
   expect(data.productions[3].content).toContain('$$');
 
-  await page.goto('/prototype.html');
+  await page.goto('prototype.html');
   await expect(page.getByTestId('card-A')).toBeVisible();
   await expect(page.locator('rich-text')).toHaveCount(9);
   await expect(page.locator('.katex').first()).toBeVisible();

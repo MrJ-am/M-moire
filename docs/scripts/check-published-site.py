@@ -17,8 +17,7 @@ def digest(content):
 
 def manifest(site):
     root = Path(site)
-    files = [p for p in root.iterdir() if p.suffix in {".html", ".js", ".css", ".svg"}]
-    files.extend((root / "data").glob("*.json"))
+    files = [p for p in root.rglob("*") if p.is_file() and p.suffix in {".html", ".js", ".css", ".svg", ".json", ".woff", ".woff2", ".ttf"}]
     result = {p.relative_to(root).as_posix(): digest(p.read_bytes()) for p in sorted(files)}
     if "index.html" not in result or "data/bank.json" not in result:
         raise ValueError("L’accueil et la banque doivent être présents avant publication.")

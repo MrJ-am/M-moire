@@ -21,7 +21,7 @@ async function close(page) {
   await expect(page.locator('reading-card')).toHaveCount(0);
 }
 async function start(page, level = '3e') {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('checkbox', { name: level, exact: true }).check();
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
   await tourStep(page, 0);
@@ -84,14 +84,9 @@ test('trois curseurs indépendants, note révisable et export traçable', async 
   await expect(page.locator('.comparison-columns rich-text')).toHaveCount(2);
   await page.getByRole('button', { name: 'Fermer la comparaison', exact: true }).click();
   await finishBySkipping(page);
-  const downloadEvent = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Exporter mes réponses', exact: true }).click();
-  const exported = JSON.parse(fs.readFileSync(await (await downloadEvent).path(), 'utf8'));
-  expect(exported.schemaVersion).toBe(2);
-  expect(exported.interactionMode).toBe('axis-sliders');
-  expect(exported.randomization.algorithm).toBe('mulberry32-fisher-yates-v1');
-  expect(Number.isInteger(exported.randomization.seed)).toBe(true);
-  expect(exported.questionOrder).toHaveLength(2);
+  const exported = await require('./collection.cjs').submitted(page, () => page.getByRole('button', { name: 'Valider ma participation', exact: true }).click());
+  expect(Number.isInteger(exported.session.seed)).toBe(true);
+  expect(exported.session.questions).toHaveLength(2);
   expect(exported.answers[firstId]).toMatchObject({ note: 1.5, initialNote: 2.25, coordinates: { x: 2, y: 2, z: 3 } });
   expect(exported.answers[firstId].evaluatedAxes.sort()).toEqual(['x', 'y', 'z']);
   expect(Object.values(exported.answers).some(a => a.note === 0)).toBe(true);
@@ -99,7 +94,7 @@ test('trois curseurs indépendants, note révisable et export traçable', async 
   expect(exported.events.every(e => e.questionId !== 'practice')).toBe(true);
   expect(exported.events.some(e => e.event === 'orbit')).toBe(true);
   expect(exported.events.filter(e => e.event === 'place').every(e => ['x','y','z'].includes(e.axis))).toBe(true);
-  expect(exported.gradeScale).toEqual({ min: 0, max: 3, step: 0.25 });
+  expect(exported.session.completedAt).toBeTruthy();
 });
 
 test('la saisie ne saute pas, le centre se confirme et la caméra garde les coordonnées', async ({ page }) => {
@@ -255,6 +250,9 @@ test('les portées indentées survivent au chargement, à la lecture et à la co
   const original = bank.questions.find(q => q.id === 'R17');
   const question = { ...original, productions: original.productions.filter(p => ['R17-6', 'R17-7'].includes(p.id)) };
   await page.route('**/data/bank.json*', route => route.fulfill({ json: { ...bank, questions: [question] } }));
+  // This rendering regression isolates the indentation pair; the collection has its own integration tests.
+  await page.route('**/api/sessions', route => route.fulfill({ json: { id: route.request().postDataJSON().id, bankVersion: bank.version, startedAt: new Date().toISOString(), questions: [question], revision: 0 } }));
+  await page.route('**/api/sessions/**', route => route.fulfill({ json: { revision: route.request().postDataJSON()?.revision || 0, savedAt: new Date().toISOString(), completedAt: null } }));
   await start(page, 'Études supérieures');
   const seen = [];
   for (let i = 0; i < 2; i++) {

@@ -1,10 +1,11 @@
 /* Browser integration only. Survey state and coordinate invariants live in Elm. */
-import { prepareSession, createSeed, axes } from './session.js?v=44fc617998f1';
+import { createSeed } from './session.js?v=44fc617998f1';
+import { Collection } from './collection.js?v=b6440c644ef4';
 import './space.js?v=68e5e5433449';
 import './sliders.js?v=e690453bfce2';
 const root = document.getElementById('app');
-let application, bank, seed, startedAt;
-let events = [], seen = new Set();
+let application, bank, starting = false;
+const collection = new Collection(message => send(message));
 function send(message) { application?.ports.incoming.send(message); }
 function showQuestion() {
   requestAnimationFrame(() => {
@@ -155,21 +156,33 @@ customElements.define('ui-icon', class extends HTMLElement {
 try {
   const response = await fetch('data/bank.json'); if (!response.ok) throw new Error('bank'); bank = await response.json();
   const levels = ['5e', '4e', '3e', '2de', '1re spé', 'Tle spé', 'Sup 1'].filter(l => bank.questions.some(q => q.level === l));
-  application = Elm.Survey.init({ node: root, flags: { levels, version: bank.version } });
-  application.ports.action.subscribe(message => {
+  const mount = document.createElement('div'); root.replaceChildren(mount); root.inert = true;
+  application = Elm.Survey.init({ node: mount, flags: { levels, version: bank.version } });
+  application.ports.action.subscribe(async message => {
     switch (message.type) {
-      case 'session': seed = createSeed(); events = []; startedAt = new Date().toISOString(); send({ type: 'session', questions: prepareSession(bank, message.levels, seed, seen) }); showQuestion(); break;
-      case 'close': closeReader(message.id); break;
-      case 'event': { const { type, ...entry } = message; events.push({ ...entry, at: new Date().toISOString(), elapsedMs: Date.now() - Date.parse(startedAt) }); if (entry.event === 'question' || entry.event === 'skip') seen.add(entry.questionId); if (['question', 'open', 'reveal', 'compare'].includes(entry.event)) showQuestion(); break; }
-      case 'export': {
-        const { type, ...data } = message;
-        const result = { schemaVersion: 2, interactionMode: 'axis-sliders', ...data, randomization: { algorithm: 'mulberry32-fisher-yates-v1', seed }, axes, gradeScale: { min: 0, max: 3, step: .25 }, startedAt, exportedAt: new Date().toISOString(), events };
-        const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
-        const link = document.createElement('a'); link.href = url; link.download = 'regards-redactions.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); break;
+      case 'session': {
+        if (starting) break;
+        starting = true;
+        try {
+          const session = await collection.start(message.levels, bank.version, createSeed());
+          send({ type: 'session', bankVersion: session.bankVersion, questions: session.questions }); showQuestion();
+        } catch (error) { send({ type: 'error', message: 'La connexion au questionnaire est indisponible. Réessayez dans un instant.' }); }
+        finally { starting = false; }
+        break;
       }
+      case 'close': closeReader(message.id); break;
+      case 'event': { const { type, ...entry } = message; collection.event(entry); if (['question', 'open', 'reveal', 'compare'].includes(entry.event)) showQuestion(); break; }
+      case 'checkpoint': collection.checkpoint(message.snapshot); break;
+      case 'submit': collection.submit(message.snapshot); break;
+      case 'retry-save': collection.flush(); break;
+      case 'restart': collection.restart(); break;
     }
   });
+  const resumed = await collection.resume();
+  if (resumed) { send({ ...resumed, type: resumed.new ? 'session' : 'restore' }); showQuestion(); }
+  root.inert = false;
 } catch (error) {
+  root.inert = false;
   root.replaceChildren(); const panel = document.createElement('section'); panel.className = 'finish-panel';
   const title = document.createElement('h1'); title.textContent = 'Les questions n’ont pas pu être chargées.';
   const retry = document.createElement('button'); retry.className = 'primary'; retry.textContent = 'Réessayer'; retry.onclick = () => location.reload(); panel.append(title, retry); root.append(panel); console.error(error);

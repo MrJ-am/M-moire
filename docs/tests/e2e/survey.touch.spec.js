@@ -32,7 +32,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       // The filmed interaction starts at the axes, after the reading step.
       // Exercise the resize at that same stage on the short landscape viewport.
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto('/');
+      await page.goto('./');
       await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
       await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
       await note(page, d); await close(page, d);

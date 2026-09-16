@@ -1,4 +1,4 @@
-module Survey.Model exposing (Answer, Point, Production, Question, answer, axes, complete, decodeQuestion, encodeAnswer, encodePoint, move, point, touchAxis)
+module Survey.Model exposing (Answer, Point, Production, Question, answer, axes, complete, decodeAnswer, decodeQuestion, encodeAnswer, encodePoint, move, point, touchAxis)
 
 import Dict exposing (Dict)
 import Json.Decode as D
@@ -85,6 +85,15 @@ decodeQuestion =
 encodePoint : Point -> E.Value
 encodePoint p =
     E.object [ ( "x", E.float p.x ), ( "y", E.float p.y ), ( "z", E.float p.z ) ]
+
+
+decodeAnswer : D.Decoder Answer
+decodeAnswer =
+    D.map4 Answer
+        (D.field "note" (D.nullable D.float))
+        (D.field "initialNote" (D.nullable D.float))
+        (D.field "coordinates" (D.map3 Point (D.field "x" D.float) (D.field "y" D.float) (D.field "z" D.float)))
+        (D.field "evaluatedAxes" (D.list D.string))
 
 
 encodeAnswer : Answer -> E.Value

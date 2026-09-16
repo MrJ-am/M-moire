@@ -1,0 +1,33 @@
+name: Sauvegarder les réponses
+on:
+  schedule:
+    - cron: '40 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    if: vars.MATHEVAL_HOST != '' && vars.MATHEVAL_BACKUPS == 'true'
+    runs-on: ubuntu-latest
+    environment: matheval-production
+    steps:
+      - name: Configurer SSH
+        env:
+          SSH_KEY: ${{ secrets.MATHEVAL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.MATHEVAL_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Récupérer la sauvegarde chiffrée
+        env:
+          MATHEVAL_HOST: ${{ vars.MATHEVAL_HOST }}
+        run: |
+          ssh "matheval-deploy@${MATHEVAL_HOST}" 'sudo -n $(command -v matheval-backup)' > matheval.dump.age
+          test -s matheval.dump.age
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matheval-backup-${{ github.run_id }}
+          path: matheval.dump.age
+          retention-days: 14

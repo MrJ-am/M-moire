@@ -41,6 +41,8 @@ type alias Model =
     , message : String
     , skipped : List String
     , version : String
+    , saveStatus : String
+    , saveMessage : String
     }
 
 
@@ -59,7 +61,8 @@ type Msg
     | Skip
     | Finish
     | Return
-    | Export
+    | Submit
+    | RetrySave
     | Restart
     | Help
     | TourNext
@@ -111,6 +114,8 @@ init flags =
       , message = ""
       , skipped = []
       , version = D.decodeValue (D.field "version" D.string) flags |> Result.withDefault ""
+      , saveStatus = "idle"
+      , saveMessage = ""
       }
     , Cmd.none
     )
@@ -178,6 +183,59 @@ openQuestion idx m =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg m =
+    let
+        ( next, command ) =
+            updateCore msg m
+
+        persist =
+            case msg of
+                Receive raw ->
+                    D.decodeValue (D.field "type" D.string) raw |> Result.map (\kind -> List.member kind [ "session", "closed", "orbit" ]) |> Result.withDefault False
+
+                Place _ _ _ committed ->
+                    committed
+
+                Submit ->
+                    False
+
+                RetrySave ->
+                    False
+
+                _ ->
+                    True
+    in
+    ( next
+    , Cmd.batch
+        [ command
+        , if persist && next.mode /= Setup && next.saveStatus /= "completed" then
+            emit "checkpoint" [ ( "snapshot", encodeSnapshot next ) ]
+
+          else
+            Cmd.none
+        ]
+    )
+
+
+encodeSnapshot : Model -> E.Value
+encodeSnapshot m =
+    E.object
+        [ ( "answers", E.object (Dict.toList m.answers |> List.filter (\( k, _ ) -> not (String.startsWith "practice" k)) |> List.map (Tuple.mapSecond S.encodeAnswer)) )
+        , ( "skippedQuestions", E.list E.string m.skipped )
+        , ( "progress"
+          , E.object
+                [ ( "mode", E.string (if m.mode == Training then "training" else if m.mode == Finished then "finished" else "running") )
+                , ( "index", E.int m.index )
+                , ( "selected", E.string m.selected )
+                , ( "exposed", E.object (Dict.toList m.exposed |> List.map (Tuple.mapSecond E.int)) )
+                , ( "reader", E.bool m.reader )
+                , ( "tour", E.int m.tour )
+                ]
+          )
+        ]
+
+
+updateCore : Msg -> Model -> ( Model, Cmd Msg )
+updateCore msg m =
     case msg of
         ToggleLevel level checked ->
             ( { m
@@ -201,6 +259,43 @@ update msg m =
 
         Receive raw ->
             case D.decodeValue (D.field "type" D.string) raw of
+                Ok "save-state" ->
+                    ( { m | saveStatus = D.decodeValue (D.field "status" D.string) raw |> Result.withDefault "error", saveMessage = D.decodeValue (D.field "message" D.string) raw |> Result.withDefault "" }, Cmd.none )
+
+                Ok "error" ->
+                    ( { m | message = D.decodeValue (D.field "message" D.string) raw |> Result.withDefault "La connexion est indisponible.", saveStatus = "error" }, Cmd.none )
+
+                Ok "restore" ->
+                    let
+                        field name decoder =
+                            D.decodeValue (D.at [ "snapshot", name ] decoder) raw
+
+                        progress name decoder fallback =
+                            D.decodeValue (D.at [ "snapshot", "progress", name ] decoder) raw |> Result.withDefault fallback
+
+                        restoredMode =
+                            progress "mode" D.string "training"
+
+                        qs =
+                            D.decodeValue (D.field "questions" (D.list S.decodeQuestion)) raw |> Result.withDefault []
+                    in
+                    ( { m
+                        | questions = qs
+                        , levels = D.decodeValue (D.field "levels" (D.list D.string)) raw |> Result.withDefault []
+                        , version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version
+                        , answers = field "answers" (D.dict S.decodeAnswer) |> Result.withDefault Dict.empty
+                        , skipped = field "skippedQuestions" (D.list D.string) |> Result.withDefault []
+                        , index = progress "index" D.int 0
+                        , selected = if restoredMode == "training" then "practice-1" else progress "selected" D.string ""
+                        , exposed = progress "exposed" (D.dict D.int) Dict.empty
+                        , reader = if restoredMode == "training" then True else progress "reader" D.bool False
+                        , mode = if restoredMode == "training" then Training else if restoredMode == "finished" then Finished else Running
+                        , tour = if restoredMode == "training" then 0 else -1
+                        , saveStatus = D.decodeValue (D.field "saveStatus" D.string) raw |> Result.withDefault "saved"
+                      }
+                    , Cmd.none
+                    )
+
                 Ok "session" ->
                     case D.decodeValue (D.field "questions" (D.list S.decodeQuestion)) raw of
                         Ok qs ->
@@ -208,13 +303,13 @@ update msg m =
                                 ( { m | message = "Aucune question disponible pour cette sélection." }, Cmd.none )
 
                             else
-                                ( { m | questions = qs, mode = Training, tour = 0, selected = "practice-1", exposed = Dict.singleton "practice" 1, answers = Dict.empty, reader = True, closing = False, index = 0, skipped = [] }, Cmd.none )
+                                ( { m | questions = qs, mode = Training, tour = 0, selected = "practice-1", exposed = Dict.singleton "practice" 1, answers = Dict.empty, reader = True, closing = False, index = 0, skipped = [], version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version }, Cmd.none )
 
                         Err _ ->
                             ( { m | message = "Impossible de préparer les questions." }, Cmd.none )
 
                 Ok "closed" ->
-                    update Closed m
+                    updateCore Closed m
 
                 Ok "orbit" ->
                     ( { m
@@ -418,10 +513,10 @@ update msg m =
                 let
                     ( advanced, command ) =
                         if m.index + 1 < List.length m.questions then
-                            update (GoQuestion (m.index + 1)) confirmed
+                            updateCore (GoQuestion (m.index + 1)) confirmed
 
                         else
-                            update Finish confirmed
+                            updateCore Finish confirmed
                 in
                 ( advanced, Cmd.batch [ confirmation, command ] )
 
@@ -483,19 +578,13 @@ update msg m =
             ( { m | mode = Running, reader = False }, Cmd.none )
 
         Restart ->
-            ( { m | mode = Setup, reader = False, message = "" }, Cmd.none )
+            ( { m | mode = Setup, reader = False, message = "", saveStatus = "idle", saveMessage = "" }, emit "restart" [] )
 
-        Export ->
-            ( m
-            , emit "export"
-                [ ( "bankVersion", E.string m.version )
-                , ( "levels", E.list E.string m.levels )
-                , ( "questionOrder", E.list (E.string << .id) m.questions )
-                , ( "productionOrder", E.object (List.map (\q -> ( q.id, E.list (E.string << .id) q.productions )) m.questions) )
-                , ( "answers", E.object (Dict.toList m.answers |> List.filter (\( k, _ ) -> not (String.startsWith "practice" k)) |> List.map (Tuple.mapSecond S.encodeAnswer)) )
-                , ( "skippedQuestions", E.list E.string m.skipped )
-                ]
-            )
+        Submit ->
+            ( { m | saveStatus = "submitting", saveMessage = "" }, emit "submit" [ ( "snapshot", encodeSnapshot m ) ] )
+
+        RetrySave ->
+            ( m, emit "retry-save" [] )
 
         Help ->
             ( { m | mode = Training, tour = 0, selected = "practice-1", reader = True, closing = False, answers = Dict.remove "practice-1" m.answers, exposed = Dict.insert "practice" 1 m.exposed, message = "" }, Cmd.none )
@@ -565,6 +654,14 @@ view m =
 
             _ ->
                 viewWorkspace m
+        , if m.mode /= Setup then
+            div [ class "save-status", attribute "role" "status", attribute "aria-live" "polite", attribute "data-status" m.saveStatus ]
+                [ text (if m.saveMessage /= "" then m.saveMessage else if m.saveStatus == "completed" then "Participation enregistrée et validée." else if m.saveStatus == "saved" then "Réponses enregistrées." else if (m.saveStatus == "error" || m.saveStatus == "submit-error") then "Enregistrement en attente. Vos réponses sont conservées sur cet appareil." else "Enregistrement en cours…")
+                , if (m.saveStatus == "error" || m.saveStatus == "submit-error") then button [ class "quiet", onClick RetrySave ] [ text "Réessayer l’enregistrement" ] else text ""
+                ]
+
+          else
+            text ""
         ]
 
 
@@ -574,7 +671,7 @@ viewSetup m =
         [ div [ class "welcome-copy" ]
             [ h1 [] [ text "Critères d’évaluations ", span [] [ text "en mathématiques" ] ]
             , p [ class "intro" ] [ text "Ce sondage fait partie d’un projet de recherche qui cherche à mettre en lumière les critères que les enseignantes et enseignants de mathématiques exploitent pour noter leurs élèves." ]
-            , div [ class "local-note" ] [ icon "info", p [] [ text "Vos réponses restent dans cette page jusqu’à leur export. Un rechargement les efface." ] ]
+            , div [ class "local-note" ] [ icon "info", p [] [ text "Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche." ] ]
             ]
         , div [ class "level-panel" ]
             [ h2 [] [ text "Quels niveaux avez-vous enseignés ?" ]
@@ -902,7 +999,13 @@ viewFinish m =
                     ++ "."
                 )
             ]
-        , p [ class "muted" ] [ text "Vous pouvez encore revenir sur vos réponses. Exportez-les pour les conserver avant de quitter cette page." ]
-        , div [ class "finish-actions" ] [ button [ class "primary", onClick Export ] [ icon "download", text "Exporter mes réponses" ], btn "secondary" "Revenir aux questions" Return ]
-        , btn "quiet" "Nouvelle session" Restart
+        , p [ class "muted" ] [ text (if m.saveStatus == "completed" then "Vos réponses ont bien été reçues. Merci pour votre participation." else "Vous pouvez encore revoir vos réponses, puis valider votre participation.") ]
+        , if m.saveStatus == "completed" then
+            btn "quiet" "Nouvelle participation" Restart
+
+          else
+            div [ class "finish-actions" ]
+                [ button [ class "primary", onClick Submit, disabled (m.saveStatus == "submitting") ] [ icon "check", text (if m.saveStatus == "submitting" then "Validation en cours…" else "Valider ma participation") ]
+                , button [ class "secondary", onClick Return, disabled (m.saveStatus == "submitting" || m.saveStatus == "submit-error") ] [ text "Revenir aux questions" ]
+                ]
         ]

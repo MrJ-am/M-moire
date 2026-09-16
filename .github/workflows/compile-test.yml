@@ -1,202 +1,111 @@
-name: Build, test and publish
-
+name: Vérifier et publier Matheval
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch:
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
+concurrency:
+  group: matheval-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  publish:
+  check:
     runs-on: ubuntu-latest
-    outputs:
-      manifest: ${{ steps.release.outputs.manifest }}
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: matheval_api_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/matheval_api_test
+      BROWSER_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/matheval_browser_test
+      PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Detect change scope
-        id: scope
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "content_only=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
-            echo "content_only=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          changed="$(git diff --name-only HEAD^ HEAD)"
-          echo "Changed files:"
-          printf '%s\n' "$changed"
-
-          if [[ -n "$changed" ]] && ! printf '%s\n' "$changed" | grep -qvE '^docs/data/[^/]+\.json$'; then
-            echo "content_only=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "content_only=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Validate content JSON
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import glob
-          import json
-          import sys
-
-          files = sorted(glob.glob("docs/data/*.json"))
-          if not files:
-              raise SystemExit("No JSON content files found in docs/data/")
-
-          required_production = {
-              "id": int,
-              "badge": str,
-              "title": str,
-              "subtitle": str,
-              "preview": str,
-              "content": str,
-          }
-
-          for path in files:
-              with open(path, encoding="utf-8") as handle:
-                  data = json.load(handle)
-
-              exercise = data.get("exercise")
-              productions = data.get("productions")
-
-              if not isinstance(exercise, dict):
-                  raise ValueError(f"{path}: missing object 'exercise'")
-              for key in ("title", "statement"):
-                  if not isinstance(exercise.get(key), str):
-                      raise ValueError(f"{path}: exercise.{key} must be a string")
-
-              if not isinstance(productions, list) or not productions:
-                  raise ValueError(f"{path}: 'productions' must be a non-empty list")
-
-              ids = set()
-              badges = set()
-              for index, production in enumerate(productions):
-                  if not isinstance(production, dict):
-                      raise ValueError(f"{path}: productions[{index}] must be an object")
-                  for key, expected_type in required_production.items():
-                      if not isinstance(production.get(key), expected_type):
-                          raise ValueError(
-                              f"{path}: productions[{index}].{key} must be {expected_type.__name__}"
-                          )
-
-                  if production["id"] in ids:
-                      raise ValueError(f"{path}: duplicate production id {production['id']}")
-                  if production["badge"] in badges:
-                      raise ValueError(f"{path}: duplicate production badge {production['badge']}")
-                  ids.add(production["id"])
-                  badges.add(production["badge"])
-
-              print(f"{path}: OK ({len(productions)} productions)")
-          PY
-
-      - name: Publish content only
-        if: steps.scope.outputs.content_only == 'true'
-        shell: bash
-        run: |
-          mkdir -p docs/site/data
-          cp docs/data/*.json docs/site/data/
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - name: Install dependencies
-        run: npm --prefix docs ci
-
-      - name: Install PDF link checker
-        run: sudo apt-get update && sudo apt-get install -y poppler-utils
-
-      - name: Check Org sources before regenerating anything
-        run: npm --prefix docs run check:data
-
-      - name: Test Org compiler failure cases
-        run: npm --prefix docs run test:data
-
-      - name: Test publication checks
-        run: python3 -m unittest discover -s docs/tests -p 'test_published_site.py'
-
-      - name: Validate survey bank and session logic
-        if: steps.scope.outputs.content_only != 'true'
+          cache-dependency-path: |
+            docs/package-lock.json
+            server/package-lock.json
+      - name: Installer les outils
         run: |
-          python3 docs/scripts/build-bank.py
-          node docs/scripts/validate-bank.cjs
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils postgresql-client
+          npm --prefix docs ci
+          npm --prefix server ci
+          createdb -h 127.0.0.1 -U postgres matheval_browser_test
+      - name: Vérifier les données et la collecte
+        run: |
+          npm --prefix docs run check:data
+          npm --prefix docs run test:data
+          python3 -m unittest discover -s docs/tests -p 'test_published_site.py'
           node docs/scripts/test-survey.cjs
-
-      - name: Run Elm logic tests
-        if: steps.scope.outputs.content_only != 'true'
-        run: npm --prefix docs run test:logic
-
-      - name: Compile Elm
-        if: steps.scope.outputs.content_only != 'true'
+          npm --prefix docs run test:logic
+          npm --prefix server test
+      - name: Construire le site
         run: npm --prefix docs run build:main
-
-      - name: Install Playwright browsers
-        run: npm --prefix docs run test:e2e:install:ci
-
-      - name: Run browser interaction tests
-        run: npm --prefix docs run test:e2e
-
-      - name: Save browser checks
+      - name: Vérifier dans les navigateurs
+        run: |
+          npm --prefix docs run test:e2e:install:ci
+          npm --prefix docs run test:e2e
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: browser-checks
           path: docs/test-results/
           if-no-files-found: ignore
           retention-days: 7
-
-      - name: Fingerprint tested site
-        id: release
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        shell: bash
+      - name: Préparer la version vérifiée
         run: |
-          release_manifest="$(python3 docs/scripts/check-published-site.py manifest docs/site)"
-          printf 'manifest=%s\n' "$release_manifest" >> "$GITHUB_OUTPUT"
-
-      - name: Configure Pages
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
-
-      - name: Upload site
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+          python3 docs/scripts/check-published-site.py manifest docs/site > release-manifest.json
+          printf '%s\n' "${GITHUB_SHA}" > RELEASE
+          tar --exclude=node_modules --exclude=tests -czf matheval.tar.gz docs/site server research/bank.json research/codebook.json RELEASE release-manifest.json
+      - uses: actions/upload-artifact@v4
         with:
-          path: docs/site
-
+          name: matheval-release
+          path: matheval.tar.gz
+          retention-days: 14
   deploy:
-    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    needs: publish
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && vars.MATHEVAL_HOST != ''
+    needs: check
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: matheval-production
+      url: https://principiipetit.io/matheval/
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-      - name: Verify published files
-        timeout-minutes: 5
+      - uses: actions/download-artifact@v4
+        with:
+          name: matheval-release
+      - name: Configurer l’accès de déploiement
         env:
-          SITE_URL: ${{ steps.deployment.outputs.page_url }}
-          EXPECTED_SITE: ${{ needs.publish.outputs.manifest }}
-        run: python3 docs/scripts/check-published-site.py verify
+          SSH_KEY: ${{ secrets.MATHEVAL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.MATHEVAL_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Installer la version vérifiée
+        env:
+          MATHEVAL_HOST: ${{ vars.MATHEVAL_HOST }}
+        run: |
+          scp matheval.tar.gz "matheval-deploy@${MATHEVAL_HOST}:/srv/matheval/incoming/${GITHUB_SHA}.tar.gz"
+          ssh "matheval-deploy@${MATHEVAL_HOST}" "matheval-release ${GITHUB_SHA}"
+      - name: Vérifier les fichiers servis
+        env:
+          SITE_URL: https://principiipetit.io/matheval/
+        run: |
+          tar -xzf matheval.tar.gz release-manifest.json
+          export EXPECTED_SITE="$(cat release-manifest.json)"
+          python3 docs/scripts/check-published-site.py verify

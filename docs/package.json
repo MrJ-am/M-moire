@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
-    "build:main": "elm make src/Main.elm --output=site/main.js && elm make src/Survey.elm --optimize --output=site/survey.js && python3 scripts/build-bank.py && node scripts/version-assets.cjs && cp data/exercise-001.json site/data/",
-    "test:logic": "npx elm-test",
+    "build:main": "node scripts/build-elm.cjs && python3 scripts/build-bank.py && node scripts/version-assets.cjs && cp data/exercise-001.json site/data/",
+    "test:logic": "node scripts/test-elm.cjs",
     "test:e2e": "npx playwright test",
     "test:e2e:guix": "bash scripts/patch-playwright-firefox.sh && PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 npx playwright test",
     "test:e2e:install": "npx playwright install firefox chromium",
@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
-    "elm": "^0.19.1-6",
+    "@lydell/elm": "0.19.1-14",
     "elm-format": "^0.8.8",
     "elm-test": "^0.19.1-revision16",
     "vite": "^8.3.0"

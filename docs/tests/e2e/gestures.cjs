@@ -45,7 +45,7 @@ async function close(page, d) {
   await expect(page.locator('reading-card')).toHaveCount(0);
 }
 async function start(page, d) {
-  await page.goto('/');
+  await page.goto('./');
   await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
   await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
   const step = n => expect(page.locator('spotlight-guide')).toHaveAttribute('step', String(n));

@@ -1,0 +1,13 @@
+import { readFile } from 'node:fs/promises';
+import { connect, migrate, importCorpus } from './database.mjs';
+import { createApp } from './app.mjs';
+const pool = connect();
+if (process.env.NODE_ENV === 'test' && !new URL(process.env.DATABASE_URL || '').pathname.endsWith('_test')) throw new Error('Le mode test exige une base distincte terminée par _test.');
+const bank = JSON.parse(await readFile(new URL('../../research/bank.json', import.meta.url)));
+const codebook = JSON.parse(await readFile(new URL('../../research/codebook.json', import.meta.url)));
+await migrate(pool);
+await importCorpus(pool, bank, codebook);
+const port = Number(process.env.PORT || 3000);
+const app = createApp({ pool, origin: process.env.PUBLIC_ORIGIN || `http://127.0.0.1:${port}`, prefix: process.env.BASE_PATH ?? '/matheval', setupHash: process.env.ADMIN_SETUP_TOKEN_HASH || '', currentVersion: bank.version, testMode: process.env.NODE_ENV === 'test' });
+const server = app.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`Matheval prêt sur le port ${port}.`));
+for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => server.close(async () => { await pool.end(); process.exit(0); }));
