@@ -5,6 +5,8 @@ Le questionnaire est servi sous https://principiipetit.io/matheval/ et l'adminis
 
 Le module [[file:matheval.nix][matheval.nix]] s'importe dans la configuration NixOS existante. Activer ~services.matheval.enable~ et déclarer la clé publique de l'utilisateur de déploiement dans ~services.matheval.deploymentPublicKeys~. Lire la configuration existante avant de l'appliquer, afin de préserver les autres services et l'accès SSH.
 
+La configuration effectivement installée sur le VPS Hostinger est conservée dans [[file:hostinger/configuration.nix][hostinger/configuration.nix]]. Les accès, les contrôles de publication et la reprise dans ChatGPT Work figurent dans [[file:REPRISE.org][REPRISE.org]]. Le domaine principal et son alias ~www~ redirigent vers le questionnaire.
+
 * Premier démarrage et administrateur
 Créer /var/lib/matheval/secrets.env, lisible uniquement par root et le service, contenant ~ADMIN_SETUP_TOKEN_HASH=<SHA-256 d'un secret aléatoire de 32 octets encodé en hexadécimal>~. Le secret original est remis au propriétaire par un lien privé ~https://principiipetit.io/matheval/admin/#activation=<secret>~.
 
@@ -28,6 +30,8 @@ Les moyennes et quantiles excluent les réponses absentes. Une note zéro compte
 NixOS produit une sauvegarde PostgreSQL quotidienne dans /var/backup/postgresql. Pour les copies hors VPS, créer une paire de clés age, conserver la clé privée hors du serveur et déclarer sa clé publique dans ~services.matheval.backupRecipient~. La variable GitHub ~MATHEVAL_BACKUPS=true~ active le workflow quotidien : le serveur chiffre le dump avant son transfert et GitHub conserve quatorze jours de copies chiffrées.
 
 La clé privée age doit être conservée par le propriétaire dans un emplacement durable indépendant du VPS. Le fichier chiffré seul ne permet pas de restaurer les réponses. Pour contrôler une restauration, déchiffrer dans un répertoire privé, créer une base temporaire distincte, lancer ~pg_restore --exit-on-error~ vers cette base et vérifier les effectifs et les contraintes. Ne jamais tester une restauration en écrasant la base en production.
+
+Sur NixOS, la commande de sauvegarde distante doit résoudre son lien vers le chemin autorisé dans sudoers : ~sudo -n "$(readlink -f "$(command -v matheval-backup)")"~. La publication utilise le wrapper sudo de NixOS pour redémarrer le service avec les droits prévus.
 
 * Développement et tests
 Installer les dépendances avec ~npm --prefix docs ci~ et ~npm --prefix server ci~. PostgreSQL 17 est utilisé pour les validations CI, avec deux bases distinctes : matheval_api_test et matheval_browser_test. Définir TEST_DATABASE_URL et BROWSER_DATABASE_URL, puis lancer ~npm --prefix server test~ et ~npm --prefix docs run test:e2e~. Les tests API refusent une base dont le nom ne se termine pas par _test.

@@ -1,21 +1,65 @@
 #+title: Reprendre Matheval dans ChatGPT Work
 #+date: 2026-09-17
 
-* Point de reprise sauvegardé
+* État vérifié le 17 septembre 2026
 
 Le dépôt canonique est https://github.com/MrJ-am/M-moire, branche ~master~.
 L'ancienne adresse ~Echologie/M-moire~ redirige vers ce dépôt.
 
+Le site est en production sur https://principiipetit.io/matheval/.
+Le domaine principal et ~www~ y redirigent ; les deux certificats Let's Encrypt
+sont valides, avec renouvellement automatique. L'API répond en HTTPS
+~{"status":"ok","version":"0.3.0"}~.
+
+Nginx, Node.js et PostgreSQL sont actifs. PostgreSQL écoute uniquement sur
+son socket Unix ; Node.js écoute sur ~127.0.0.1:3000~. SSH utilise des clés,
+avec deux comptes distincts pour l'administration et la publication.
+La configuration NixOS est installée et enregistrée pour les prochains
+démarrages ; aucun redémarrage du VPS n'a été nécessaire.
+
 Le commit applicatif ~b7923802ea693d6aa6465cccb8257e50a3a2c229~ est poussé.
 La [[https://github.com/MrJ-am/M-moire/actions/runs/35152845801][validation GitHub Actions]] a réussi : données, logique Elm, API PostgreSQL,
 compilation et parcours navigateur. L'archive ~matheval-release~ de cette
-exécution contient la version vérifiée. Le travail de déploiement est décrit
-dans [[file:README.org][le guide d'exploitation]].
+exécution a servi à la première mise en ligne ; les 87 fichiers publics ont
+été comparés avec succès à son manifeste. Les publications suivantes sont
+suivies dans [[https://github.com/MrJ-am/M-moire/actions/workflows/compile-test.yml][le workflow de validation et de publication]].
+Lire la version effectivement active avec :
+
+#+begin_src sh
+sh deploy/connect.sh 'cat /srv/matheval/current/RELEASE'
+#+end_src
 
 Au début de cette reprise, le déploiement Actions était ignoré faute de
 configuration de production ; le VPS n'hébergeait encore ni Node.js, ni Nginx,
 ni PostgreSQL. Le domaine affichait la page de parking Hostinger.
-Ne pas confondre une validation réussie avec une publication réussie.
+Les accès de production ont depuis été configurés. Vérifier les deux tâches
+~check~ et ~deploy~ dans Actions pour contrôler une nouvelle publication.
+
+* Publication, sauvegardes et administration
+
+La variable GitHub ~MATHEVAL_HOST=187.77.95.158~ et les secrets
+~MATHEVAL_SSH_KEY~ et ~MATHEVAL_KNOWN_HOSTS~ sont configurés pour
+~matheval-production~. La clé CI est celle de ~matheval-deploy~, pas celle de root.
+La publication automatique suit les commits validés sur ~master~.
+
+La sauvegarde locale quotidienne est activée et une première copie a été
+produite dans ~/var/backup/postgresql/~. ~MATHEVAL_BACKUPS=true~ active les
+copies chiffrées hors du VPS à 03:40 UTC, conservées quatorze jours dans
+[[https://github.com/MrJ-am/M-moire/actions/workflows/backup.yml][les artefacts de sauvegarde GitHub]]. Une copie chiffrée a été déchiffrée,
+puis restaurée dans une base temporaire : corpus identique, 19 contraintes
+présentes et aucune participation initiale. Cette base temporaire a ensuite
+été supprimée.
+
+Le propriétaire doit créer le premier compte administrateur avec le lien
+privé du fichier ~/public/.config/matheval/activation-admin.txt~. Le fichier
+serveur ~/var/lib/matheval/secrets.env~ ne contient que le condensat du jeton.
+Les accès anonymes aux statistiques et au compte administrateur renvoient
+HTTP 401. Aucun compte de test ni réponse fictive n'a été ajouté en production.
+
+L'archive privée ~/public/matheval-acces-prives.zip~, hors Git, regroupe les
+clés SSH, la clé de déchiffrement age, la sauvegarde initiale et le lien
+d'activation. Le propriétaire doit en conserver une copie privée durable
+pour reprendre sur un autre ordinateur. Ne jamais ajouter cette archive au dépôt.
 
 * Accès SSH vérifié
 
@@ -90,18 +134,38 @@ Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire, branche master.
 Lis AGENTS.md, deploy/REPRISE.org et deploy/README.org. Vérifie d'abord l'état
 Git et les dernières exécutions Actions, puis l'accès SSH avec
 sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
-Le serveur est le VPS NixOS 187.77.95.158, et l'adresse publique attendue est
-https://principiipetit.io/matheval/. Termine la mise en service, vérifie la
-collecte et l'administration avec les tests isolés, puis consigne l'état
-réel ici. Préserve les données et les accès existants, garde les secrets hors
+Le site est en production sur le VPS NixOS 187.77.95.158 à l'adresse
+https://principiipetit.io/matheval/. Vérifie son état, les sauvegardes et
+l'activation du compte propriétaire, puis poursuis les améliorations demandées.
+Les tests de collecte et d'administration doivent utiliser des bases isolées.
+Consigne l'état réel ici. Préserve les données et les accès existants, garde les secrets hors
 Git, et committe en français puis pousse les changements validés sur master.
 #+end_quote
 
-* État initial du serveur à préserver
+* Configuration NixOS et récupération
 
-Le dossier ~/etc/nixos/~ était vide malgré un système NixOS actif. Ne pas
-lancer un remplacement de configuration sans reconstituer et vérifier
-le démarrage, le réseau et SSH. Le démarrage utilise GRUB BIOS sur ~/dev/sda~.
+Les sources installées sont [[file:hostinger/configuration.nix][la configuration Hostinger]],
+[[file:hostinger/hardware-configuration.nix][le matériel relevé]] et [[file:matheval.nix][le module Matheval]]. Sur le VPS,
+~/etc/nixos/configuration.nix~ importe ~/etc/nixos/hostinger/configuration.nix~,
+qui importe le matériel et ~/etc/nixos/matheval.nix~. Copier les modifications
+validées dans cette arborescence avant ~nixos-rebuild switch~. Le workflow
+applicatif n'actualise pas automatiquement la configuration système.
+
+La sauvegarde initiale de configuration est
+~/root/matheval-bootstrap/etc-before.tar.gz~ ; le chemin de l'ancienne
+génération est dans ~/root/matheval-bootstrap/system-before~. Ce retour à
+l'image initiale rétablirait un système sans les services du site : ne pas
+l'utiliser comme un simple retour à une version applicative antérieure.
+
+L'activation initiale a été testée avec un retour arrière programmé, annulé
+après vérification d'une nouvelle connexion SSH et de la santé de l'API.
+La configuration validée a ensuite été enregistrée avec ~nixos-rebuild switch~.
+
+** Relevé de l'image initiale
+
+Le dossier ~/etc/nixos/~ était vide malgré un système NixOS actif. Il a été
+reconstitué en conservant le démarrage, le réseau, cloud-init et l'agent QEMU.
+Le démarrage utilise GRUB BIOS sur ~/dev/sda~.
 La racine ext4 a l'UUID ~f222513b-ded1-49fa-b591-20ce86a2fe7f~.
 Le canal installé est ~https://channels.nixos.org/nixos-26.05~.
 
@@ -129,6 +193,7 @@ fichier privé local ~/public/.ssh/matheval_deploy~. Elle doit appartenir à
 
 Avant modification, le DNS Hostinger contenait ~@ A 2.57.91.91~ (TTL 50)
 et ~www CNAME principiipetit.io.~ (TTL 300), sans autre enregistrement.
-La cible du domaine est ~@ A 187.77.95.158~. Conserver l'alias ~www~.
+La cible installée et vérifiée est ~@ A 187.77.95.158~ (TTL 300).
+L'alias ~www~ est conservé.
 Une réponse HTML de parking en HTTP 200 ne valide pas l'API : elle doit
 renvoyer du JSON avec ~status: ok~ et la version du corpus.

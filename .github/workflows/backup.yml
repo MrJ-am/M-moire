@@ -24,7 +24,7 @@ jobs:
         env:
           MATHEVAL_HOST: ${{ vars.MATHEVAL_HOST }}
         run: |
-          ssh "matheval-deploy@${MATHEVAL_HOST}" 'sudo -n $(command -v matheval-backup)' > matheval.dump.age
+          ssh "matheval-deploy@${MATHEVAL_HOST}" 'sudo -n "$(readlink -f "$(command -v matheval-backup)")"' > matheval.dump.age
           test -s matheval.dump.age
       - uses: actions/upload-artifact@v4
         with:

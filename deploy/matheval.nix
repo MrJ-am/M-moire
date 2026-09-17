@@ -3,7 +3,7 @@ let
   cfg = config.services.matheval;
   release = pkgs.writeShellApplication {
     name = "matheval-release";
-    runtimeInputs = [ pkgs.coreutils pkgs.gnutar pkgs.gzip pkgs.nodejs_22 pkgs.curl pkgs.util-linux pkgs.sudo ];
+    runtimeInputs = [ pkgs.coreutils pkgs.gnutar pkgs.gzip pkgs.nodejs_22 pkgs.curl pkgs.util-linux ];
     text = ''
       id="''${1:-}"
       if [[ ! "$id" =~ ^[0-9a-f]{40}$ ]]; then echo "Identifiant de version invalide" >&2; exit 2; fi
@@ -27,7 +27,7 @@ let
       fi
       ln -sfn "$target" /srv/matheval/next
       mv -Tf /srv/matheval/next /srv/matheval/current
-      sudo -n ${pkgs.systemd}/bin/systemctl restart matheval.service
+      ${config.security.wrapperDir}/sudo -n ${pkgs.systemd}/bin/systemctl restart matheval.service
       for _attempt in $(seq 1 30); do
         if curl --fail --silent --max-time 2 http://127.0.0.1:3000/matheval/api/health >/dev/null; then
           echo "Version $id active"
@@ -38,7 +38,7 @@ let
       if [[ -n "$previous" && -d "$previous" && "$previous" != "$target" ]]; then
         ln -sfn "$previous" /srv/matheval/next
         mv -Tf /srv/matheval/next /srv/matheval/current
-        sudo -n ${pkgs.systemd}/bin/systemctl restart matheval.service
+        ${config.security.wrapperDir}/sudo -n ${pkgs.systemd}/bin/systemctl restart matheval.service
       fi
       echo "La version ne répond pas ; retour à la version précédente tenté." >&2
       exit 1
@@ -63,6 +63,7 @@ in {
       enable = true;
       package = pkgs.postgresql_17;
       enableTCPIP = false;
+      settings.listen_addresses = lib.mkForce "";
       ensureDatabases = [ "matheval" ];
       ensureUsers = [{ name = "matheval"; ensureDBOwnership = true; }];
     };
