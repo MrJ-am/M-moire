@@ -1,0 +1,134 @@
+#+title: Reprendre Matheval dans ChatGPT Work
+#+date: 2026-09-17
+
+* Point de reprise sauvegardé
+
+Le dépôt canonique est https://github.com/MrJ-am/M-moire, branche ~master~.
+L'ancienne adresse ~Echologie/M-moire~ redirige vers ce dépôt.
+
+Le commit applicatif ~b7923802ea693d6aa6465cccb8257e50a3a2c229~ est poussé.
+La [[https://github.com/MrJ-am/M-moire/actions/runs/35152845801][validation GitHub Actions]] a réussi : données, logique Elm, API PostgreSQL,
+compilation et parcours navigateur. L'archive ~matheval-release~ de cette
+exécution contient la version vérifiée. Le travail de déploiement est décrit
+dans [[file:README.org][le guide d'exploitation]].
+
+Au début de cette reprise, le déploiement Actions était ignoré faute de
+configuration de production ; le VPS n'hébergeait encore ni Node.js, ni Nginx,
+ni PostgreSQL. Le domaine affichait la page de parking Hostinger.
+Ne pas confondre une validation réussie avec une publication réussie.
+
+* Accès SSH vérifié
+
+| Paramètre | Valeur |
+|-----------+--------|
+| VPS Hostinger | ~1982677~ / ~srv1982677.hstgr.cloud~ |
+| Adresse IPv4 | ~187.77.95.158~ |
+| Port / utilisateur d'administration | ~22~ / ~root~ |
+| Système constaté | NixOS ~26.05.8639.c5c4a43b0e80~, x86_64 |
+| Nom renvoyé par hostname | ~nixos~ |
+| Clé privée dans l'environnement de cette session | ~/public/.ssh/matheval_admin~ |
+| Empreinte de la clé publique d'administration | ~SHA256:Ls0fnnzPHPLzsEOIH3wO/pwe2biKEtvJjyJ4nHCUsno~ |
+| Empreinte de la clé ED25519 du serveur | ~SHA256:0FOvxV7dd/mibk8/zo9TPaVJfZLPAo2qEjN0rLcN8Xk~ |
+
+Dans l'environnement où l'accès a été réparé :
+
+#+begin_src sh
+ssh matheval-admin
+#+end_src
+
+Depuis la racine d'un clone, avec la clé privée dans =~/.ssh/matheval_admin= :
+
+#+begin_src sh
+sh deploy/connect.sh
+#+end_src
+
+Le script utilise [[file:ssh-known-hosts][la clé d'hôte vérifiée]] et refuse un serveur présentant une autre clé.
+Pour un autre emplacement de clé privée :
+
+#+begin_src sh
+MATHEVAL_SSH_KEY=/chemin/vers/matheval_admin sh deploy/connect.sh
+#+end_src
+
+La clé privée ne fait pas partie du dépôt et n'est pas transférée en ouvrant
+une nouvelle conversation. Sur un autre ordinateur, transférer ce fichier
+par un moyen privé vers =~/.ssh/matheval_admin=, puis limiter sa lecture :
+
+#+begin_src sh
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/matheval_admin
+#+end_src
+
+Ne pas copier le contenu de cette clé dans un message, un ticket ou GitHub.
+Si elle est indisponible, créer une nouvelle paire sur le nouvel ordinateur
+et faire ajouter uniquement sa clé publique par une session administrative
+existante ou par le terminal hPanel. Ne pas remplacer les clés déjà autorisées.
+
+* Reprise dans ChatGPT Work
+
+Dans l'application de bureau ChatGPT, choisir *Work*, puis *Work locally*
+pour utiliser les fichiers et l'accès SSH de l'ordinateur. Ouvrir le dossier
+du dépôt, ou le cloner depuis l'adresse canonique. Le terminal intégré est
+accessible par l'icône de terminal en haut à droite.
+
+Le mode Cloud n'hérite pas automatiquement des clés SSH locales. Il faut
+un environnement autorisant le terminal, le réseau et l'accès privé à la clé.
+Ouvrir le dépôt GitHub seul ne suffit pas à donner l'accès au VPS.
+
+Depuis un téléphone, la fonction Remote permet de piloter un ordinateur
+Mac ou Windows connecté et allumé ; ce n'est pas une connexion directe au VPS.
+La disponibilité dépend du compte et des paramètres de l'espace de travail.
+
+Documentation officielle consultée le 17 septembre 2026 :
+- [[https://learn.chatgpt.com/docs/get-started-with-work][Choisir Work local ou Cloud]].
+- [[https://learn.chatgpt.com/docs/integrated-terminal][Ouvrir le terminal intégré]].
+- [[https://learn.chatgpt.com/docs/remote][Piloter l'ordinateur depuis le téléphone]].
+
+Message à donner à Work après ouverture du dépôt :
+
+#+begin_quote
+Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire, branche master.
+Lis AGENTS.md, deploy/REPRISE.org et deploy/README.org. Vérifie d'abord l'état
+Git et les dernières exécutions Actions, puis l'accès SSH avec
+sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
+Le serveur est le VPS NixOS 187.77.95.158, et l'adresse publique attendue est
+https://principiipetit.io/matheval/. Termine la mise en service, vérifie la
+collecte et l'administration avec les tests isolés, puis consigne l'état
+réel ici. Préserve les données et les accès existants, garde les secrets hors
+Git, et committe en français puis pousse les changements validés sur master.
+#+end_quote
+
+* État initial du serveur à préserver
+
+Le dossier ~/etc/nixos/~ était vide malgré un système NixOS actif. Ne pas
+lancer un remplacement de configuration sans reconstituer et vérifier
+le démarrage, le réseau et SSH. Le démarrage utilise GRUB BIOS sur ~/dev/sda~.
+La racine ext4 a l'UUID ~f222513b-ded1-49fa-b591-20ce86a2fe7f~.
+Le canal installé est ~https://channels.nixos.org/nixos-26.05~.
+
+L'interface ~eth0~ utilise systemd-networkd :
+- IPv4 ~187.77.95.158/24~, passerelle ~187.77.95.254~.
+- IPv6 ~2a02:4780:41:cf57::1/48~, passerelle ~2a02:4780:41::1~.
+- Adresse MAC ~d4:e8:d4:c3:50:d5~.
+- DNS ~153.92.2.6~, ~1.1.1.1~, ~8.8.4.4~.
+
+L'accès root par clé a été vérifié dans plusieurs nouvelles sessions SSH.
+Le fichier ~/root/.ssh/authorized_keys~ contient la clé d'administration
+valide. Sa sauvegarde avant nettoyage est
+~/root/.ssh/authorized_keys.before-repair.XjTDsq~ sur le VPS.
+
+La clé de déploiement est distincte : empreinte
+~SHA256:pVLRPSuVqjBuDgBl5xBqTzOSyxKN2NeUz+MXu3tz2uc~,
+fichier privé local ~/public/.ssh/matheval_deploy~. Elle doit appartenir à
+~matheval-deploy~, sans accès root général.
+
+* Adresses à vérifier après publication
+
+- Questionnaire : https://principiipetit.io/matheval/
+- Administration : https://principiipetit.io/matheval/admin/
+- Santé de l'API : https://principiipetit.io/matheval/api/health
+
+Avant modification, le DNS Hostinger contenait ~@ A 2.57.91.91~ (TTL 50)
+et ~www CNAME principiipetit.io.~ (TTL 300), sans autre enregistrement.
+La cible du domaine est ~@ A 187.77.95.158~. Conserver l'alias ~www~.
+Une réponse HTML de parking en HTTP 200 ne valide pas l'API : elle doit
+renvoyer du JSON avec ~status: ok~ et la version du corpus.

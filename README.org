@@ -83,3 +83,5 @@ Les ancres inter-fichiers utilisent ~CUSTOM_ID~ ; les liens PDF paginés utilise
 * Hébergement sur VPS
 
 Le questionnaire est prévu sous https://principiipetit.io/matheval/ et son administration sous /matheval/admin/. Le service Node.js et PostgreSQL sont décrits dans [[file:deploy/README.org][le guide de déploiement et de sauvegarde]]. Le tableau de bord expose les effectifs, les statistiques par rédaction, les corpus versionnés et les réponses individuelles.
+
+Les accès SSH vérifiés, l'état de publication et le message pour continuer dans ChatGPT Work sont consignés dans [[file:deploy/REPRISE.org][le document de reprise]].
