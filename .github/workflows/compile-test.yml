@@ -46,7 +46,9 @@ jobs:
           createdb -h 127.0.0.1 -U postgres matheval_browser_test
       - name: Vérifier les données et la collecte
         run: |
-          sudo nix-instantiate --store local --parse deploy/matheval.nix >/dev/null
+          for module in deploy/matheval.nix deploy/legacy-nginx.nix deploy/hostinger/*.nix; do
+            sudo nix-instantiate --store local --parse "$module" >/dev/null
+          done
           npm --prefix docs run check:data
           npm --prefix docs run test:data
           python3 -m unittest discover -s docs/tests -p 'test_published_site.py'

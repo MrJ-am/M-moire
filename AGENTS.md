@@ -1,5 +1,24 @@
 # Règles de travail de l'agent
 
+## Frontière entre Matheval et l'infrastructure VPS
+
+- Lire `deploy/INFRASTRUCTURE.org` avant toute intervention sur le déploiement.
+- Le projet VPS est responsable de Nginx, des certificats ACME, des domaines,
+  du pare-feu, du réseau, de SSH et de l'activation de NixOS. Ne pas modifier
+  ces éléments depuis le projet mémoire ni exécuter `nixos-rebuild` ici.
+- Matheval conserve l'application, `deploy/matheval.nix`, son service, sa base,
+  ses migrations, ses publications et ses sauvegardes. Toute évolution de
+  son module NixOS doit être intégrée explicitement par le projet VPS.
+- Le raccordement reste `127.0.0.1:3000`, préfixe `/matheval` conservé et origine
+  `https://principiipetit.io`. Tout changement de ce contrat est coordonné
+  avec le projet VPS avant déploiement.
+- `deploy/hostinger/` et `deploy/legacy-nginx.nix` ne sont que la compatibilité
+  de l'ancienne installation. Ne pas y ajouter de sites. La publication
+  applicative n'a jamais à les copier sur le VPS.
+- La séparation est préparée ; elle n'est pas réputée activée sur le serveur.
+  Seul un relevé de la génération NixOS active et de ses contrôles permet de
+  consigner cette activation. Préserver les accès et les données existants.
+
 ## Source éditoriale des questions et des contrats
 
 - Modifier les questions, les textes et les tableaux de codage dans `research/questions.org`, et les définitions dans `research/contrats.org`.

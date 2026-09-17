@@ -1,11 +1,18 @@
 #+title: Exploiter Matheval sur NixOS
 
+* Responsabilité de l'infrastructure
+
+Lire [[file:INFRASTRUCTURE.org][le contrat avec le projet VPS]]. Le module
+~matheval.nix~ fournit désormais uniquement le service applicatif et sa base.
+Nginx, HTTPS et la configuration de la machine relèvent du projet VPS.
+La séparation est préparée ; l'activation sur le serveur reste à vérifier.
+
 * Adresses et services
 Le questionnaire est servi sous https://principiipetit.io/matheval/ et l'administration sous /matheval/admin/. Nginx termine HTTPS et transmet ce préfixe à Node.js, lié à 127.0.0.1:3000. PostgreSQL est accessible par socket Unix ; aucun port de base de données n'est publié.
 
 Le module [[file:matheval.nix][matheval.nix]] s'importe dans la configuration NixOS existante. Activer ~services.matheval.enable~ et déclarer la clé publique de l'utilisateur de déploiement dans ~services.matheval.deploymentPublicKeys~. Lire la configuration existante avant de l'appliquer, afin de préserver les autres services et l'accès SSH.
 
-La configuration effectivement installée sur le VPS Hostinger est conservée dans [[file:hostinger/configuration.nix][hostinger/configuration.nix]]. Les accès, les contrôles de publication et la reprise dans ChatGPT Work figurent dans [[file:REPRISE.org][REPRISE.org]]. Le domaine principal et son alias ~www~ redirigent vers le questionnaire.
+La configuration relevée lors de l'installation est conservée dans [[file:hostinger/configuration.nix][hostinger/configuration.nix]], avec [[file:legacy-nginx.nix][un module de compatibilité Nginx]]. Elle ne constitue plus la source à déployer pour administrer le VPS. Les accès et les contrôles de publication figurent dans [[file:REPRISE.org][REPRISE.org]]. Le domaine principal et son alias ~www~ doivent continuer à rediriger vers le questionnaire.
 
 * Premier démarrage et administrateur
 Créer /var/lib/matheval/secrets.env, lisible uniquement par root et le service, contenant ~ADMIN_SETUP_TOKEN_HASH=<SHA-256 d'un secret aléatoire de 32 octets encodé en hexadécimal>~. Le secret original est remis au propriétaire par un lien privé ~https://principiipetit.io/matheval/admin/#activation=<secret>~.

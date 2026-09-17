@@ -1,6 +1,20 @@
 #+title: Reprendre Matheval dans ChatGPT Work
 #+date: 2026-09-17
 
+* Transfert de responsabilité vers le projet VPS — préparé, non activé ici
+
+Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. La configuration
+Nginx/HTTPS et la configuration système sont désormais du ressort du projet
+VPS. Les instructions historiques ci-dessous ne donnent plus au projet mémoire
+la responsabilité de reconstruire NixOS ou de recopier sa configuration.
+
+Lors de la préparation de cette séparation, GitHub était accessible, mais la
+connexion TCP à ~187.77.95.158:22~ a échoué avec ~Network is unreachable~.
+La clé privée et l'archive d'accès n'étaient pas disponibles dans cet
+environnement. Aucune nouvelle génération n'a donc été activée et aucun état
+serveur n'a pu être revérifié. Les réussites Actions sont des éléments de suivi,
+pas une preuve de l'état réel à l'instant de la migration.
+
 * État vérifié le 17 septembre 2026
 
 Le dépôt canonique est https://github.com/MrJ-am/M-moire, branche ~master~.
@@ -131,7 +145,10 @@ Message à donner à Work après ouverture du dépôt :
 
 #+begin_quote
 Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire, branche master.
-Lis AGENTS.md, deploy/REPRISE.org et deploy/README.org. Vérifie d'abord l'état
+Lis AGENTS.md, deploy/INFRASTRUCTURE.org, deploy/REPRISE.org et deploy/README.org.
+Le projet VPS possède Nginx, HTTPS et la configuration système ; coordonne avec
+lui toute modification du raccordement et ne reconstruis pas NixOS ici.
+Vérifie d'abord l'état
 Git et les dernières exécutions Actions, puis l'accès SSH avec
 sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
 Le site est en production sur le VPS NixOS 187.77.95.158 à l'adresse
@@ -142,14 +159,16 @@ Consigne l'état réel ici. Préserve les données et les accès existants, gard
 Git, et committe en français puis pousse les changements validés sur master.
 #+end_quote
 
-* Configuration NixOS et récupération
+* Configuration NixOS et récupération — relevé historique
 
 Les sources installées sont [[file:hostinger/configuration.nix][la configuration Hostinger]],
 [[file:hostinger/hardware-configuration.nix][le matériel relevé]] et [[file:matheval.nix][le module Matheval]]. Sur le VPS,
 ~/etc/nixos/configuration.nix~ importe ~/etc/nixos/hostinger/configuration.nix~,
-qui importe le matériel et ~/etc/nixos/matheval.nix~. Copier les modifications
-validées dans cette arborescence avant ~nixos-rebuild switch~. Le workflow
-applicatif n'actualise pas automatiquement la configuration système.
+qui importe le matériel et ~/etc/nixos/matheval.nix~. Ce relevé décrit l'état
+antérieur à la séparation. Ne plus copier ces fichiers ni lancer une activation
+depuis le projet mémoire. Le projet VPS doit comparer l'installation réelle,
+préparer sa configuration complète et prendre en charge la migration avec
+retour arrière. Le workflow applicatif n'actualise pas la configuration système.
 
 La sauvegarde initiale de configuration est
 ~/root/matheval-bootstrap/etc-before.tar.gz~ ; le chemin de l'ancienne
