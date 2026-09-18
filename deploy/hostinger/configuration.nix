@@ -1,6 +1,13 @@
 { config, lib, pkgs, ... }:
 {
-  imports = [ ./hardware-configuration.nix ../matheval.nix ];
+  # Archive de compatibilité : ne plus déployer ni modifier le VPS depuis
+  # ce projet. Voir ../INFRASTRUCTURE.org pour le transfert et son état réel.
+  imports = [
+    ./hardware-configuration.nix
+    ../matheval.nix
+    ../legacy-nginx.nix
+    ../legacy-postgresql.nix
+  ];
 
   # Configuration reconstituée sur le VPS 1982677 le 17 septembre 2026.
   # Le canal installé (26.05) et le noyau 6.18 sont conservés.

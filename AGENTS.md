@@ -1,5 +1,44 @@
 # Règles de travail de l'agent
 
+## Frontière entre Matheval et l'infrastructure VPS
+
+- Lire `deploy/INFRASTRUCTURE.org` avant toute intervention sur le déploiement.
+- Depuis ChatGPT Work, l'accès au VPS passe par GitHub Actions. Aucun accès
+  SSH direct n'est disponible : ne pas retenter `deploy/connect.sh` depuis
+  Work ni redemander une clé pour résoudre cette limitation réseau. Lire les
+  exécutions identifiées par leur URL et leur commit ; les runners ouvrent les
+  connexions SSH. Les diagnostics administratifs appartiennent au dépôt VPS.
+- Le projet VPS, https://github.com/MrJ-am/vps-infrastructure (privé), est
+  responsable de Nginx, des certificats ACME, des domaines, du pare-feu, du
+  réseau, de SSH, de l'activation de NixOS et de PostgreSQL (instance, bases,
+  rôles, règles d'accès et sauvegardes locales). Ne pas administrer ces
+  éléments depuis le projet mémoire ni exécuter `nixos-rebuild` ici.
+- Matheval conserve l'application, `deploy/matheval.nix`, son service et ses
+  comptes Unix, les données, le schéma, les migrations, les publications et
+  l'export chiffré `matheval-backup` avec son workflow Actions. Toute évolution
+  du module NixOS doit être intégrée explicitement par le projet VPS.
+- Le module applicatif ne déclare ni `services.postgresql` ni
+  `services.postgresqlBackup`. Son client de sauvegarde suit
+  `config.services.postgresql.package`. Le service attend `postgresql.service`
+  et `postgresql-setup.service` avec `after` et `requires`.
+- Le raccordement reste `127.0.0.1:3000`, préfixe `/matheval` conservé et origine
+  `https://principiipetit.io` ; PostgreSQL utilise le socket `/run/postgresql`,
+  la base, le rôle et le compte Unix `matheval`. Tout changement de ce contrat
+  est coordonné avec le projet VPS avant déploiement.
+- `deploy/hostinger/`, `deploy/legacy-nginx.nix` et
+  `deploy/legacy-postgresql.nix` préservent la reconstructibilité de l'ancienne
+  installation. Seule cette configuration importe les deux modules historiques ;
+  la nouvelle infrastructure ne les importe jamais. Ne pas les étendre.
+  La publication applicative n'a jamais à les copier sur le VPS.
+- Ne jamais copier isolément le nouveau module sur l'ancienne installation.
+  La bascule porte sur la configuration complète, coordonnée par le projet VPS.
+  Celui-ci vérifie les restrictions HBA/SQL et leur retour arrière : un retour
+  de génération NixOS ne restaure ni les données ni les ACL PostgreSQL.
+- La séparation a été activée et enregistrée le 18 septembre 2026 à 21:10 UTC,
+  avec les contrôles de l'exécution VPS `35395320446`. Les références installées
+  et le point de retour sont dans `deploy/INFRASTRUCTURE.org`. Vérifier les
+  dernières exécutions pour tout nouvel état ; préserver les accès et les données.
+
 ## Source éditoriale des questions et des contrats
 
 - Modifier les questions, les textes et les tableaux de codage dans `research/questions.org`, et les définitions dans `research/contrats.org`.

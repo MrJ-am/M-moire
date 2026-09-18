@@ -1,0 +1,153 @@
+#+title: Contrat Matheval — infrastructure VPS
+#+date: 2026-09-18
+
+* État de la séparation
+
+La séparation de Nginx et PostgreSQL est *activée et enregistrée* sur le VPS
+depuis le 18 septembre 2026 à 21:10 UTC. La
+[[https://github.com/MrJ-am/vps-infrastructure/actions/runs/35395320446][bascule GitHub Actions]] a réussi : nouvelle connexion SSH, services, onze contrôles
+HTTP/TLS, accès PostgreSQL autorisés et refusés, conservation des lignes,
+sauvegarde locale restaurée dans une instance isolée et export chiffré hors VPS.
+Le retour automatique a été annulé après ces contrôles et l'enregistrement.
+Le relais des sources applicatives est regroupé dans la
+[[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]].
+
+Le dépôt [[https://github.com/MrJ-am/vps-infrastructure][MrJ-am/vps-infrastructure]] (privé) possède désormais la configuration
+active. Lire son [[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/ETAT.md][état attesté]], son [[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/POSTGRESQL.md][contrat PostgreSQL]] et sa
+[[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/MIGRATION.md][procédure de migration]].
+
+| Élément | Référence vérifiée |
+|---------+--------------------|
+| Commit des sources installées | fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb |
+| Commit opérateur de la bascule | 49d82f8167b8121fb03c7d95da02169bb6409e28 |
+| Sources installées | /etc/nixos/vps-infrastructure/fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb |
+| Génération active et par défaut | /nix/store/8cbhcffxr0xhybz2va6yz8rrxfgqgzy9-nixos-system-nixos-26.05.8639.c5c4a43b0e80 |
+| Ancienne génération protégée | /nix/store/5840x51nc7d2s7gw0zfyy6my47j6nh1i-nixos-system-nixos-26.05.8639.c5c4a43b0e80 |
+| Sauvegardes et rapport de migration | /root/vps-migrations/fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb/ |
+| PostgreSQL conservé | 17.11 ; /var/lib/postgresql/17 |
+
+Le dossier privé conserve ~etc-nixos-before.tar~, ~configuration.nix.before~,
+~rollback-acl.sql~, les sauvegardes et ~committed.json~. L'ancienne génération
+et le candidat ont des racines de GC explicites. Le script de retour de l'essai
+refuse d'agir après enregistrement : un retour ultérieur doit être préparé par
+VPS en tenant compte des éventuelles évolutions SQL et applicatives.
+Aucun redémarrage du VPS n'a été effectué ; le profil et le menu de démarrage
+sont enregistrés, mais un redémarrage réel reste un contrôle distinct.
+
+La reprise amont du module ~0bcdaf101cbdacb85694ca217fd21ab3f2eac828~ est
+désormais référencée dans VPS au commit ~e0f0c33a312708a54babdbfca00bd958682845b0~.
+Sa copie a la même empreinte : ne plus lui appliquer le patch PostgreSQL.
+Cette copie exacte est celle intégrée dans la génération maintenant active.
+
+* Accès depuis Work
+
+Les accès SSH au VPS se font depuis les runners GitHub Actions. Work prépare
+les changements, déclenche les workflows par les moyens GitHub disponibles
+et lit leurs résultats. Ne pas tenter de connexion SSH directe depuis Work.
+Le workflow applicatif conserve ~matheval-deploy~ ; le dépôt VPS gère son
+accès administratif séparément. Un accès root ne doit pas être ajouté ici.
+
+* Répartition des responsabilités
+
+| Projet VPS | Projet mémoire / Matheval |
+|------------+--------------------------|
+| Nginx unique, ports publics 80/443 | Service matheval et écoute locale |
+| Routage, domaines, certificats ACME | Contrat HTTP, chemins, origine publique |
+| NixOS hôte, démarrage, réseau, SSH, pare-feu | Module applicatif deploy/matheval.nix |
+| Intégration explicite d'une version du module | Versions du code et publications Actions |
+| Instance PostgreSQL 17, création des bases et rôles | Compte Unix matheval, schéma, tables, index et migrations |
+| Règles d'accès HBA/SQL et maintenance PostgreSQL | Données et compatibilité des versions applicatives |
+| Sauvegardes PostgreSQL locales quotidiennes | Export chiffré matheval-backup et workflow Actions |
+| Environnement isolé et droits pour les restaurations | Validation fonctionnelle des données restaurées |
+
+Le module applicatif ne déclare plus ~services.postgresql~ ni
+~services.postgresqlBackup~. L'infrastructure conserve PostgreSQL 17 et
+~/var/backup/postgresql~ avec l'horaire ~daily~ ; aucun déplacement de données
+ni changement de version majeure n'est demandé. Les nouvelles règles d'accès
+relèvent du projet VPS ; elles ont été auditées puis vérifiées pendant la bascule.
+
+* Contrat conservé
+
+| Élément | Valeur |
+|---------+--------|
+| Origine canonique | https://principiipetit.io |
+| Préfixe public et interne | /matheval |
+| Service HTTP privé | http://127.0.0.1:3000 |
+| Santé en lecture seule | GET /matheval/api/health : JSON, status=ok |
+| Questionnaire | GET /matheval/ : HTML 200 |
+| Administration | GET /matheval/admin/ : HTML 200 |
+| Administration anonyme | GET /matheval/api/admin/me : 401 |
+| Statistiques anonymes | GET /matheval/api/admin/statistics : 401 |
+| Taille de requête autorisée par Nginx | 5m |
+| Version active | /srv/matheval/current → /srv/matheval/releases/<commit> |
+| Compte de publication | matheval-deploy |
+| Secret applicatif, hors Git | /var/lib/matheval/secrets.env |
+| Socket PostgreSQL | /run/postgresql, port logique 5432, sans écoute TCP |
+| Base, rôle SQL et compte Unix | matheval |
+| Dépendances du service (after et requires) | postgresql.service et postgresql-setup.service |
+
+Le proxy transmet ~Host~, ~X-Forwarded-Proto~ et remplace ~X-Forwarded-For~
+par l'adresse distante, comme auparavant. Il ne retire pas ~/matheval~ de
+l'URI : le ~proxyPass~ ne comporte pas de barre oblique terminale.
+Les redirections de ~/~ et de ~/matheval~ restent 308 vers ~/matheval/~.
+L'alias ~www.principiipetit.io~ conserve sa redirection vers le domaine canonique.
+L'origine et le chemin des cookies d'administration ne changent pas.
+
+Le client Node.js conserve son raccordement par défaut au socket sous le rôle
+~matheval~. Les connexions locales effectives ont été vérifiées pendant la
+bascule. Toute évolution d'un éventuel ~DATABASE_URL~ doit respecter ce contrat,
+sans divulguer le secret. L'authentification ~peer~, les droits de connexion et les ACL
+appartiennent au projet VPS ; Matheval conserve ses migrations de schéma.
+
+* Publication et évolution du module
+
+Le workflow Actions construit, teste et publie l'application avec la clé
+~matheval-deploy~ ; il n'administre ni Nginx, ni PostgreSQL, ni NixOS. Le workflow
+de sauvegarde conserve ses secrets et son compte. Depuis Work, une modification
+de ~deploy/backup-request.json~ publiée sur ~master~ déclenche aussi une copie
+chiffrée, en complément du déclenchement manuel et quotidien. ~matheval-backup~ conserve
+son chiffrement age et ses droits sudo limités ; seul son client ~pg_dump~
+suit désormais ~config.services.postgresql.package~. Ne pas donner de clé
+root à ces workflows.
+
+Le projet VPS importe une copie revue et identifiée par commit de
+~deploy/matheval.nix~. Une publication de Matheval ne met jamais cette copie
+à jour automatiquement. Pour modifier le service, proposer un changement du
+module puis demander son intégration au projet VPS avec les vérifications
+nécessaires. Les migrations de base doivent rester compatibles avec les
+versions applicatives encore susceptibles d'être restaurées.
+
+Le patch PostgreSQL fourni par VPS est repris sans divergence depuis le module
+au commit ~c83308ddfeefa03dfbb6692773c3d1274c867936~. L'empreinte SHA-256 du
+module adapté est ~8959538472392c6bff39cf91e3eeaa125b6814f0af15d63381258a51baf20086~.
+VPS a référencé cette reprise dans ~vendor/matheval/source.json~ au commit
+~e0f0c33a312708a54babdbfca00bd958682845b0~. Ne plus appliquer son patch à ce
+module : les changements sont déjà présents. Ne transférer aucun module
+~legacy-*~.
+
+* Conservation de la configuration historique
+
+Les blocs Nginx, puis PostgreSQL et sauvegardes locales, ont été déplacés sans
+changer leur contenu vers ~deploy/legacy-nginx.nix~ et
+~deploy/legacy-postgresql.nix~. Ils restent conditionnés par
+~services.matheval.enable~. Seule ~deploy/hostinger/configuration.nix~ les
+importe explicitement : l'ancienne configuration complète reste reconstructible.
+La CI vérifie la syntaxe de ces modules et évalue la configuration historique
+complète avec une source Nixpkgs 26.05 identifiée, sans construire ni activer
+le système. Cette validation ne remplace pas la construction côté VPS avec
+la source Nixpkgs réellement installée. L'archive ne doit plus recevoir de
+nouvelles fonctionnalités.
+
+Attention : copier uniquement le nouveau ~matheval.nix~ sur l'installation
+ancienne, puis reconstruire NixOS, pourrait désactiver Nginx, PostgreSQL et
+ses sauvegardes locales.
+La bascule doit porter sur la configuration complète assemblée par le projet
+VPS. Ne jamais importer les modules historiques dans la nouvelle infrastructure
+ni lancer ~nixos-rebuild~ depuis le projet mémoire.
+
+L'infrastructure activée a conservé les versions, le réseau, les clés, les
+certificats, les chemins de données et l'application active. Les restrictions
+HBA/SQL et l'attente de ~postgresql-setup.service~ sont des changements
+intentionnels : ne pas présenter l'activation comme neutre. Leur vérification
+et le retour ciblé des ACL et attributs de rôles ont été validés côté VPS.
+Un retour de génération NixOS ne restaure ni les données ni ces droits SQL.

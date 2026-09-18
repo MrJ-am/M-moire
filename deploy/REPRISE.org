@@ -1,7 +1,63 @@
 #+title: Reprendre Matheval dans ChatGPT Work
-#+date: 2026-09-17
+#+date: 2026-09-18
 
-* État vérifié le 17 septembre 2026
+* Mode d'accès retenu depuis Work
+
+L'accès au VPS se fait par GitHub Actions. Work n'a pas d'accès SSH direct ;
+les connexions réussies observées sont celles des runners GitHub. Ne pas
+retenter SSH depuis Work et ne pas demander de nouveau l'archive privée pour
+résoudre cette limitation réseau. Les commandes SSH des relevés historiques
+ci-dessous sont destinées aux runners ou à un opérateur local.
+
+Le dépôt VPS propose le workflow ~Auditer le VPS~. Work peut le déclencher
+par une demande ~operations/audit-request.json~ publiée sur sa branche ~main~,
+puis consulter l'exécution correspondant au commit. La publication de Matheval
+et son export chiffré restent gérés par les workflows de ce dépôt sous
+~matheval-deploy~, sans droits d'administration du système.
+
+* Transfert de responsabilité vers le projet VPS — activé le 18 septembre 2026
+
+Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. Le dépôt privé
+[[https://github.com/MrJ-am/vps-infrastructure][VPS Infrastructure]] possède Nginx/HTTPS, NixOS et PostgreSQL (instance,
+création des bases et rôles, règles d'accès et sauvegardes locales).
+Matheval conserve les données, le schéma, les migrations, les publications,
+les secrets et l'export chiffré ~matheval-backup~ avec son workflow Actions.
+Les instructions historiques ci-dessous ne donnent plus au projet mémoire
+la responsabilité de reconstruire NixOS ou de recopier sa configuration.
+
+La [[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]], branche ~infra/separer-nginx~, reprend le patch PostgreSQL
+fourni par VPS au commit ~bccf320~. Le module attend désormais
+~postgresql-setup.service~ ; son client ~pg_dump~ suit le paquet PostgreSQL
+de l'infrastructure. L'ancien bloc PostgreSQL et ses sauvegardes locales sont
+conservés dans [[file:legacy-postgresql.nix][legacy-postgresql.nix]], importé uniquement par la configuration
+historique [[file:hostinger/configuration.nix][Hostinger]], comme [[file:legacy-nginx.nix][legacy-nginx.nix]]. La CI en vérifie la syntaxe et
+évalue la configuration historique complète sans construction ni activation.
+
+Le raccordement conserve ~/run/postgresql~, base/rôle/compte Unix ~matheval~,
+HTTP ~127.0.0.1:3000~ et le préfixe ~/matheval~. Aucun déplacement de données
+ni changement de version majeure n'a été effectué. Le projet VPS a intégré
+explicitement le commit amont adapté, contrôlé les restrictions HBA/SQL
+et validé le retour de leurs ACL : revenir à une génération NixOS ne les
+restaure pas. Ne pas importer les modules historiques dans la nouvelle
+infrastructure, copier isolément le module adapté sur l'ancienne installation,
+ni reconstruire NixOS depuis Mémoire.
+
+La [[https://github.com/MrJ-am/vps-infrastructure/actions/runs/35395320446][migration du 18 septembre]] est activée et enregistrée depuis 21:10 UTC.
+Les sources VPS installées correspondent à ~fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb~.
+La génération active et par défaut, les sauvegardes et l'ancienne génération
+protégée figurent dans [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. SSH, HTTPS, l'API, les refus
+anonymes, les droits SQL, la conservation des lignes et une restauration isolée
+ont été vérifiés. L'export chiffré hors VPS a réussi. Aucun redémarrage du VPS
+n'a été effectué. Les relevés du 17 septembre ci-dessous restent historiques.
+
+Lors de la préparation initiale du 17 septembre, GitHub était accessible, mais la
+connexion TCP à ~187.77.95.158:22~ a échoué avec ~Network is unreachable~.
+La clé privée et l'archive d'accès n'étaient pas disponibles dans cet
+environnement. Aucune nouvelle génération n'a donc été activée et aucun état
+serveur n'a pu être revérifié. Les réussites Actions sont des éléments de suivi,
+pas une preuve de l'état réel à l'instant de la migration.
+
+* État vérifié le 17 septembre 2026 — relevé historique
 
 Le dépôt canonique est https://github.com/MrJ-am/M-moire, branche ~master~.
 L'ancienne adresse ~Echologie/M-moire~ redirige vers ce dépôt.
@@ -45,7 +101,10 @@ La publication automatique suit les commits validés sur ~master~.
 La sauvegarde locale quotidienne est activée et une première copie a été
 produite dans ~/var/backup/postgresql/~. ~MATHEVAL_BACKUPS=true~ active les
 copies chiffrées hors du VPS à 03:40 UTC, conservées quatorze jours dans
-[[https://github.com/MrJ-am/M-moire/actions/workflows/backup.yml][les artefacts de sauvegarde GitHub]]. Une copie chiffrée a été déchiffrée,
+[[https://github.com/MrJ-am/M-moire/actions/workflows/backup.yml][les artefacts de sauvegarde GitHub]]. Depuis Work, modifier l'identifiant de
+~deploy/backup-request.json~ sur ~master~ permet aussi de déclencher ce workflow,
+sans clé root ni accès SSH direct. Lors de la mise en service initiale,
+une copie chiffrée a été déchiffrée,
 puis restaurée dans une base temporaire : corpus identique, 19 contraintes
 présentes et aucune participation initiale. Cette base temporaire a ensuite
 été supprimée.
@@ -61,7 +120,7 @@ clés SSH, la clé de déchiffrement age, la sauvegarde initiale et le lien
 d'activation. Le propriétaire doit en conserver une copie privée durable
 pour reprendre sur un autre ordinateur. Ne jamais ajouter cette archive au dépôt.
 
-* Accès SSH vérifié
+* Paramètres SSH — relevé historique
 
 | Paramètre | Valeur |
 |-----------+--------|
@@ -109,47 +168,54 @@ existante ou par le terminal hPanel. Ne pas remplacer les clés déjà autorisé
 
 * Reprise dans ChatGPT Work
 
-Dans l'application de bureau ChatGPT, choisir *Work*, puis *Work locally*
-pour utiliser les fichiers et l'accès SSH de l'ordinateur. Ouvrir le dossier
-du dépôt, ou le cloner depuis l'adresse canonique. Le terminal intégré est
-accessible par l'icône de terminal en haut à droite.
-
-Le mode Cloud n'hérite pas automatiquement des clés SSH locales. Il faut
-un environnement autorisant le terminal, le réseau et l'accès privé à la clé.
-Ouvrir le dépôt GitHub seul ne suffit pas à donner l'accès au VPS.
-
-Depuis un téléphone, la fonction Remote permet de piloter un ordinateur
-Mac ou Windows connecté et allumé ; ce n'est pas une connexion directe au VPS.
-La disponibilité dépend du compte et des paramètres de l'espace de travail.
-
-Documentation officielle consultée le 17 septembre 2026 :
-- [[https://learn.chatgpt.com/docs/get-started-with-work][Choisir Work local ou Cloud]].
-- [[https://learn.chatgpt.com/docs/integrated-terminal][Ouvrir le terminal intégré]].
-- [[https://learn.chatgpt.com/docs/remote][Piloter l'ordinateur depuis le téléphone]].
+Ouvrir le dépôt canonique avec l'application GitHub connectée. Lire ses
+consignes et les dernières exécutions Actions. Un commit applicatif validé
+sur ~master~ déclenche la publication existante ; l'accès SSH de ce workflow
+est indépendant du réseau de Work. Pour le système, utiliser uniquement les
+workflows du dépôt VPS, avec leurs contrôles et leur retour arrière.
 
 Message à donner à Work après ouverture du dépôt :
 
 #+begin_quote
-Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire, branche master.
-Lis AGENTS.md, deploy/REPRISE.org et deploy/README.org. Vérifie d'abord l'état
-Git et les dernières exécutions Actions, puis l'accès SSH avec
-sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
+Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire sur master.
+Le transfert d'infrastructure est activé depuis le 18 septembre 2026 ; les
+sources applicatives correspondantes sont regroupées dans la PR nº 8.
+Lis AGENTS.md, deploy/INFRASTRUCTURE.org, deploy/REPRISE.org et deploy/README.org.
+Le projet https://github.com/MrJ-am/vps-infrastructure possède Nginx, HTTPS,
+NixOS et PostgreSQL (bases, rôles, accès et sauvegardes locales). Matheval
+conserve les données, les migrations, les publications et l'export chiffré.
+Coordonne avec VPS toute modification du raccordement. Ne copie pas isolément
+le nouveau module sur l'ancienne installation et ne reconstruis pas NixOS ici.
+La migration a été vérifiée dans l'exécution VPS 35395320446. Vérifie l'état Git et les
+dernières exécutions Actions. L'accès au VPS passe par GitHub Actions ; ne
+tente pas de connexion SSH directe depuis Work. Consulte le diagnostic du
+dépôt VPS pour les services, la génération active et les contrôles distants.
 Le site est en production sur le VPS NixOS 187.77.95.158 à l'adresse
 https://principiipetit.io/matheval/. Vérifie son état, les sauvegardes et
 l'activation du compte propriétaire, puis poursuis les améliorations demandées.
 Les tests de collecte et d'administration doivent utiliser des bases isolées.
 Consigne l'état réel ici. Préserve les données et les accès existants, garde les secrets hors
-Git, et committe en français puis pousse les changements validés sur master.
+Git, et committe en français puis pousse les changements validés sur la
+branche courante. Transmets les évolutions du module à VPS pour intégration.
 #+end_quote
 
-* Configuration NixOS et récupération
+* Configuration NixOS et récupération — relevé historique
 
 Les sources installées sont [[file:hostinger/configuration.nix][la configuration Hostinger]],
 [[file:hostinger/hardware-configuration.nix][le matériel relevé]] et [[file:matheval.nix][le module Matheval]]. Sur le VPS,
 ~/etc/nixos/configuration.nix~ importe ~/etc/nixos/hostinger/configuration.nix~,
-qui importe le matériel et ~/etc/nixos/matheval.nix~. Copier les modifications
-validées dans cette arborescence avant ~nixos-rebuild switch~. Le workflow
-applicatif n'actualise pas automatiquement la configuration système.
+qui importe le matériel et ~/etc/nixos/matheval.nix~. Ce relevé décrit l'état
+antérieur à la séparation. Ne plus copier ces fichiers ni lancer une activation
+depuis le projet mémoire. Le projet VPS doit comparer l'installation réelle,
+préparer toute nouvelle évolution avec son retour arrière. La migration du
+18 septembre est consignée dans INFRASTRUCTURE.org ; le workflow applicatif
+n'actualise pas la configuration système.
+
+Dans les sources de la PR nº 8, l'ancienne configuration complète importe
+aussi [[file:legacy-nginx.nix][legacy-nginx.nix]] et [[file:legacy-postgresql.nix][legacy-postgresql.nix]]. Ces deux extractions
+préservent les anciens réglages pour la reconstruction historique ; elles
+ne décrivent pas des fichiers déjà copiés sur le serveur. La nouvelle
+infrastructure n'importe aucun de ces deux modules de compatibilité.
 
 La sauvegarde initiale de configuration est
 ~/root/matheval-bootstrap/etc-before.tar.gz~ ; le chemin de l'ancienne

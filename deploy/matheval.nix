@@ -46,7 +46,7 @@ let
   };
   backup = pkgs.writeShellApplication {
     name = "matheval-backup";
-    runtimeInputs = [ pkgs.postgresql_17 pkgs.age pkgs.util-linux ];
+    runtimeInputs = [ config.services.postgresql.package pkgs.age pkgs.util-linux ];
     text = ''
       runuser -u postgres -- pg_dump --format=custom matheval | age -r ${lib.escapeShellArg cfg.backupRecipient}
     '';
@@ -59,20 +59,6 @@ in {
     backupRecipient = lib.mkOption { type = lib.types.str; default = ""; description = "Clé publique age ; la clé privée est conservée hors du VPS."; };
   };
   config = lib.mkIf cfg.enable {
-    services.postgresql = {
-      enable = true;
-      package = pkgs.postgresql_17;
-      enableTCPIP = false;
-      settings.listen_addresses = lib.mkForce "";
-      ensureDatabases = [ "matheval" ];
-      ensureUsers = [{ name = "matheval"; ensureDBOwnership = true; }];
-    };
-    services.postgresqlBackup = {
-      enable = true;
-      databases = [ "matheval" ];
-      startAt = "daily";
-      location = "/var/backup/postgresql";
-    };
     users.groups.matheval = {};
     users.users.matheval = { isSystemUser = true; group = "matheval"; };
     users.users.matheval-deploy = {
@@ -99,8 +85,8 @@ in {
     systemd.services.matheval = {
       description = "Collecte et administration Matheval";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" "postgresql.service" ];
-      requires = [ "postgresql.service" ];
+      after = [ "network.target" "postgresql.service" "postgresql-setup.service" ];
+      requires = [ "postgresql.service" "postgresql-setup.service" ];
       environment = {
         NODE_ENV = "production";
         HOST = "127.0.0.1";
@@ -129,23 +115,5 @@ in {
         UMask = "0077";
       };
     };
-    security.acme.acceptTerms = true;
-    services.nginx.enable = true;
-    services.nginx.virtualHosts."${cfg.domain}" = {
-      enableACME = true;
-      forceSSL = true;
-      locations."= /".return = "308 /matheval/";
-      locations."= /matheval".return = "308 /matheval/";
-      locations."/matheval/" = {
-        proxyPass = "http://127.0.0.1:3000";
-        extraConfig = ''
-          client_max_body_size 5m;
-          proxy_set_header Host $host;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_set_header X-Forwarded-For $remote_addr;
-        '';
-      };
-    };
-    networking.firewall.allowedTCPPorts = [ 80 443 ];
   };
 }
