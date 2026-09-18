@@ -1,16 +1,20 @@
 #+title: Contrat Matheval — infrastructure VPS
-#+date: 2026-09-17
+#+date: 2026-09-18
 
 * État de la séparation
 
-La séparation des sources est préparée. La migration effective sur le VPS
-n'a pas été exécutée dans cette session : réseau SSH inaccessible et clé
-privée indisponible. Ne pas annoncer que le serveur utilise déjà le nouveau
-dépôt. Le projet VPS devra consigner ici l'URL de son dépôt, son commit,
-la génération activée, la date des contrôles et le point de retour arrière.
+La séparation de Nginx et PostgreSQL est préparée dans les sources de la
+[[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]], branche ~infra/separer-nginx~. La migration serveur n'est pas
+activée. Aucun accès ni changement serveur n'a été effectué lors de la reprise
+PostgreSQL du 18 septembre. Ne pas annoncer que le VPS utilise déjà ces sources.
 
-Le dépôt proposé est ~MrJ-am/vps-infrastructure~ (privé, à créer).
-Son nom est une proposition ; aucune URL de dépôt créé n'est encore attestée.
+Le dépôt d'infrastructure existe :
+[[https://github.com/MrJ-am/vps-infrastructure][MrJ-am/vps-infrastructure]] (privé). Cette reprise suit son
+[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/MESSAGE-MEMOIRE.md][message au commit bccf320]], son
+[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/POSTGRESQL.md][contrat PostgreSQL]] et sa
+[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/MIGRATION.md][procédure de migration]]. Le projet VPS devra consigner ici le commit
+d'infrastructure installé, la génération activée, la date des contrôles et
+le point de retour arrière. Ces éléments restent à relever sur le serveur.
 
 * Répartition des responsabilités
 
@@ -20,12 +24,16 @@ Son nom est une proposition ; aucune URL de dépôt créé n'est encore attesté
 | Routage, domaines, certificats ACME | Contrat HTTP, chemins, origine publique |
 | NixOS hôte, démarrage, réseau, SSH, pare-feu | Module applicatif deploy/matheval.nix |
 | Intégration explicite d'une version du module | Versions du code et publications Actions |
-| Arbitrage des ressources et services partagés | Schéma, données, sauvegardes applicatives |
+| Instance PostgreSQL 17, création des bases et rôles | Compte Unix matheval, schéma, tables, index et migrations |
+| Règles d'accès HBA/SQL et maintenance PostgreSQL | Données et compatibilité des versions applicatives |
+| Sauvegardes PostgreSQL locales quotidiennes | Export chiffré matheval-backup et workflow Actions |
+| Environnement isolé et droits pour les restaurations | Validation fonctionnelle des données restaurées |
 
-Le module applicatif déclare encore PostgreSQL 17, son écoute sur socket Unix
-et les sauvegardes locales. Toute évolution de ces options globales doit être
-relue côté infrastructure avant intégration ; un second projet ne doit pas
-imposer une autre version de PostgreSQL ou ouvrir son port.
+Le module applicatif ne déclare plus ~services.postgresql~ ni
+~services.postgresqlBackup~. L'infrastructure conserve PostgreSQL 17 et
+~/var/backup/postgresql~ avec l'horaire ~daily~ ; aucun déplacement de données
+ni changement de version majeure n'est demandé. Les nouvelles règles d'accès
+relèvent du projet VPS, qui doit les auditer et les tester avant activation.
 
 * Contrat conservé
 
@@ -43,6 +51,9 @@ imposer une autre version de PostgreSQL ou ouvrir son port.
 | Version active | /srv/matheval/current → /srv/matheval/releases/<commit> |
 | Compte de publication | matheval-deploy |
 | Secret applicatif, hors Git | /var/lib/matheval/secrets.env |
+| Socket PostgreSQL | /run/postgresql, port logique 5432, sans écoute TCP |
+| Base, rôle SQL et compte Unix | matheval |
+| Dépendances du service (after et requires) | postgresql.service et postgresql-setup.service |
 
 Le proxy transmet ~Host~, ~X-Forwarded-Proto~ et remplace ~X-Forwarded-For~
 par l'adresse distante, comme auparavant. Il ne retire pas ~/matheval~ de
@@ -51,11 +62,20 @@ Les redirections de ~/~ et de ~/matheval~ restent 308 vers ~/matheval/~.
 L'alias ~www.principiipetit.io~ conserve sa redirection vers le domaine canonique.
 L'origine et le chemin des cookies d'administration ne changent pas.
 
+Le client Node.js conserve son raccordement par défaut au socket sous le rôle
+~matheval~. Avant activation, le projet VPS doit vérifier qu'un éventuel
+~DATABASE_URL~ dans l'environnement réel respecte ce contrat, sans divulguer
+le secret. L'authentification ~peer~, les droits de connexion et les ACL
+appartiennent au projet VPS ; Matheval conserve ses migrations de schéma.
+
 * Publication et évolution du module
 
 Le workflow Actions construit, teste et publie l'application avec la clé
-~matheval-deploy~ ; il ne modifie ni Nginx ni NixOS. Le workflow de sauvegarde
-et ses secrets restent identiques. Ne pas donner de clé root à ces workflows.
+~matheval-deploy~ ; il n'administre ni Nginx, ni PostgreSQL, ni NixOS. Le workflow
+de sauvegarde et ses secrets restent identiques. ~matheval-backup~ conserve
+son chiffrement age et ses droits sudo limités ; seul son client ~pg_dump~
+suit désormais ~config.services.postgresql.package~. Ne pas donner de clé
+root à ces workflows.
 
 Le projet VPS importe une copie revue et identifiée par commit de
 ~deploy/matheval.nix~. Une publication de Matheval ne met jamais cette copie
@@ -64,18 +84,37 @@ module puis demander son intégration au projet VPS avec les vérifications
 nécessaires. Les migrations de base doivent rester compatibles avec les
 versions applicatives encore susceptibles d'être restaurées.
 
+Le patch PostgreSQL fourni par VPS est repris sans divergence depuis le module
+au commit ~c83308ddfeefa03dfbb6692773c3d1274c867936~. L'empreinte SHA-256 du
+module adapté est ~8959538472392c6bff39cf91e3eeaa125b6814f0af15d63381258a51baf20086~.
+Transmettre au projet VPS le commit de cette reprise pour qu'il remplace sa
+copie adaptée par la copie amont identifiée et actualise
+~vendor/matheval/source.json~. Ne plus appliquer son patch à ce module : les
+changements sont déjà présents. Ne transférer aucun module ~legacy-*~.
+
 * Compatibilité pendant la transition
 
-Le bloc Nginx a été déplacé, sans changer son contenu, vers
-~deploy/legacy-nginx.nix~. L'ancienne configuration ~deploy/hostinger/~
-l'importe explicitement : elle reste reconstructible dans son ensemble.
-Cette archive ne doit plus recevoir de nouvelles fonctionnalités.
+Les blocs Nginx, puis PostgreSQL et sauvegardes locales, ont été déplacés sans
+changer leur contenu vers ~deploy/legacy-nginx.nix~ et
+~deploy/legacy-postgresql.nix~. Ils restent conditionnés par
+~services.matheval.enable~. Seule ~deploy/hostinger/configuration.nix~ les
+importe explicitement : l'ancienne configuration complète reste reconstructible.
+La CI vérifie la syntaxe de ces modules et évalue la configuration historique
+complète avec une source Nixpkgs 26.05 identifiée, sans construire ni activer
+le système. Cette validation ne remplace pas la construction côté VPS avec
+la source Nixpkgs réellement installée. L'archive ne doit plus recevoir de
+nouvelles fonctionnalités.
 
 Attention : copier uniquement le nouveau ~matheval.nix~ sur l'installation
-ancienne, puis reconstruire NixOS, pourrait supprimer le vhost principal.
+ancienne, puis reconstruire NixOS, pourrait désactiver Nginx, PostgreSQL et
+ses sauvegardes locales.
 La bascule doit porter sur la configuration complète assemblée par le projet
-VPS. Ne jamais mélanger l'ancien module Nginx et la nouvelle passerelle.
+VPS. Ne jamais importer les modules historiques dans la nouvelle infrastructure
+ni lancer ~nixos-rebuild~ depuis le projet mémoire.
 
-La future infrastructure conservera la configuration réseau, les clés, les
-certificats et les chemins de données existants. Le transfert initial vise un
-comportement équivalent, sans mise à jour du système ni de l'application.
+La future infrastructure conserve les versions, le réseau, les clés, les
+certificats, les chemins de données et l'application active. Les restrictions
+HBA/SQL et l'attente de ~postgresql-setup.service~ sont des changements
+intentionnels : ne pas présenter l'activation comme neutre. Leur vérification
+et le retour ciblé des ACL et attributs de rôles sont à préparer côté VPS.
+Un retour de génération NixOS ne restaure ni les données ni ces droits SQL.

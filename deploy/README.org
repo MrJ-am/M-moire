@@ -2,17 +2,32 @@
 
 * Responsabilité de l'infrastructure
 
-Lire [[file:INFRASTRUCTURE.org][le contrat avec le projet VPS]]. Le module
-~matheval.nix~ fournit désormais uniquement le service applicatif et sa base.
-Nginx, HTTPS et la configuration de la machine relèvent du projet VPS.
-La séparation est préparée ; l'activation sur le serveur reste à vérifier.
+Lire [[file:INFRASTRUCTURE.org][le contrat avec le projet VPS]]. Le dépôt privé
+[[https://github.com/MrJ-am/vps-infrastructure][VPS Infrastructure]] possède Nginx, HTTPS, NixOS et PostgreSQL : instance,
+création des bases et rôles, accès et sauvegardes locales. Le module
+~matheval.nix~ conserve le service, les comptes Unix, les chemins, les secrets,
+les publications et l'export chiffré. Les données, le schéma et ses migrations
+restent du ressort de Matheval. La séparation est préparée, non activée.
 
 * Adresses et services
 Le questionnaire est servi sous https://principiipetit.io/matheval/ et l'administration sous /matheval/admin/. Nginx termine HTTPS et transmet ce préfixe à Node.js, lié à 127.0.0.1:3000. PostgreSQL est accessible par socket Unix ; aucun port de base de données n'est publié.
 
-Le module [[file:matheval.nix][matheval.nix]] s'importe dans la configuration NixOS existante. Activer ~services.matheval.enable~ et déclarer la clé publique de l'utilisateur de déploiement dans ~services.matheval.deploymentPublicKeys~. Lire la configuration existante avant de l'appliquer, afin de préserver les autres services et l'accès SSH.
+Le projet VPS intègre une copie revue et identifiée par commit de
+[[file:matheval.nix][matheval.nix]] dans sa configuration complète. Il active
+~services.matheval.enable~ et conserve les clés publiques de publication et
+de sauvegarde. Le module ne crée plus l'instance PostgreSQL, sa base ou son rôle.
+Le raccordement reste le socket ~/run/postgresql~, base/rôle/compte Unix
+~matheval~ ; le service attend ~postgresql.service~ et
+~postgresql-setup.service~ avec ~after~ et ~requires~. Toute évolution de ce
+contrat doit être coordonnée avec VPS.
 
-La configuration relevée lors de l'installation est conservée dans [[file:hostinger/configuration.nix][hostinger/configuration.nix]], avec [[file:legacy-nginx.nix][un module de compatibilité Nginx]]. Elle ne constitue plus la source à déployer pour administrer le VPS. Les accès et les contrôles de publication figurent dans [[file:REPRISE.org][REPRISE.org]]. Le domaine principal et son alias ~www~ doivent continuer à rediriger vers le questionnaire.
+La configuration historique reste reconstructible avec
+[[file:hostinger/configuration.nix][hostinger/configuration.nix]], qui importe seule les modules de compatibilité
+[[file:legacy-nginx.nix][Nginx]] et [[file:legacy-postgresql.nix][PostgreSQL]]. Ne pas les importer dans la nouvelle infrastructure,
+copier isolément le nouveau module sur l'ancienne installation ou reconstruire
+NixOS depuis Mémoire. Les accès et les contrôles de publication figurent dans
+[[file:REPRISE.org][REPRISE.org]]. Le domaine principal et son alias ~www~ conservent leur
+redirection vers le questionnaire.
 
 * Premier démarrage et administrateur
 Créer /var/lib/matheval/secrets.env, lisible uniquement par root et le service, contenant ~ADMIN_SETUP_TOKEN_HASH=<SHA-256 d'un secret aléatoire de 32 octets encodé en hexadécimal>~. Le secret original est remis au propriétaire par un lien privé ~https://principiipetit.io/matheval/admin/#activation=<secret>~.
@@ -34,9 +49,15 @@ Les participations ont un identifiant aléatoire et un secret de reprise propre 
 Les moyennes et quantiles excluent les réponses absentes. Une note zéro compte comme une note ; un axe zéro compte uniquement s'il figure parmi les axes évalués. Les filtres de date portent sur le début de participation en UTC. Le filtre de niveau porte sur les niveaux déclarés ; plusieurs niveaux peuvent être associés à une même participation.
 
 * Sauvegardes et restauration
-NixOS produit une sauvegarde PostgreSQL quotidienne dans /var/backup/postgresql. Pour les copies hors VPS, créer une paire de clés age, conserver la clé privée hors du serveur et déclarer sa clé publique dans ~services.matheval.backupRecipient~. La variable GitHub ~MATHEVAL_BACKUPS=true~ active le workflow quotidien : le serveur chiffre le dump avant son transfert et GitHub conserve quatorze jours de copies chiffrées.
+Le projet VPS gère les sauvegardes PostgreSQL locales quotidiennes dans
+~/var/backup/postgresql~ via ~services.postgresqlBackup~. Matheval conserve
+~matheval-backup~ et son workflow Actions pour l'export hors VPS : le serveur
+chiffre le dump avec age avant son transfert, et GitHub conserve quatorze jours
+de copies chiffrées. ~pg_dump~ suit ~config.services.postgresql.package~.
+Conserver la clé privée age hors du serveur, la clé publique déjà déclarée dans
+~services.matheval.backupRecipient~ et la variable ~MATHEVAL_BACKUPS=true~.
 
-La clé privée age doit être conservée par le propriétaire dans un emplacement durable indépendant du VPS. Le fichier chiffré seul ne permet pas de restaurer les réponses. Pour contrôler une restauration, déchiffrer dans un répertoire privé, créer une base temporaire distincte, lancer ~pg_restore --exit-on-error~ vers cette base et vérifier les effectifs et les contraintes. Ne jamais tester une restauration en écrasant la base en production.
+La clé privée age doit être conservée par le propriétaire dans un emplacement durable indépendant du VPS. Le fichier chiffré seul ne permet pas de restaurer les réponses. Pour contrôler une restauration, faire préparer avec le projet VPS une base ou une instance isolée et ses accès, déchiffrer dans un répertoire privé, lancer ~pg_restore --exit-on-error~ vers cette base et vérifier les effectifs et les contraintes. Ne jamais tester une restauration en écrasant la base en production. La restauration des ACL modifiées lors de la migration relève également de VPS ; un retour de génération NixOS ne les rétablit pas.
 
 Sur NixOS, la commande de sauvegarde distante doit résoudre son lien vers le chemin autorisé dans sudoers : ~sudo -n "$(readlink -f "$(command -v matheval-backup)")"~. La publication utilise le wrapper sudo de NixOS pour redémarrer le service avec les droits prévus.
 

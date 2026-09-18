@@ -3,18 +3,32 @@
 ## Frontière entre Matheval et l'infrastructure VPS
 
 - Lire `deploy/INFRASTRUCTURE.org` avant toute intervention sur le déploiement.
-- Le projet VPS est responsable de Nginx, des certificats ACME, des domaines,
-  du pare-feu, du réseau, de SSH et de l'activation de NixOS. Ne pas modifier
-  ces éléments depuis le projet mémoire ni exécuter `nixos-rebuild` ici.
-- Matheval conserve l'application, `deploy/matheval.nix`, son service, sa base,
-  ses migrations, ses publications et ses sauvegardes. Toute évolution de
-  son module NixOS doit être intégrée explicitement par le projet VPS.
+- Le projet VPS, https://github.com/MrJ-am/vps-infrastructure (privé), est
+  responsable de Nginx, des certificats ACME, des domaines, du pare-feu, du
+  réseau, de SSH, de l'activation de NixOS et de PostgreSQL (instance, bases,
+  rôles, règles d'accès et sauvegardes locales). Ne pas administrer ces
+  éléments depuis le projet mémoire ni exécuter `nixos-rebuild` ici.
+- Matheval conserve l'application, `deploy/matheval.nix`, son service et ses
+  comptes Unix, les données, le schéma, les migrations, les publications et
+  l'export chiffré `matheval-backup` avec son workflow Actions. Toute évolution
+  du module NixOS doit être intégrée explicitement par le projet VPS.
+- Le module applicatif ne déclare ni `services.postgresql` ni
+  `services.postgresqlBackup`. Son client de sauvegarde suit
+  `config.services.postgresql.package`. Le service attend `postgresql.service`
+  et `postgresql-setup.service` avec `after` et `requires`.
 - Le raccordement reste `127.0.0.1:3000`, préfixe `/matheval` conservé et origine
-  `https://principiipetit.io`. Tout changement de ce contrat est coordonné
-  avec le projet VPS avant déploiement.
-- `deploy/hostinger/` et `deploy/legacy-nginx.nix` ne sont que la compatibilité
-  de l'ancienne installation. Ne pas y ajouter de sites. La publication
-  applicative n'a jamais à les copier sur le VPS.
+  `https://principiipetit.io` ; PostgreSQL utilise le socket `/run/postgresql`,
+  la base, le rôle et le compte Unix `matheval`. Tout changement de ce contrat
+  est coordonné avec le projet VPS avant déploiement.
+- `deploy/hostinger/`, `deploy/legacy-nginx.nix` et
+  `deploy/legacy-postgresql.nix` préservent la reconstructibilité de l'ancienne
+  installation. Seule cette configuration importe les deux modules historiques ;
+  la nouvelle infrastructure ne les importe jamais. Ne pas les étendre.
+  La publication applicative n'a jamais à les copier sur le VPS.
+- Ne jamais copier isolément le nouveau module sur l'ancienne installation.
+  La bascule porte sur la configuration complète, coordonnée par le projet VPS.
+  Celui-ci vérifie les restrictions HBA/SQL et leur retour arrière : un retour
+  de génération NixOS ne restaure ni les données ni les ACL PostgreSQL.
 - La séparation est préparée ; elle n'est pas réputée activée sur le serveur.
   Seul un relevé de la génération NixOS active et de ses contrôles permet de
   consigner cette activation. Préserver les accès et les données existants.

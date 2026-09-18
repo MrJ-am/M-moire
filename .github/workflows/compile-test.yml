@@ -46,7 +46,7 @@ jobs:
           createdb -h 127.0.0.1 -U postgres matheval_browser_test
       - name: Vérifier les données et la collecte
         run: |
-          for module in deploy/matheval.nix deploy/legacy-nginx.nix deploy/hostinger/*.nix; do
+          for module in deploy/matheval.nix deploy/legacy-nginx.nix deploy/legacy-postgresql.nix deploy/hostinger/*.nix; do
             sudo nix-instantiate --store local --parse "$module" >/dev/null
           done
           npm --prefix docs run check:data
@@ -55,6 +55,16 @@ jobs:
           node docs/scripts/test-survey.cjs
           npm --prefix docs run test:logic
           npm --prefix server test
+      - name: Évaluer la configuration NixOS historique sans la construire ni l'activer
+        env:
+          # Même source de validation que VPS Infrastructure au commit bccf320.
+          # Ce choix CI ne met pas à jour le Nixpkgs installé sur le VPS.
+          NIXPKGS_REVISION: 4c7870105e7f1fdf9c48688c8d7efc21abf0688a
+        run: |
+          curl --fail --location --retry 2 "https://github.com/NixOS/nixpkgs/archive/$NIXPKGS_REVISION.tar.gz" -o "$RUNNER_TEMP/nixpkgs.tar.gz"
+          tar -xzf "$RUNNER_TEMP/nixpkgs.tar.gz" -C "$RUNNER_TEMP"
+          sudo env NIX_REMOTE=local NIX_PATH="nixpkgs=$RUNNER_TEMP/nixpkgs-$NIXPKGS_REVISION" \
+            nix-instantiate '<nixpkgs/nixos>' -A system --arg configuration ./deploy/hostinger/configuration.nix >/dev/null
       - name: Construire le site
         run: npm --prefix docs run build:main
       - name: Vérifier dans les navigateurs

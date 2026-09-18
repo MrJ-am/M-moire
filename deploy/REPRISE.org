@@ -1,21 +1,45 @@
 #+title: Reprendre Matheval dans ChatGPT Work
-#+date: 2026-09-17
+#+date: 2026-09-18
 
 * Transfert de responsabilité vers le projet VPS — préparé, non activé ici
 
-Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. La configuration
-Nginx/HTTPS et la configuration système sont désormais du ressort du projet
-VPS. Les instructions historiques ci-dessous ne donnent plus au projet mémoire
+Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. Le dépôt privé
+[[https://github.com/MrJ-am/vps-infrastructure][VPS Infrastructure]] possède Nginx/HTTPS, NixOS et PostgreSQL (instance,
+création des bases et rôles, règles d'accès et sauvegardes locales).
+Matheval conserve les données, le schéma, les migrations, les publications,
+les secrets et l'export chiffré ~matheval-backup~ avec son workflow Actions.
+Les instructions historiques ci-dessous ne donnent plus au projet mémoire
 la responsabilité de reconstruire NixOS ou de recopier sa configuration.
 
-Lors de la préparation de cette séparation, GitHub était accessible, mais la
+La [[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]], branche ~infra/separer-nginx~, reprend le patch PostgreSQL
+fourni par VPS au commit ~bccf320~. Le module attend désormais
+~postgresql-setup.service~ ; son client ~pg_dump~ suit le paquet PostgreSQL
+de l'infrastructure. L'ancien bloc PostgreSQL et ses sauvegardes locales sont
+conservés dans [[file:legacy-postgresql.nix][legacy-postgresql.nix]], importé uniquement par la configuration
+historique [[file:hostinger/configuration.nix][Hostinger]], comme [[file:legacy-nginx.nix][legacy-nginx.nix]]. La CI en vérifie la syntaxe et
+évalue la configuration historique complète sans construction ni activation.
+
+Le raccordement conserve ~/run/postgresql~, base/rôle/compte Unix ~matheval~,
+HTTP ~127.0.0.1:3000~ et le préfixe ~/matheval~. Aucun déplacement de données
+ni changement de version majeure n'est demandé. Le projet VPS doit intégrer
+explicitement le commit amont adapté, puis contrôler les restrictions HBA/SQL
+et préparer le retour de leurs ACL : revenir à une génération NixOS ne les
+restaure pas. Ne pas importer les modules historiques dans la nouvelle
+infrastructure, copier isolément le module adapté sur l'ancienne installation,
+ni reconstruire NixOS depuis Mémoire.
+
+Aucun accès ni changement serveur n'a été effectué lors de cette reprise du
+18 septembre. La migration reste préparée, non activée ; les relevés de
+production ci-dessous sont historiques et doivent être revérifiés côté VPS.
+
+Lors de la préparation initiale du 17 septembre, GitHub était accessible, mais la
 connexion TCP à ~187.77.95.158:22~ a échoué avec ~Network is unreachable~.
 La clé privée et l'archive d'accès n'étaient pas disponibles dans cet
 environnement. Aucune nouvelle génération n'a donc été activée et aucun état
 serveur n'a pu être revérifié. Les réussites Actions sont des éléments de suivi,
 pas une preuve de l'état réel à l'instant de la migration.
 
-* État vérifié le 17 septembre 2026
+* État vérifié le 17 septembre 2026 — relevé historique
 
 Le dépôt canonique est https://github.com/MrJ-am/M-moire, branche ~master~.
 L'ancienne adresse ~Echologie/M-moire~ redirige vers ce dépôt.
@@ -144,19 +168,25 @@ Documentation officielle consultée le 17 septembre 2026 :
 Message à donner à Work après ouverture du dépôt :
 
 #+begin_quote
-Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire, branche master.
+Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire. Pour le transfert
+d'infrastructure, reprends la PR nº 8, branche infra/separer-nginx ; la
+publication applicative suit master.
 Lis AGENTS.md, deploy/INFRASTRUCTURE.org, deploy/REPRISE.org et deploy/README.org.
-Le projet VPS possède Nginx, HTTPS et la configuration système ; coordonne avec
-lui toute modification du raccordement et ne reconstruis pas NixOS ici.
-Vérifie d'abord l'état
-Git et les dernières exécutions Actions, puis l'accès SSH avec
+Le projet https://github.com/MrJ-am/vps-infrastructure possède Nginx, HTTPS,
+NixOS et PostgreSQL (bases, rôles, accès et sauvegardes locales). Matheval
+conserve les données, les migrations, les publications et l'export chiffré.
+Coordonne avec VPS toute modification du raccordement. Ne copie pas isolément
+le nouveau module sur l'ancienne installation et ne reconstruis pas NixOS ici.
+La migration est préparée, non activée. Vérifie d'abord l'état Git et les
+dernières exécutions Actions, puis l'accès SSH avec
 sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
 Le site est en production sur le VPS NixOS 187.77.95.158 à l'adresse
 https://principiipetit.io/matheval/. Vérifie son état, les sauvegardes et
 l'activation du compte propriétaire, puis poursuis les améliorations demandées.
 Les tests de collecte et d'administration doivent utiliser des bases isolées.
 Consigne l'état réel ici. Préserve les données et les accès existants, garde les secrets hors
-Git, et committe en français puis pousse les changements validés sur master.
+Git, et committe en français puis pousse les changements validés sur la
+branche courante. Transmets les évolutions du module à VPS pour intégration.
 #+end_quote
 
 * Configuration NixOS et récupération — relevé historique
@@ -169,6 +199,12 @@ antérieur à la séparation. Ne plus copier ces fichiers ni lancer une activati
 depuis le projet mémoire. Le projet VPS doit comparer l'installation réelle,
 préparer sa configuration complète et prendre en charge la migration avec
 retour arrière. Le workflow applicatif n'actualise pas la configuration système.
+
+Dans les sources de la PR nº 8, l'ancienne configuration complète importe
+aussi [[file:legacy-nginx.nix][legacy-nginx.nix]] et [[file:legacy-postgresql.nix][legacy-postgresql.nix]]. Ces deux extractions
+préservent les anciens réglages pour la reconstruction historique ; elles
+ne décrivent pas des fichiers déjà copiés sur le serveur. La nouvelle
+infrastructure n'importe aucun de ces deux modules de compatibilité.
 
 La sauvegarde initiale de configuration est
 ~/root/matheval-bootstrap/etc-before.tar.gz~ ; le chemin de l'ancienne
