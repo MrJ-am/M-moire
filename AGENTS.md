@@ -3,6 +3,11 @@
 ## Frontière entre Matheval et l'infrastructure VPS
 
 - Lire `deploy/INFRASTRUCTURE.org` avant toute intervention sur le déploiement.
+- Depuis ChatGPT Work, l'accès au VPS passe par GitHub Actions. Aucun accès
+  SSH direct n'est disponible : ne pas retenter `deploy/connect.sh` depuis
+  Work ni redemander une clé pour résoudre cette limitation réseau. Lire les
+  exécutions identifiées par leur URL et leur commit ; les runners ouvrent les
+  connexions SSH. Les diagnostics administratifs appartiennent au dépôt VPS.
 - Le projet VPS, https://github.com/MrJ-am/vps-infrastructure (privé), est
   responsable de Nginx, des certificats ACME, des domaines, du pare-feu, du
   réseau, de SSH, de l'activation de NixOS et de PostgreSQL (instance, bases,

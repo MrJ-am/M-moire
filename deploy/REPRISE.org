@@ -1,6 +1,20 @@
 #+title: Reprendre Matheval dans ChatGPT Work
 #+date: 2026-09-18
 
+* Mode d'accès retenu depuis Work
+
+L'accès au VPS se fait par GitHub Actions. Work n'a pas d'accès SSH direct ;
+les connexions réussies observées sont celles des runners GitHub. Ne pas
+retenter SSH depuis Work et ne pas demander de nouveau l'archive privée pour
+résoudre cette limitation réseau. Les commandes SSH des relevés historiques
+ci-dessous sont destinées aux runners ou à un opérateur local.
+
+Le dépôt VPS propose le workflow ~Auditer le VPS~. Work peut le déclencher
+par une demande ~operations/audit-request.json~ publiée sur sa branche ~main~,
+puis consulter l'exécution correspondant au commit. La publication de Matheval
+et son export chiffré restent gérés par les workflows de ce dépôt sous
+~matheval-deploy~, sans droits d'administration du système.
+
 * Transfert de responsabilité vers le projet VPS — préparé, non activé ici
 
 Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. Le dépôt privé
@@ -99,7 +113,7 @@ clés SSH, la clé de déchiffrement age, la sauvegarde initiale et le lien
 d'activation. Le propriétaire doit en conserver une copie privée durable
 pour reprendre sur un autre ordinateur. Ne jamais ajouter cette archive au dépôt.
 
-* Accès SSH vérifié
+* Paramètres SSH — relevé historique
 
 | Paramètre | Valeur |
 |-----------+--------|
@@ -147,23 +161,11 @@ existante ou par le terminal hPanel. Ne pas remplacer les clés déjà autorisé
 
 * Reprise dans ChatGPT Work
 
-Dans l'application de bureau ChatGPT, choisir *Work*, puis *Work locally*
-pour utiliser les fichiers et l'accès SSH de l'ordinateur. Ouvrir le dossier
-du dépôt, ou le cloner depuis l'adresse canonique. Le terminal intégré est
-accessible par l'icône de terminal en haut à droite.
-
-Le mode Cloud n'hérite pas automatiquement des clés SSH locales. Il faut
-un environnement autorisant le terminal, le réseau et l'accès privé à la clé.
-Ouvrir le dépôt GitHub seul ne suffit pas à donner l'accès au VPS.
-
-Depuis un téléphone, la fonction Remote permet de piloter un ordinateur
-Mac ou Windows connecté et allumé ; ce n'est pas une connexion directe au VPS.
-La disponibilité dépend du compte et des paramètres de l'espace de travail.
-
-Documentation officielle consultée le 17 septembre 2026 :
-- [[https://learn.chatgpt.com/docs/get-started-with-work][Choisir Work local ou Cloud]].
-- [[https://learn.chatgpt.com/docs/integrated-terminal][Ouvrir le terminal intégré]].
-- [[https://learn.chatgpt.com/docs/remote][Piloter l'ordinateur depuis le téléphone]].
+Ouvrir le dépôt canonique avec l'application GitHub connectée. Lire ses
+consignes et les dernières exécutions Actions. Un commit applicatif validé
+sur ~master~ déclenche la publication existante ; l'accès SSH de ce workflow
+est indépendant du réseau de Work. Pour le système, utiliser uniquement les
+workflows du dépôt VPS, avec leurs contrôles et leur retour arrière.
 
 Message à donner à Work après ouverture du dépôt :
 
@@ -178,8 +180,9 @@ conserve les données, les migrations, les publications et l'export chiffré.
 Coordonne avec VPS toute modification du raccordement. Ne copie pas isolément
 le nouveau module sur l'ancienne installation et ne reconstruis pas NixOS ici.
 La migration est préparée, non activée. Vérifie d'abord l'état Git et les
-dernières exécutions Actions, puis l'accès SSH avec
-sh deploy/connect.sh 'hostname; systemctl is-active sshd nginx postgresql matheval'.
+dernières exécutions Actions. L'accès au VPS passe par GitHub Actions ; ne
+tente pas de connexion SSH directe depuis Work. Consulte le diagnostic du
+dépôt VPS pour les services, la génération active et les contrôles distants.
 Le site est en production sur le VPS NixOS 187.77.95.158 à l'adresse
 https://principiipetit.io/matheval/. Vérifie son état, les sauvegardes et
 l'activation du compte propriétaire, puis poursuis les améliorations demandées.

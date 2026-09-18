@@ -9,6 +9,13 @@ création des bases et rôles, accès et sauvegardes locales. Le module
 les publications et l'export chiffré. Les données, le schéma et ses migrations
 restent du ressort de Matheval. La séparation est préparée, non activée.
 
+Depuis ChatGPT Work, toute opération distante passe par GitHub Actions :
+les connexions SSH sont ouvertes par les runners, pas par Work. Utiliser les
+workflows applicatifs existants pour les publications et exports chiffrés,
+et le dépôt VPS pour les diagnostics administratifs et la migration système.
+Ne pas retenter SSH depuis Work ni y transférer une clé pour contourner sa
+limitation réseau.
+
 * Adresses et services
 Le questionnaire est servi sous https://principiipetit.io/matheval/ et l'administration sous /matheval/admin/. Nginx termine HTTPS et transmet ce préfixe à Node.js, lié à 127.0.0.1:3000. PostgreSQL est accessible par socket Unix ; aucun port de base de données n'est publié.
 

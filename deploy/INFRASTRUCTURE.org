@@ -16,6 +16,19 @@ Le dépôt d'infrastructure existe :
 d'infrastructure installé, la génération activée, la date des contrôles et
 le point de retour arrière. Ces éléments restent à relever sur le serveur.
 
+La reprise amont du module ~0bcdaf101cbdacb85694ca217fd21ab3f2eac828~ est
+désormais référencée dans VPS au commit ~e0f0c33a312708a54babdbfca00bd958682845b0~.
+Sa copie a la même empreinte : ne plus lui appliquer le patch PostgreSQL.
+Cette intégration des sources ne constitue pas une activation du serveur.
+
+* Accès depuis Work
+
+Les accès SSH au VPS se font depuis les runners GitHub Actions. Work prépare
+les changements, déclenche les workflows par les moyens GitHub disponibles
+et lit leurs résultats. Ne pas tenter de connexion SSH directe depuis Work.
+Le workflow applicatif conserve ~matheval-deploy~ ; le dépôt VPS gère son
+accès administratif séparément. Un accès root ne doit pas être ajouté ici.
+
 * Répartition des responsabilités
 
 | Projet VPS | Projet mémoire / Matheval |
@@ -87,10 +100,10 @@ versions applicatives encore susceptibles d'être restaurées.
 Le patch PostgreSQL fourni par VPS est repris sans divergence depuis le module
 au commit ~c83308ddfeefa03dfbb6692773c3d1274c867936~. L'empreinte SHA-256 du
 module adapté est ~8959538472392c6bff39cf91e3eeaa125b6814f0af15d63381258a51baf20086~.
-Transmettre au projet VPS le commit de cette reprise pour qu'il remplace sa
-copie adaptée par la copie amont identifiée et actualise
-~vendor/matheval/source.json~. Ne plus appliquer son patch à ce module : les
-changements sont déjà présents. Ne transférer aucun module ~legacy-*~.
+VPS a référencé cette reprise dans ~vendor/matheval/source.json~ au commit
+~e0f0c33a312708a54babdbfca00bd958682845b0~. Ne plus appliquer son patch à ce
+module : les changements sont déjà présents. Ne transférer aucun module
+~legacy-*~.
 
 * Compatibilité pendant la transition
 
