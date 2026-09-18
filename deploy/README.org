@@ -7,7 +7,8 @@ Lire [[file:INFRASTRUCTURE.org][le contrat avec le projet VPS]]. Le dépôt priv
 création des bases et rôles, accès et sauvegardes locales. Le module
 ~matheval.nix~ conserve le service, les comptes Unix, les chemins, les secrets,
 les publications et l'export chiffré. Les données, le schéma et ses migrations
-restent du ressort de Matheval. La séparation est préparée, non activée.
+restent du ressort de Matheval. La séparation a été activée et vérifiée le
+18 septembre 2026 ; les générations et preuves figurent dans INFRASTRUCTURE.org.
 
 Depuis ChatGPT Work, toute opération distante passe par GitHub Actions :
 les connexions SSH sont ouvertes par les runners, pas par Work. Utiliser les
@@ -60,7 +61,9 @@ Le projet VPS gère les sauvegardes PostgreSQL locales quotidiennes dans
 ~/var/backup/postgresql~ via ~services.postgresqlBackup~. Matheval conserve
 ~matheval-backup~ et son workflow Actions pour l'export hors VPS : le serveur
 chiffre le dump avec age avant son transfert, et GitHub conserve quatorze jours
-de copies chiffrées. ~pg_dump~ suit ~config.services.postgresql.package~.
+de copies chiffrées. Une modification de ~deploy/backup-request.json~ sur
+~master~ déclenche aussi cette sauvegarde depuis Work ; le déclenchement manuel
+et l'horaire quotidien sont conservés. ~pg_dump~ suit ~config.services.postgresql.package~.
 Conserver la clé privée age hors du serveur, la clé publique déjà déclarée dans
 ~services.matheval.backupRecipient~ et la variable ~MATHEVAL_BACKUPS=true~.
 

@@ -3,23 +3,41 @@
 
 * État de la séparation
 
-La séparation de Nginx et PostgreSQL est préparée dans les sources de la
-[[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]], branche ~infra/separer-nginx~. La migration serveur n'est pas
-activée. Aucun accès ni changement serveur n'a été effectué lors de la reprise
-PostgreSQL du 18 septembre. Ne pas annoncer que le VPS utilise déjà ces sources.
+La séparation de Nginx et PostgreSQL est *activée et enregistrée* sur le VPS
+depuis le 18 septembre 2026 à 21:10 UTC. La
+[[https://github.com/MrJ-am/vps-infrastructure/actions/runs/35395320446][bascule GitHub Actions]] a réussi : nouvelle connexion SSH, services, onze contrôles
+HTTP/TLS, accès PostgreSQL autorisés et refusés, conservation des lignes,
+sauvegarde locale restaurée dans une instance isolée et export chiffré hors VPS.
+Le retour automatique a été annulé après ces contrôles et l'enregistrement.
+Le relais des sources applicatives est regroupé dans la
+[[https://github.com/MrJ-am/M-moire/pull/8][PR nº 8]].
 
-Le dépôt d'infrastructure existe :
-[[https://github.com/MrJ-am/vps-infrastructure][MrJ-am/vps-infrastructure]] (privé). Cette reprise suit son
-[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/MESSAGE-MEMOIRE.md][message au commit bccf320]], son
-[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/POSTGRESQL.md][contrat PostgreSQL]] et sa
-[[https://github.com/MrJ-am/vps-infrastructure/blob/bccf320/docs/MIGRATION.md][procédure de migration]]. Le projet VPS devra consigner ici le commit
-d'infrastructure installé, la génération activée, la date des contrôles et
-le point de retour arrière. Ces éléments restent à relever sur le serveur.
+Le dépôt [[https://github.com/MrJ-am/vps-infrastructure][MrJ-am/vps-infrastructure]] (privé) possède désormais la configuration
+active. Lire son [[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/ETAT.md][état attesté]], son [[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/POSTGRESQL.md][contrat PostgreSQL]] et sa
+[[https://github.com/MrJ-am/vps-infrastructure/blob/main/docs/MIGRATION.md][procédure de migration]].
+
+| Élément | Référence vérifiée |
+|---------+--------------------|
+| Commit des sources installées | fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb |
+| Commit opérateur de la bascule | 49d82f8167b8121fb03c7d95da02169bb6409e28 |
+| Sources installées | /etc/nixos/vps-infrastructure/fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb |
+| Génération active et par défaut | /nix/store/8cbhcffxr0xhybz2va6yz8rrxfgqgzy9-nixos-system-nixos-26.05.8639.c5c4a43b0e80 |
+| Ancienne génération protégée | /nix/store/5840x51nc7d2s7gw0zfyy6my47j6nh1i-nixos-system-nixos-26.05.8639.c5c4a43b0e80 |
+| Sauvegardes et rapport de migration | /root/vps-migrations/fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb/ |
+| PostgreSQL conservé | 17.11 ; /var/lib/postgresql/17 |
+
+Le dossier privé conserve ~etc-nixos-before.tar~, ~configuration.nix.before~,
+~rollback-acl.sql~, les sauvegardes et ~committed.json~. L'ancienne génération
+et le candidat ont des racines de GC explicites. Le script de retour de l'essai
+refuse d'agir après enregistrement : un retour ultérieur doit être préparé par
+VPS en tenant compte des éventuelles évolutions SQL et applicatives.
+Aucun redémarrage du VPS n'a été effectué ; le profil et le menu de démarrage
+sont enregistrés, mais un redémarrage réel reste un contrôle distinct.
 
 La reprise amont du module ~0bcdaf101cbdacb85694ca217fd21ab3f2eac828~ est
 désormais référencée dans VPS au commit ~e0f0c33a312708a54babdbfca00bd958682845b0~.
 Sa copie a la même empreinte : ne plus lui appliquer le patch PostgreSQL.
-Cette intégration des sources ne constitue pas une activation du serveur.
+Cette copie exacte est celle intégrée dans la génération maintenant active.
 
 * Accès depuis Work
 
@@ -46,7 +64,7 @@ Le module applicatif ne déclare plus ~services.postgresql~ ni
 ~services.postgresqlBackup~. L'infrastructure conserve PostgreSQL 17 et
 ~/var/backup/postgresql~ avec l'horaire ~daily~ ; aucun déplacement de données
 ni changement de version majeure n'est demandé. Les nouvelles règles d'accès
-relèvent du projet VPS, qui doit les auditer et les tester avant activation.
+relèvent du projet VPS ; elles ont été auditées puis vérifiées pendant la bascule.
 
 * Contrat conservé
 
@@ -76,16 +94,18 @@ L'alias ~www.principiipetit.io~ conserve sa redirection vers le domaine canoniqu
 L'origine et le chemin des cookies d'administration ne changent pas.
 
 Le client Node.js conserve son raccordement par défaut au socket sous le rôle
-~matheval~. Avant activation, le projet VPS doit vérifier qu'un éventuel
-~DATABASE_URL~ dans l'environnement réel respecte ce contrat, sans divulguer
-le secret. L'authentification ~peer~, les droits de connexion et les ACL
+~matheval~. Les connexions locales effectives ont été vérifiées pendant la
+bascule. Toute évolution d'un éventuel ~DATABASE_URL~ doit respecter ce contrat,
+sans divulguer le secret. L'authentification ~peer~, les droits de connexion et les ACL
 appartiennent au projet VPS ; Matheval conserve ses migrations de schéma.
 
 * Publication et évolution du module
 
 Le workflow Actions construit, teste et publie l'application avec la clé
 ~matheval-deploy~ ; il n'administre ni Nginx, ni PostgreSQL, ni NixOS. Le workflow
-de sauvegarde et ses secrets restent identiques. ~matheval-backup~ conserve
+de sauvegarde conserve ses secrets et son compte. Depuis Work, une modification
+de ~deploy/backup-request.json~ publiée sur ~master~ déclenche aussi une copie
+chiffrée, en complément du déclenchement manuel et quotidien. ~matheval-backup~ conserve
 son chiffrement age et ses droits sudo limités ; seul son client ~pg_dump~
 suit désormais ~config.services.postgresql.package~. Ne pas donner de clé
 root à ces workflows.
@@ -105,7 +125,7 @@ VPS a référencé cette reprise dans ~vendor/matheval/source.json~ au commit
 module : les changements sont déjà présents. Ne transférer aucun module
 ~legacy-*~.
 
-* Compatibilité pendant la transition
+* Conservation de la configuration historique
 
 Les blocs Nginx, puis PostgreSQL et sauvegardes locales, ont été déplacés sans
 changer leur contenu vers ~deploy/legacy-nginx.nix~ et
@@ -125,9 +145,9 @@ La bascule doit porter sur la configuration complète assemblée par le projet
 VPS. Ne jamais importer les modules historiques dans la nouvelle infrastructure
 ni lancer ~nixos-rebuild~ depuis le projet mémoire.
 
-La future infrastructure conserve les versions, le réseau, les clés, les
+L'infrastructure activée a conservé les versions, le réseau, les clés, les
 certificats, les chemins de données et l'application active. Les restrictions
 HBA/SQL et l'attente de ~postgresql-setup.service~ sont des changements
 intentionnels : ne pas présenter l'activation comme neutre. Leur vérification
-et le retour ciblé des ACL et attributs de rôles sont à préparer côté VPS.
+et le retour ciblé des ACL et attributs de rôles ont été validés côté VPS.
 Un retour de génération NixOS ne restaure ni les données ni ces droits SQL.

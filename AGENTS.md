@@ -34,9 +34,10 @@
   La bascule porte sur la configuration complète, coordonnée par le projet VPS.
   Celui-ci vérifie les restrictions HBA/SQL et leur retour arrière : un retour
   de génération NixOS ne restaure ni les données ni les ACL PostgreSQL.
-- La séparation est préparée ; elle n'est pas réputée activée sur le serveur.
-  Seul un relevé de la génération NixOS active et de ses contrôles permet de
-  consigner cette activation. Préserver les accès et les données existants.
+- La séparation a été activée et enregistrée le 18 septembre 2026 à 21:10 UTC,
+  avec les contrôles de l'exécution VPS `35395320446`. Les références installées
+  et le point de retour sont dans `deploy/INFRASTRUCTURE.org`. Vérifier les
+  dernières exécutions pour tout nouvel état ; préserver les accès et les données.
 
 ## Source éditoriale des questions et des contrats
 

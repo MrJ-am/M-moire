@@ -15,7 +15,7 @@ puis consulter l'exécution correspondant au commit. La publication de Matheval
 et son export chiffré restent gérés par les workflows de ce dépôt sous
 ~matheval-deploy~, sans droits d'administration du système.
 
-* Transfert de responsabilité vers le projet VPS — préparé, non activé ici
+* Transfert de responsabilité vers le projet VPS — activé le 18 septembre 2026
 
 Lire d'abord [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. Le dépôt privé
 [[https://github.com/MrJ-am/vps-infrastructure][VPS Infrastructure]] possède Nginx/HTTPS, NixOS et PostgreSQL (instance,
@@ -35,16 +35,20 @@ historique [[file:hostinger/configuration.nix][Hostinger]], comme [[file:legacy-
 
 Le raccordement conserve ~/run/postgresql~, base/rôle/compte Unix ~matheval~,
 HTTP ~127.0.0.1:3000~ et le préfixe ~/matheval~. Aucun déplacement de données
-ni changement de version majeure n'est demandé. Le projet VPS doit intégrer
-explicitement le commit amont adapté, puis contrôler les restrictions HBA/SQL
-et préparer le retour de leurs ACL : revenir à une génération NixOS ne les
+ni changement de version majeure n'a été effectué. Le projet VPS a intégré
+explicitement le commit amont adapté, contrôlé les restrictions HBA/SQL
+et validé le retour de leurs ACL : revenir à une génération NixOS ne les
 restaure pas. Ne pas importer les modules historiques dans la nouvelle
 infrastructure, copier isolément le module adapté sur l'ancienne installation,
 ni reconstruire NixOS depuis Mémoire.
 
-Aucun accès ni changement serveur n'a été effectué lors de cette reprise du
-18 septembre. La migration reste préparée, non activée ; les relevés de
-production ci-dessous sont historiques et doivent être revérifiés côté VPS.
+La [[https://github.com/MrJ-am/vps-infrastructure/actions/runs/35395320446][migration du 18 septembre]] est activée et enregistrée depuis 21:10 UTC.
+Les sources VPS installées correspondent à ~fa059d61acfc8cf5c5bd7f3f9c83600787f2c6eb~.
+La génération active et par défaut, les sauvegardes et l'ancienne génération
+protégée figurent dans [[file:INFRASTRUCTURE.org][INFRASTRUCTURE.org]]. SSH, HTTPS, l'API, les refus
+anonymes, les droits SQL, la conservation des lignes et une restauration isolée
+ont été vérifiés. L'export chiffré hors VPS a réussi. Aucun redémarrage du VPS
+n'a été effectué. Les relevés du 17 septembre ci-dessous restent historiques.
 
 Lors de la préparation initiale du 17 septembre, GitHub était accessible, mais la
 connexion TCP à ~187.77.95.158:22~ a échoué avec ~Network is unreachable~.
@@ -97,7 +101,10 @@ La publication automatique suit les commits validés sur ~master~.
 La sauvegarde locale quotidienne est activée et une première copie a été
 produite dans ~/var/backup/postgresql/~. ~MATHEVAL_BACKUPS=true~ active les
 copies chiffrées hors du VPS à 03:40 UTC, conservées quatorze jours dans
-[[https://github.com/MrJ-am/M-moire/actions/workflows/backup.yml][les artefacts de sauvegarde GitHub]]. Une copie chiffrée a été déchiffrée,
+[[https://github.com/MrJ-am/M-moire/actions/workflows/backup.yml][les artefacts de sauvegarde GitHub]]. Depuis Work, modifier l'identifiant de
+~deploy/backup-request.json~ sur ~master~ permet aussi de déclencher ce workflow,
+sans clé root ni accès SSH direct. Lors de la mise en service initiale,
+une copie chiffrée a été déchiffrée,
 puis restaurée dans une base temporaire : corpus identique, 19 contraintes
 présentes et aucune participation initiale. Cette base temporaire a ensuite
 été supprimée.
@@ -170,16 +177,16 @@ workflows du dépôt VPS, avec leurs contrôles et leur retour arrière.
 Message à donner à Work après ouverture du dépôt :
 
 #+begin_quote
-Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire. Pour le transfert
-d'infrastructure, reprends la PR nº 8, branche infra/separer-nginx ; la
-publication applicative suit master.
+Reprends le projet Regards / Matheval du dépôt MrJ-am/M-moire sur master.
+Le transfert d'infrastructure est activé depuis le 18 septembre 2026 ; les
+sources applicatives correspondantes sont regroupées dans la PR nº 8.
 Lis AGENTS.md, deploy/INFRASTRUCTURE.org, deploy/REPRISE.org et deploy/README.org.
 Le projet https://github.com/MrJ-am/vps-infrastructure possède Nginx, HTTPS,
 NixOS et PostgreSQL (bases, rôles, accès et sauvegardes locales). Matheval
 conserve les données, les migrations, les publications et l'export chiffré.
 Coordonne avec VPS toute modification du raccordement. Ne copie pas isolément
 le nouveau module sur l'ancienne installation et ne reconstruis pas NixOS ici.
-La migration est préparée, non activée. Vérifie d'abord l'état Git et les
+La migration a été vérifiée dans l'exécution VPS 35395320446. Vérifie l'état Git et les
 dernières exécutions Actions. L'accès au VPS passe par GitHub Actions ; ne
 tente pas de connexion SSH directe depuis Work. Consulte le diagnostic du
 dépôt VPS pour les services, la génération active et les contrôles distants.
@@ -200,8 +207,9 @@ Les sources installées sont [[file:hostinger/configuration.nix][la configuratio
 qui importe le matériel et ~/etc/nixos/matheval.nix~. Ce relevé décrit l'état
 antérieur à la séparation. Ne plus copier ces fichiers ni lancer une activation
 depuis le projet mémoire. Le projet VPS doit comparer l'installation réelle,
-préparer sa configuration complète et prendre en charge la migration avec
-retour arrière. Le workflow applicatif n'actualise pas la configuration système.
+préparer toute nouvelle évolution avec son retour arrière. La migration du
+18 septembre est consignée dans INFRASTRUCTURE.org ; le workflow applicatif
+n'actualise pas la configuration système.
 
 Dans les sources de la PR nº 8, l'ancienne configuration complète importe
 aussi [[file:legacy-nginx.nix][legacy-nginx.nix]] et [[file:legacy-postgresql.nix][legacy-postgresql.nix]]. Ces deux extractions
