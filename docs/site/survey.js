@@ -7895,6 +7895,7 @@ var $author$project$Survey$contextHelp = F4(
 			'context-help',
 			_List_fromArray(
 				[
+					$elm$html$Html$Attributes$class('context-help'),
 					A2($elm$html$Html$Attributes$attribute, 'target', '#' + target)
 				]),
 			_List_fromArray(

@@ -1243,7 +1243,7 @@ viewHelp m =
 contextHelp : String -> String -> String -> String -> Html Msg
 contextHelp target heading body closeLabel =
     Html.node "context-help"
-        [ attribute "target" ("#" ++ target) ]
+        [ class "context-help", attribute "target" ("#" ++ target) ]
         [ div [ class "context-help-card" ]
             [ h2 [] [ text heading ]
             , p [] [ text body ]
