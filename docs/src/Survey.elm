@@ -344,6 +344,7 @@ encodeSnapshot m =
                 , ( "selected", E.string m.selected )
                 , ( "exposed", E.object (Dict.toList m.exposed |> List.map (Tuple.mapSecond E.int)) )
                 , ( "reader", E.bool m.reader )
+                , ( "tour", E.int -1 )
                 ]
           )
         ]
@@ -1213,7 +1214,7 @@ viewHelp m =
                 , section [ class "help-dialog", attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "help-title" ]
                     [ span [ class "eyebrow" ] [ text "Une aide quand vous en avez besoin" ]
                     , h2 [ id "help-title" ] [ text "Comment se déroule l’évaluation ?" ]
-                    , p [] [ text "Vous allez lire des rédactions mathématiques, leur attribuer une note, puis les situer sur trois axes : lisibilité, précision et validité." ]
+                    , p [] [ text "Vous allez être amené à juger des rédactions mathématiques, à leur attribuer une note, puis à les situer sur trois axes : lisibilité, précision et validité." ]
                     , p [ class "muted" ] [ text "Vous pourrez revenir sur vos choix à tout moment." ]
                     , div [ class "help-dialog-actions" ]
                         [ button [ class "quiet", onClick SkipHelp ] [ text "Passer l’aide" ]

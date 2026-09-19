@@ -5781,6 +5781,9 @@ var $elm$core$Tuple$mapSecond = F2(
 			x,
 			func(y));
 	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Survey$encodeSnapshot = function (m) {
 	return $elm$json$Json$Encode$object(
@@ -5826,7 +5829,10 @@ var $author$project$Survey$encodeSnapshot = function (m) {
 									$elm$core$Dict$toList(m.E)))),
 							_Utils_Tuple2(
 							'reader',
-							$elm$json$Json$Encode$bool(m.f))
+							$elm$json$Json$Encode$bool(m.f)),
+							_Utils_Tuple2(
+							'tour',
+							$elm$json$Json$Encode$int(-1))
 						])))
 			]));
 };
@@ -6147,9 +6153,6 @@ var $elm$core$List$isEmpty = function (xs) {
 	} else {
 		return false;
 	}
-};
-var $elm$core$Basics$negate = function (n) {
-	return -n;
 };
 var $author$project$Survey$Model$move = F3(
 	function (axis, value, previous) {
@@ -7997,7 +8000,7 @@ var $author$project$Survey$viewHelp = function (m) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Vous allez lire des rédactions mathématiques, leur attribuer une note, puis les situer sur trois axes : lisibilité, précision et validité.')
+											$elm$html$Html$text('Vous allez être amené à juger des rédactions mathématiques, à leur attribuer une note, puis à les situer sur trois axes : lisibilité, précision et validité.')
 										])),
 									A2(
 									$elm$html$Html$p,
