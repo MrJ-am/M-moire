@@ -73,7 +73,7 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
       snapshot: {
         answers: { [production.id]: { note: 0, initialNote: 1, coordinates: { x: 0, y: 0, z: 0 }, evaluatedAxes: ['x'] } },
         skippedQuestions: [],
-        progress: { mode: 'finished', index: 0, selected: production.id, exposed: { [question.id]: 1 }, reader: false }
+        progress: { mode: 'finished', index: 0, selected: production.id, exposed: { [question.id]: 1 }, reader: false, tour: -1 }
       },
       events: []
     }

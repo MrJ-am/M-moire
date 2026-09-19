@@ -59,7 +59,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await expect(x).toHaveAttribute('data-value', position);
       await expect(thumb(page, 'y')).toHaveAttribute('data-value', '0');
       await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
-      await expect(page.getByRole('heading', { name: 'Ajustez la précision', exact: true })).toBeInViewport({ ratio: 1 });
+      await expect(page.getByRole('heading', { name: 'Vos repères', exact: true })).toBeInViewport({ ratio: 1 });
       await expect(thumb(page, 'y')).toBeInViewport({ ratio: 1 });
     });
   });
