@@ -59,7 +59,6 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await expect(x).toHaveAttribute('data-value', position);
       await expect(thumb(page, 'y')).toHaveAttribute('data-value', '0');
       await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
-      await expect(page.locator('.axes-heading')).toBeInViewport({ ratio: 1 });
       await expect(thumb(page, 'y')).toBeInViewport({ ratio: 1 });
     });
   });

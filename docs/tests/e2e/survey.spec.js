@@ -45,7 +45,8 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await expect(page.locator('context-help')).toContainText('Lisez la production');
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
   await grade(page, 6);
-  await close(page);
+  await page.locator('#validate-reading').click();
+  await expect(page.locator('.reader')).toHaveCount(0);
   const axesHelp = page.locator('context-help');
   if (await axesHelp.count()) await axesHelp.getByRole('button', { name: 'Compris', exact: true }).click();
 
