@@ -54,7 +54,9 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await page.getByRole('menuitem', { name: 'Réinitialiser l’aide', exact: true }).click();
   await expect(page.locator('.help-dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
-  await expect(page.locator('context-help')).toBeVisible();
+  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+  await page.getByRole('button', { name: /Rédaction 1\. Appuyer pour lire/ }).click();
+  await expect(page.locator('context-help')).toContainText('Déplacez ce curseur');
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
   await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
   await expect(page.locator('#validate-reading')).toHaveText(/Valider/);
