@@ -44,8 +44,8 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await page.getByRole('button', { name: 'Aide sur la fiche de rédaction', exact: true }).click();
   await expect(page.locator('context-help')).toContainText('Lisez la production');
   await page.getByRole('button', { name: 'Fermer', exact: true }).click();
-  await page.getByRole('button', { name: 'Fermer la rédaction', exact: true }).click();
-  await expect(page.locator('reading-card')).toHaveCount(0);
+  await grade(page, 6);
+  await close(page);
   const axesHelp = page.locator('context-help');
   if (await axesHelp.count()) await axesHelp.getByRole('button', { name: 'Compris', exact: true }).click();
 
