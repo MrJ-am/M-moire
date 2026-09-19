@@ -15,8 +15,8 @@ Les tests navigateur sont obligatoires aussi pour une modification des seules do
 | Fichier | Parcours vérifié |
 | ~collection-admin.spec.js~ | Reprise après rechargement et coupure réseau, connexion administrateur, corpus, statistiques et réponses individuelles |
 | ~survey.spec.js~ | Clavier, animations réduites, coordonnées indépendantes, révisions, enregistrement et disposition des petits écrans |
-| ~survey-gestures.spec.js~ | Souris, animations actives, tutoriel puis session entière sans saut de question, coordonnées conservées au centre, maintien d’une bille surélevée sous le pointeur, synchronisation de la note |
-| ~survey.touch.spec.js~ | Gestes tactiles Chromium : tutoriel, glissement horizontal, défilement vertical, annulation de geste, ouverture d’une rédaction et navigation |
+| ~survey-gestures.spec.js~ | Souris, animations actives, aide contextuelle puis session entière sans saut de question, coordonnées conservées au centre, maintien d’une bille surélevée sous le pointeur, synchronisation de la note |
+| ~survey.touch.spec.js~ | Gestes tactiles Chromium : aide contextuelle, glissement horizontal, défilement vertical, annulation de geste, ouverture d’une rédaction et navigation |
 
 Les gestes tactiles sont injectés avec ~Input.dispatchTouchEvent~ : ils passent par le traitement des pointeurs et du défilement du navigateur. Réduire seulement la taille de la fenêtre ne simule pas ces gestes. Les tests attendent la fin des animations de lecture avant de saisir une bille ; ils inspectent aussi sa position *pendant* le glissement. Le parcours complet compare les réponses enregistrées en base aux notes et coordonnées observées dans l’interface.
 
@@ -28,4 +28,4 @@ Les autres tests portent sur le prototype conservé à ~prototype.html~. Pour ci
 
 Sur Guix seulement, ~npm run test:e2e:guix~ applique le correctif Firefox avant les tests. La commande standard ~test:e2e~ n’applique pas ce correctif.
 
-Le contrôle des portées injecte la paire R17-6/R17-7 issue de la banque générée, parcourt le tutoriel, ouvre les deux rédactions puis la comparaison. Il vérifie le contenu exact, les retraits de deux profondeurs, la sortie de portée, le rendu KaTeX et l’absence de débordement aux largeurs 390 et 1363 pixels. Des captures sont conservées dans les résultats du test. Les deux membres ne diffèrent que par les espaces initiaux, ce que les tests du compilateur vérifient également.
+Le contrôle des portées injecte la paire R17-6/R17-7 issue de la banque générée, parcourt l’aide initiale, ouvre les deux rédactions puis la comparaison. Il vérifie le contenu exact, les retraits de deux profondeurs, la sortie de portée, le rendu KaTeX et l’absence de débordement aux largeurs 390 et 1363 pixels. Des captures sont conservées dans les résultats du test. Les deux membres ne diffèrent que par les espaces initiaux, ce que les tests du compilateur vérifient également.

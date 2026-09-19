@@ -41,22 +41,19 @@ async function note(page, d, dx = 35) {
   await expect(page.locator('#grade')).not.toHaveClass(/ungraded/);
 }
 async function close(page, d) {
-  await d.click(page.locator('#place-button'));
+  await d.click(page.locator('#validate-reading'));
   await expect(page.locator('reading-card')).toHaveCount(0);
+  const contextual = page.locator('context-help');
+  if (await contextual.count()) await d.click(contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }));
 }
 async function start(page, d) {
   await page.goto('./');
   await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
   await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
-  const step = n => expect(page.locator('spotlight-guide')).toHaveAttribute('step', String(n));
-  await step(0); await note(page, d); await step(1); await close(page, d); await step(2);
-  for (const [i, a] of ['x', 'y', 'z'].entries()) { await drag(d, thumb(page, a), 25); await step(i + 3); }
-  const scene = page.locator('#space'); await scene.scrollIntoViewIfNeeded();
-  const b = await scene.boundingBox(), p = { x: b.x + b.width - 40, y: b.y + 40 };
-  await d.down(p); await d.move({ x: p.x - 45, y: p.y + 12 }); await d.up(); await step(6);
-  await d.click(thumb(page, 'x')); await step(7);
-  await d.click(page.getByRole('button', { name: 'Commencer mes questions', exact: true }));
-  await expect(page.locator('spotlight-guide')).toHaveCount(0);
+  await expect(page.locator('.help-dialog')).toBeVisible();
+  await d.click(page.getByRole('button', { name: 'Suivant', exact: true }));
+  await expect(page.locator('context-help')).toBeVisible();
+  await d.click(page.getByRole('button', { name: 'Compris', exact: true }));
   await settled(page.locator('reading-card'));
 }
 module.exports = { thumb, center, settled, driver, drag, note, close, start };

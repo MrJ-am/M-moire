@@ -2,7 +2,7 @@
 
 * Le site
 
-Regards propose aux enseignants de lire et noter des rédactions, puis de les situer sur trois axes indépendants : Confus–Lisible, Vague–Précis et Fautif–Valide. Le parcours comprend un essai guidé, une lecture progressive, trois barres à billes numérotées et une vue libre en trois dimensions.
+Regards propose aux enseignants de lire et noter des rédactions, puis de les situer sur trois axes indépendants : Confus–Lisible, Vague–Précis et Fautif–Valide. Le parcours comprend une aide initiale facultative, des aides contextuelles déclenchées une seule fois et réinitialisables, une lecture progressive, trois barres à billes numérotées et une vue libre en trois dimensions.
 
 La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 en interne ; les axes affichent seulement le repère du milieu. Le zéro correspond à un attendu contextualisé. Les réponses sont sauvegardées progressivement dans PostgreSQL par le service de collecte. Une copie locale permet la reprise dans le même navigateur et les retransmissions après une interruption réseau. La validation finale confirme leur réception.
 
@@ -10,7 +10,7 @@ La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 
 
 | Chemin | Rôle |
 |--------+------|
-| ~docs/src/Survey.elm~ | État Elm du parcours, navigation, tutoriel et vues |
+| ~docs/src/Survey.elm~ | État Elm du parcours, navigation, aide progressive et vues |
 | ~docs/src/Survey/Model.elm~ | Données, coordonnées, complétude et sérialisation |
 | ~docs/site/space.js~ | Projection SVG, billes, rotation et gestes |
 | ~docs/site/session.js~ | Tirage reproductible des questions et des rédactions |
@@ -68,7 +68,7 @@ Les tests de navigateur lancent leur propre service Node.js, avec une base Postg
 
 * Collecte et administration
 
-La collecte conserve la version de banque, les niveaux, la graine et les ordres de présentation, les notes initiales et révisées, les coordonnées et leurs axes évalués, les questions passées et un journal horodaté des interactions. L’essai guidé est exclu. Une coordonnée à zéro dont l’axe n’est pas dans ~evaluatedAxes~ représente une absence de jugement, pas une réponse zéro.
+La collecte conserve la version de banque, les niveaux, la graine et les ordres de présentation, les notes initiales et révisées, les coordonnées et leurs axes évalués, les questions passées et un journal horodaté des interactions. Les préférences d’aide restent locales au navigateur et ne sont pas transmises à la collecte. Une coordonnée à zéro dont l’axe n’est pas dans ~evaluatedAxes~ représente une absence de jugement, pas une réponse zéro.
 
 Le détail des choix méthodologiques et des limites de collecte se trouve dans ~research/protocole.org~.
 

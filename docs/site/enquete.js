@@ -6,6 +6,16 @@ import './sliders.js?v=e690453bfce2';
 const root = document.getElementById('app');
 let application, bank, starting = false;
 const collection = new Collection(message => send(message));
+const helpStorageKey = 'regards-help-v1';
+const defaultHelpState = { enabled: true, introSeen: false, ratingSeen: false, axesSeen: false };
+function readHelpState() {
+  try { return { ...defaultHelpState, ...(JSON.parse(localStorage.getItem(helpStorageKey) || 'null') || {}) }; }
+  catch { return { ...defaultHelpState }; }
+}
+function saveHelpState(state) {
+  try { localStorage.setItem(helpStorageKey, JSON.stringify({ ...defaultHelpState, ...state })); }
+  catch { /* The interface remains usable when browser storage is unavailable. */ }
+}
 function send(message) {
   application?.ports.incoming.send(message);
   if (message.type === 'save-state') requestAnimationFrame(() => {
@@ -46,9 +56,7 @@ class ReadingCard extends HTMLElement {
   connectedCallback() {
     this.layout = () => {
       const bottom = document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140;
-      const coach = document.querySelector('.coach-card');
-      const top = coach ? Math.min(innerHeight - 250, bottom + coach.offsetHeight + 38) : Math.max(12, bottom + 14);
-      this.closest('.reader-layer').style.paddingTop = `${top}px`;
+      this.closest('.reader-layer').style.paddingTop = `${Math.max(12, bottom + 14)}px`;
       this.closest('.reader-layer').style.paddingBottom = saveNoticeSpace();
     };
     this.resize = new ResizeObserver(this.layout);
@@ -57,7 +65,7 @@ class ReadingCard extends HTMLElement {
     window.addEventListener('regards-layout', this.layout);
     this.onKey = e => {
       if (e.key !== 'Tab') return;
-      const controls = [...this.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]'), ...document.querySelectorAll('.coach-card button, .save-status button')];
+      const controls = [...this.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]'), ...document.querySelectorAll('.context-help-card button, .help-dialog button, .save-status button')];
       const first = controls[0], last = controls.at(-1);
       if (e.shiftKey && (document.activeElement === first || document.activeElement === this)) { last?.focus(); e.preventDefault(); }
       if (!e.shiftKey && document.activeElement === last) { first?.focus(); e.preventDefault(); }
@@ -92,61 +100,39 @@ async function closeReader(id) {
   requestAnimationFrame(() => orb?.focus({ preventScroll: true }));
 }
 
-class SpotlightGuide extends HTMLElement {
-  static get observedAttributes() { return ['target', 'step']; }
+class ContextHelp extends HTMLElement {
+  static get observedAttributes() { return ['target']; }
   connectedCallback() {
-    this.updateBounds = () => this.position();
+    this.updateBounds = () => this.schedule();
     this.resize = new ResizeObserver(this.updateBounds); this.resize.observe(document.documentElement);
     window.addEventListener('resize', this.updateBounds); window.addEventListener('scroll', this.updateBounds, true); window.addEventListener('regards-layout', this.updateBounds);
-    this.panels = Array.from({ length: 4 }, () => { const panel = document.createElement('div'); panel.className = 'spotlight-shade'; document.body.append(panel); return panel; });
-    this.ring = document.createElement('div'); this.ring.className = 'spotlight-ring'; document.body.append(this.ring); this.schedule();
+    this.schedule();
   }
   attributeChangedCallback() { this.schedule(); }
   schedule() {
     cancelAnimationFrame(this.frame);
-    this.frame = requestAnimationFrame(() => {
-      const target = document.querySelector(this.getAttribute('target'));
-      if (target && !document.querySelector('reading-card')) {
-        const r = target.getBoundingClientRect(), questionBottom = document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 0;
-        if (r.top < questionBottom + 12 || r.bottom > innerHeight - 100) target.scrollIntoView({ block: 'center', behavior: 'instant' });
-      }
-      const coach = this.querySelector('.coach-card'); if (coach) coach.scrollTop = 0;
-      this.position();
-    });
+    this.frame = requestAnimationFrame(() => this.position());
   }
   position() {
-    if (!this.isConnected || !this.panels) return;
-    const target = document.querySelector(this.getAttribute('target')), coach = this.querySelector('.coach-card');
-    if (!target || !coach) return;
-    const rect = target.getBoundingClientRect(), pad = 8, w = innerWidth, h = innerHeight;
-    const l = Math.max(4, rect.left - pad), t = Math.max(4, rect.top - pad), r = Math.min(w - 4, rect.right + pad), b = Math.min(h - 4, rect.bottom + pad);
-    const bounds = [[0, 0, w, t], [0, t, l, b - t], [r, t, w - r, b - t], [0, b, w, h - b]];
-    bounds.forEach(([x, y, width, height], i) => Object.assign(this.panels[i].style, { left: `${x}px`, top: `${y}px`, width: `${width}px`, height: `${height}px` }));
-    Object.assign(this.ring.style, { left: `${l}px`, top: `${t}px`, width: `${r - l}px`, height: `${b - t}px` });
-    // On short screens the full instruction may not fit above or below an
-    // axis. Keep its sphere exposed and let the instruction itself scroll.
-    const axisTarget = target.matches('axis-slider');
-    const above = Math.max(0, t - 26), below = Math.max(0, h - b - 26);
-    coach.style.maxHeight = axisTarget ? `${Math.max(80, above, below)}px` : '';
-    coach.style.overflowY = axisTarget ? 'auto' : '';
-    const ch = coach.offsetHeight, cw = coach.offsetWidth;
-    let y = t > ch + 24 ? t - ch - 14 : b + 14;
-    if (y + ch > h - 12) y = h - ch - 14;
-    if (axisTarget) y = above >= below ? t - ch - 14 : b + 14;
-    if (this.getAttribute('target') === '#space') y = t > ch + 16 ? t - ch - 12 : Math.min(h - ch - 12, b - ch + 50);
-    if (document.querySelector('reading-card')) {
-      const reader = document.querySelector('reading-card'); reader.layout?.();
-      y = (document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 100) + 14;
-    }
-    Object.assign(coach.style, { left: `${Math.max(12, Math.min(w - cw - 12, (l + r - cw) / 2))}px`, top: `${Math.max(12, y)}px` });
+    const target = document.querySelector(this.getAttribute('target')), card = this.querySelector('.context-help-card');
+    if (!this.isConnected || !target || !card) return;
+    const rect = target.getBoundingClientRect(), margin = 12, gap = 14, width = innerWidth, height = innerHeight;
+    const cardWidth = card.offsetWidth, cardHeight = card.offsetHeight;
+    const above = rect.top - cardHeight - gap >= margin;
+    const below = !above;
+    let top = above ? rect.top - cardHeight - gap : rect.bottom + gap;
+    top = Math.max(margin, Math.min(height - cardHeight - margin, top));
+    const left = Math.max(margin, Math.min(width - cardWidth - margin, rect.left + (rect.width - cardWidth) / 2));
+    const arrowLeft = Math.max(18, Math.min(cardWidth - 18, rect.left + rect.width / 2 - left));
+    this.classList.toggle('below', below);
+    card.style.setProperty('--arrow-left', `${arrowLeft}px`);
+    Object.assign(this.style, { left: `${left}px`, top: `${top}px` });
   }
   disconnectedCallback() {
     cancelAnimationFrame(this.frame); this.resize?.disconnect(); window.removeEventListener('resize', this.updateBounds); window.removeEventListener('scroll', this.updateBounds, true); window.removeEventListener('regards-layout', this.updateBounds);
-    this.panels?.forEach(p => p.remove()); this.ring?.remove();
-    requestAnimationFrame(() => window.dispatchEvent(new Event('regards-layout')));
   }
 }
-customElements.define('spotlight-guide', SpotlightGuide);
+customElements.define('context-help', ContextHelp);
 const paths = {
   layers: '<path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/>',
   cube: '<path d="m12 3 9 5v8l-9 5-9-5V8l9-5Zm0 10v8M3 8l9 5 9-5M12 3v10"/>',
@@ -161,7 +147,9 @@ const paths = {
   shrink: '<path d="M4 4l6 6m0-5v5H5m15 10-6-6m0 5v-5h5"/>',
   hand: '<path d="M8 12V5a2 2 0 0 1 4 0v6-3a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-3 6-6 6h-2c-2 0-3-1-4-3l-4-6a2 2 0 0 1 3-2l1 2Z"/>',
   compare: '<rect x="3" y="4" width="7" height="16" rx="2"/><rect x="14" y="4" width="7" height="16" rx="2"/>',
-  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
+  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  reset: '<path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6"/>'
 };
 customElements.define('ui-icon', class extends HTMLElement {
   connectedCallback() { this.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[this.getAttribute('name')] || paths.cube}</svg>`; }
@@ -171,7 +159,7 @@ try {
   const response = await fetch('data/bank.json'); if (!response.ok) throw new Error('bank'); bank = await response.json();
   const levels = ['5e', '4e', '3e', '2de', '1re spé', 'Tle spé', 'Sup 1'].filter(l => bank.questions.some(q => q.level === l));
   const mount = document.createElement('div'); root.replaceChildren(mount); root.inert = true;
-  application = Elm.Survey.init({ node: mount, flags: { levels, version: bank.version } });
+  application = Elm.Survey.init({ node: mount, flags: { levels, version: bank.version, help: readHelpState() } });
   application.ports.action.subscribe(async message => {
     switch (message.type) {
       case 'session': {
@@ -190,6 +178,7 @@ try {
       case 'submit': collection.submit(message.snapshot); break;
       case 'retry-save': collection.flush(); break;
       case 'restart': collection.restart(); break;
+      case 'help-state': saveHelpState(message.state); break;
     }
   });
   const resumed = await collection.resume();

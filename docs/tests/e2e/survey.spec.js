@@ -4,9 +4,6 @@ const fs = require('node:fs');
 test.use({ reducedMotion: 'reduce' });
 const axis = (page, name) => page.locator(`#axis-${name}`);
 const thumb = (page, name, number = 1) => axis(page, name).getByRole('slider', { name: `Rédaction ${number} ·`, exact: false });
-async function tourStep(page, number) {
-  await expect(page.locator('spotlight-guide')).toHaveAttribute('step', String(number));
-}
 async function rotate(page) {
   await page.locator('#space').press('ArrowRight');
 }
@@ -17,35 +14,60 @@ async function grade(page, quarters) {
   await expect(slider).toHaveValue(String(quarters / 4));
 }
 async function close(page) {
-  await page.locator('#place-button').click();
+  await page.locator('#validate-reading').click();
   await expect(page.locator('reading-card')).toHaveCount(0);
+  const contextual = page.locator('context-help');
+  if (await contextual.count()) await contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }).click();
 }
 async function start(page, level = '3e') {
   await page.goto('./');
   await page.getByRole('checkbox', { name: level, exact: true }).check();
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
-  await tourStep(page, 0);
-  await expect(page.locator('#place-button')).toBeDisabled();
-  await grade(page, 7);
-  await tourStep(page, 1);
-  await close(page);
-  await tourStep(page, 2);
-  await thumb(page, 'x').press('Shift+ArrowRight');
-  await tourStep(page, 3);
-  await thumb(page, 'y').press('Shift+ArrowRight');
-  await tourStep(page, 4);
-  await thumb(page, 'z').press('Shift+ArrowRight');
-  await tourStep(page, 5);
-  await rotate(page);
-  await tourStep(page, 6);
-  await thumb(page, 'x').press('Enter');
-  await tourStep(page, 7);
-  await page.getByRole('button', { name: 'Commencer mes questions', exact: true }).click();
-  await expect(page.locator('spotlight-guide')).toHaveCount(0);
+  await expect(page.locator('.help-dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Suivant', exact: true }).click();
+  await expect(page.locator('context-help')).toBeVisible();
+  await page.getByRole('button', { name: 'Compris', exact: true }).click();
   await expect(page.locator('reading-card')).toBeVisible();
   await expect(page.locator('.orb')).toHaveCount(1);
   await expect(page.locator('#grade')).toHaveClass(/ungraded/);
 }
+
+test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('checkbox', { name: '3e', exact: true }).check();
+  await page.getByRole('button', { name: 'Commencer', exact: true }).click();
+  await expect(page.locator('.help-dialog')).toBeVisible();
+  await expect(page.locator('.help-dialog')).toContainText('Vous allez être amené');
+  await page.getByRole('button', { name: 'Passer l’aide', exact: true }).click();
+  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Aide sur la fiche de rédaction', exact: true }).click();
+  await expect(page.locator('context-help')).toContainText('Lisez la production');
+  await page.getByRole('button', { name: 'Fermer', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Ouvrir le menu', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Réinitialiser l’aide', exact: true }).click();
+  await expect(page.locator('.help-dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Suivant', exact: true }).click();
+  await expect(page.locator('context-help')).toBeVisible();
+  await page.getByRole('button', { name: 'Compris', exact: true }).click();
+  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+  await expect(page.locator('#validate-reading')).toHaveText(/Valider/);
+});
+
+test('les aides contextuelles apparaissent une seule fois à l’étape concernée', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('checkbox', { name: '3e', exact: true }).check();
+  await page.getByRole('button', { name: 'Commencer', exact: true }).click();
+  await page.getByRole('button', { name: 'Suivant', exact: true }).click();
+  await page.getByRole('button', { name: 'Compris', exact: true }).click();
+  await grade(page, 6);
+  await page.locator('#validate-reading').click();
+  await expect(page.locator('context-help')).toContainText('Déplacez les trois curseurs');
+  await page.getByRole('button', { name: 'Compris', exact: true }).click();
+  await page.locator('#axis-x').getByRole('slider').press('ArrowRight');
+  await expect(page.locator('context-help')).toHaveCount(0);
+});
 async function coordinates(orb) {
   return orb.evaluate(el => ['x', 'y', 'z'].map(a => Number(el.dataset[a])));
 }
@@ -188,7 +210,7 @@ test('curseurs au-dessus sur téléphone et lecture après rotation de l’écra
   await expect.poll(() => coordinates(page.locator('.orb'))).toEqual([0, 0, 1]);
   await page.locator('.orb').press('Enter');
   await expect(page.locator('#grade')).toHaveValue('2');
-  await expect(page.locator('#place-button')).toBeInViewport();
+  await expect(page.locator('#validate-reading')).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

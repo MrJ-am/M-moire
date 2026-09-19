@@ -33,7 +33,7 @@ test('une confirmation perdue se retrouve au rechargement sans créer une second
   await start(page, d);
   while (await page.getByRole('button', { name: 'Passer cette question', exact: true }).count()) {
     await page.locator('#grade').evaluate(el => { el.value = '1.5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-    await page.locator('#place-button').click();
+    await page.locator('#validate-reading').click();
     await expect(page.locator('reading-card')).toHaveCount(0);
     await page.getByRole('button', { name: 'Passer cette question', exact: true }).click();
     await expect(page.locator('reading-card, .finish-panel')).toBeVisible();
@@ -73,7 +73,7 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
       snapshot: {
         answers: { [production.id]: { note: 0, initialNote: 1, coordinates: { x: 0, y: 0, z: 0 }, evaluatedAxes: ['x'] } },
         skippedQuestions: [],
-        progress: { mode: 'finished', index: 0, selected: production.id, exposed: { [question.id]: 1 }, reader: false, tour: -1 }
+        progress: { mode: 'finished', index: 0, selected: production.id, exposed: { [question.id]: 1 }, reader: false }
       },
       events: []
     }

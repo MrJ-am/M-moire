@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { thumb, center, settled, driver, drag, note, close, start } = require('./gestures.cjs');
 test.use({ reducedMotion: 'no-preference' });
 test.setTimeout(90000);
-test('gestes tactiles Android : tutoriel, glissement, défilement et rédaction suivante', async ({ page }) => {
+test('gestes tactiles Android : glissement, défilement et rédaction suivante', async ({ page }) => {
   page.on('pageerror', error => { throw error; });
   const d = await driver(page, true); await start(page, d);
   await note(page, d); await close(page, d);
@@ -35,9 +35,12 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await page.goto('./');
       await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
       await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
+      await expect(page.locator('.help-dialog')).toBeVisible();
+      await d.click(page.getByRole('button', { name: 'Suivant', exact: true }));
+      await expect(page.locator('context-help')).toBeVisible();
+      await d.click(page.getByRole('button', { name: 'Compris', exact: true }));
       await note(page, d); await close(page, d);
       await page.setViewportSize(viewport);
-      await expect(page.locator('spotlight-guide')).toHaveAttribute('step', '2');
       const x = thumb(page, 'x'); await x.scrollIntoViewIfNeeded(); await settled(x);
       const p = await center(x), scroll = await page.evaluate(() => scrollY);
       expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y + 10)?.closest('.slider-thumb')?.getAttribute('aria-label'), p)).toBe('Rédaction 1 · Lisibilité');
@@ -52,9 +55,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       const position = await x.getAttribute('data-value');
       expect(Number(position)).toBeGreaterThan(0);
       await expect.poll(() => page.evaluate(() => scrollY)).toBe(scroll);
-      await expect(page.locator('spotlight-guide')).toHaveAttribute('step', '2');
       await d.up();
-      await expect(page.locator('spotlight-guide')).toHaveAttribute('step', '3');
       await expect(x).toHaveAttribute('data-value', position);
       await expect(thumb(page, 'y')).toHaveAttribute('data-value', '0');
       await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
@@ -71,7 +72,7 @@ test('la note suit aussi une trajectoire tactile qui commence verticalement', as
   await d.move({ x: p.x + 40, y: p.y - 50 }); await d.up();
   await expect(page.locator('#grade')).not.toHaveClass(/ungraded/);
   expect(Number(await page.locator('#grade').inputValue())).toBeGreaterThan(1.5);
-  await expect(page.locator('#place-button')).toBeEnabled();
+  await expect(page.locator('#validate-reading')).toBeEnabled();
 });
 
 test('un geste tactile annulé ne valide ni la note ni la coordonnée', async ({ page }) => {
@@ -80,7 +81,7 @@ test('un geste tactile annulé ne valide ni la note ni la coordonnée', async ({
   await d.down(p); await d.move({ x: p.x + 30, y: p.y }); await d.cancel();
   await expect(page.locator('#grade')).toHaveValue('1.5');
   await expect(page.locator('#grade')).toHaveClass(/ungraded/);
-  await expect(page.locator('#place-button')).toBeDisabled();
+  await expect(page.locator('#validate-reading')).toBeDisabled();
   await note(page, d); await close(page, d);
   const x = thumb(page, 'x'); await x.scrollIntoViewIfNeeded(); const q = await center(x);
   await d.down(q); await d.move({ x: q.x + 30, y: q.y }); await d.cancel();

@@ -19,9 +19,23 @@ port incoming : (E.Value -> msg) -> Sub msg
 
 type Mode
     = Setup
-    | Training
     | Running
     | Finished
+
+
+type HelpTopic
+    = WelcomeHelp
+    | ReaderHelp
+    | RatingHelp
+    | AxesHelp
+
+
+type alias HelpState =
+    { enabled : Bool
+    , introSeen : Bool
+    , ratingSeen : Bool
+    , axesSeen : Bool
+    }
 
 
 type alias Model =
@@ -37,7 +51,10 @@ type alias Model =
     , closing : Bool
     , compare : Bool
     , compareId : String
-    , tour : Int
+    , help : HelpState
+    , helpTopic : Maybe HelpTopic
+    , helpContinue : Bool
+    , menuOpen : Bool
     , message : String
     , skipped : List String
     , version : String
@@ -64,8 +81,13 @@ type Msg
     | Submit
     | RetrySave
     | Restart
-    | Help
-    | TourNext
+    | ToggleMenu
+    | ShowHelp HelpTopic
+    | HelpNext
+    | SkipHelp
+    | DismissHelp
+    | ResetHelp
+    | Escape
     | Compare
     | CompareWith String
     | NoOp
@@ -85,7 +107,7 @@ main =
                         (D.map
                             (\key ->
                                 if key == "Escape" then
-                                    Close
+                                    Escape
 
                                 else
                                     NoOp
@@ -110,7 +132,10 @@ init flags =
       , closing = False
       , compare = False
       , compareId = ""
-      , tour = -1
+      , help = helpFromFlags flags
+      , helpTopic = Nothing
+      , helpContinue = False
+      , menuOpen = False
       , message = ""
       , skipped = []
       , version = D.decodeValue (D.field "version" D.string) flags |> Result.withDefault ""
@@ -119,6 +144,39 @@ init flags =
       }
     , Cmd.none
     )
+
+
+defaultHelp : HelpState
+defaultHelp =
+    { enabled = True
+    , introSeen = False
+    , ratingSeen = False
+    , axesSeen = False
+    }
+
+
+helpDecoder : D.Decoder HelpState
+helpDecoder =
+    D.map4 HelpState
+        (D.oneOf [ D.field "enabled" D.bool, D.succeed True ])
+        (D.oneOf [ D.field "introSeen" D.bool, D.succeed False ])
+        (D.oneOf [ D.field "ratingSeen" D.bool, D.succeed False ])
+        (D.oneOf [ D.field "axesSeen" D.bool, D.succeed False ])
+
+
+helpFromFlags : E.Value -> HelpState
+helpFromFlags flags =
+    D.decodeValue (D.field "help" helpDecoder) flags |> Result.withDefault defaultHelp
+
+
+encodeHelp : HelpState -> E.Value
+encodeHelp help =
+    E.object
+        [ ( "enabled", E.bool help.enabled )
+        , ( "introSeen", E.bool help.introSeen )
+        , ( "ratingSeen", E.bool help.ratingSeen )
+        , ( "axesSeen", E.bool help.axesSeen )
+        ]
 
 
 practice : Question
@@ -133,11 +191,7 @@ practice =
 
 current : Model -> Question
 current m =
-    if m.mode == Training then
-        practice
-
-    else
-        List.drop m.index m.questions |> List.head |> Maybe.withDefault practice
+    List.drop m.index m.questions |> List.head |> Maybe.withDefault practice
 
 
 chosen : Model -> Production
@@ -158,6 +212,60 @@ number id m =
 emit : String -> List ( String, E.Value ) -> Cmd Msg
 emit kind fields =
     action (E.object (( "type", E.string kind ) :: fields))
+
+
+persistHelp : HelpState -> Cmd Msg
+persistHelp help =
+    emit "help-state" [ ( "state", encodeHelp help ) ]
+
+
+firstProductionId : List Question -> String
+firstProductionId questions =
+    List.head questions
+        |> Maybe.andThen (List.head << .productions)
+        |> Maybe.map .id
+        |> Maybe.withDefault ""
+
+
+markHelp : HelpTopic -> HelpState -> HelpState
+markHelp topic help =
+    case topic of
+        WelcomeHelp ->
+            { help | introSeen = True }
+
+        RatingHelp ->
+            { help | ratingSeen = True }
+
+        AxesHelp ->
+            { help | axesSeen = True }
+
+        ReaderHelp ->
+            help
+
+
+showHelp : HelpTopic -> Bool -> Model -> ( Model, Cmd Msg )
+showHelp topic continue m =
+    let
+        nextHelp =
+            markHelp topic m.help
+    in
+    ( { m | help = nextHelp, helpTopic = Just topic, helpContinue = continue, menuOpen = False }
+    , persistHelp nextHelp
+    )
+
+
+hideHelp : Model -> Model
+hideHelp m =
+    { m | helpTopic = Nothing, helpContinue = False }
+
+
+showRatingHelpIfNeeded : Model -> ( Model, Cmd Msg )
+showRatingHelpIfNeeded m =
+    if m.help.enabled && not m.help.ratingSeen then
+        showHelp RatingHelp False m
+
+    else
+        ( m, Cmd.none )
 
 
 event : Model -> String -> List ( String, E.Value ) -> Cmd Msg
@@ -223,12 +331,19 @@ encodeSnapshot m =
         , ( "skippedQuestions", E.list E.string m.skipped )
         , ( "progress"
           , E.object
-                [ ( "mode", E.string (if m.mode == Training then "training" else if m.mode == Finished then "finished" else "running") )
+                [ ( "mode"
+                  , E.string
+                        (if m.mode == Finished then
+                            "finished"
+
+                         else
+                            "running"
+                        )
+                  )
                 , ( "index", E.int m.index )
                 , ( "selected", E.string m.selected )
                 , ( "exposed", E.object (Dict.toList m.exposed |> List.map (Tuple.mapSecond E.int)) )
                 , ( "reader", E.bool m.reader )
-                , ( "tour", E.int m.tour )
                 ]
           )
         ]
@@ -278,23 +393,50 @@ updateCore msg m =
 
                         qs =
                             D.decodeValue (D.field "questions" (D.list S.decodeQuestion)) raw |> Result.withDefault []
+
+                        selectedSnapshot =
+                            progress "selected" D.string ""
+
+                        selectedProduction =
+                            if List.any (\q -> List.any (\p -> p.id == selectedSnapshot) q.productions) qs then
+                                selectedSnapshot
+
+                            else
+                                firstProductionId qs
+
+                        restored =
+                            { m
+                                | questions = qs
+                                , levels = D.decodeValue (D.field "levels" (D.list D.string)) raw |> Result.withDefault []
+                                , version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version
+                                , answers = field "answers" (D.dict S.decodeAnswer) |> Result.withDefault Dict.empty
+                                , skipped = field "skippedQuestions" (D.list D.string) |> Result.withDefault []
+                                , index = progress "index" D.int 0
+                                , selected = selectedProduction
+                                , exposed = progress "exposed" (D.dict D.int) Dict.empty
+                                , reader =
+                                    if restoredMode == "training" then
+                                        False
+
+                                    else
+                                        progress "reader" D.bool False
+                                , mode =
+                                    if restoredMode == "finished" then
+                                        Finished
+
+                                    else
+                                        Running
+                                , saveStatus = D.decodeValue (D.field "saveStatus" D.string) raw |> Result.withDefault "saved"
+                            }
                     in
-                    ( { m
-                        | questions = qs
-                        , levels = D.decodeValue (D.field "levels" (D.list D.string)) raw |> Result.withDefault []
-                        , version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version
-                        , answers = field "answers" (D.dict S.decodeAnswer) |> Result.withDefault Dict.empty
-                        , skipped = field "skippedQuestions" (D.list D.string) |> Result.withDefault []
-                        , index = progress "index" D.int 0
-                        , selected = if restoredMode == "training" then "practice-1" else progress "selected" D.string ""
-                        , exposed = progress "exposed" (D.dict D.int) Dict.empty
-                        , reader = if restoredMode == "training" then True else progress "reader" D.bool False
-                        , mode = if restoredMode == "training" then Training else if restoredMode == "finished" then Finished else Running
-                        , tour = if restoredMode == "training" then 0 else -1
-                        , saveStatus = D.decodeValue (D.field "saveStatus" D.string) raw |> Result.withDefault "saved"
-                      }
-                    , Cmd.none
-                    )
+                    if restored.mode == Running && restored.reader then
+                        showRatingHelpIfNeeded restored
+
+                    else if restored.mode == Running && restored.help.enabled && not restored.help.introSeen then
+                        showHelp WelcomeHelp True restored
+
+                    else
+                        ( restored, Cmd.none )
 
                 Ok "session" ->
                     case D.decodeValue (D.field "questions" (D.list S.decodeQuestion)) raw of
@@ -303,7 +445,29 @@ updateCore msg m =
                                 ( { m | message = "Aucune question disponible pour cette sélection." }, Cmd.none )
 
                             else
-                                ( { m | questions = qs, mode = Training, tour = 0, selected = "practice-1", exposed = Dict.singleton "practice" 1, answers = Dict.empty, reader = True, closing = False, index = 0, skipped = [], version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version }, Cmd.none )
+                                let
+                                    question =
+                                        List.head qs |> Maybe.withDefault practice
+
+                                    started =
+                                        { m
+                                            | questions = qs
+                                            , mode = Running
+                                            , selected = firstProductionId qs
+                                            , exposed = Dict.singleton question.id 1
+                                            , answers = Dict.empty
+                                            , reader = True
+                                            , closing = False
+                                            , index = 0
+                                            , skipped = []
+                                            , version = D.decodeValue (D.field "bankVersion" D.string) raw |> Result.withDefault m.version
+                                        }
+                                in
+                                if started.help.enabled && not started.help.introSeen then
+                                    showHelp WelcomeHelp True started
+
+                                else
+                                    showRatingHelpIfNeeded started
 
                         Err _ ->
                             ( { m | message = "Impossible de préparer les questions." }, Cmd.none )
@@ -312,16 +476,7 @@ updateCore msg m =
                     updateCore Closed m
 
                 Ok "orbit" ->
-                    ( { m
-                        | tour =
-                            if m.tour == 5 then
-                                6
-
-                            else
-                                m.tour
-                      }
-                    , event m "orbit" []
-                    )
+                    ( m, event m "orbit" [] )
 
                 _ ->
                     ( m, Cmd.none )
@@ -346,12 +501,18 @@ updateCore msg m =
                         ( { m
                             | answers = Dict.insert m.selected next m.answers
                             , message = ""
-                            , tour =
-                                if m.tour == 0 then
-                                    1
+                            , helpTopic =
+                                if m.helpTopic == Just RatingHelp then
+                                    Nothing
 
                                 else
-                                    m.tour
+                                    m.helpTopic
+                            , helpContinue =
+                                if m.helpTopic == Just RatingHelp then
+                                    False
+
+                                else
+                                    m.helpContinue
                           }
                         , event m "grade" [ ( "value", E.float grade ), ( "initial", E.bool (a.initialNote == Nothing) ) ]
                         )
@@ -387,19 +548,25 @@ updateCore msg m =
                 ( { m | closing = True, answers = Dict.insert m.selected rated m.answers }, emit "close" [ ( "id", E.string m.selected ) ] )
 
         Closed ->
-            ( { m
-                | reader = False
-                , closing = False
-                , message = ""
-                , tour =
-                    if m.tour == 1 then
-                        2
+            let
+                next =
+                    { m
+                        | reader = False
+                        , closing = False
+                        , message = ""
+                    }
+            in
+            if next.help.enabled && not next.help.axesSeen then
+                let
+                    ( withHelp, helpCommand ) =
+                        showHelp AxesHelp False next
+                in
+                ( withHelp, Cmd.batch [ event m "close" [], helpCommand ] )
 
-                    else
-                        m.tour
-              }
-            , event m "close" []
-            )
+            else
+                ( next
+                , event m "close" []
+                )
 
         Place id axis value committed ->
             let
@@ -425,12 +592,18 @@ updateCore msg m =
                     | answers = Dict.insert id next m.answers
                     , selected = id
                     , message = ""
-                    , tour =
-                        if committed && ((m.tour == 2 && axis == "x") || (m.tour == 3 && axis == "y") || (m.tour == 4 && axis == "z")) then
-                            m.tour + 1
+                    , helpTopic =
+                        if committed && axis == "x" && m.helpTopic == Just AxesHelp then
+                            Nothing
 
                         else
-                            m.tour
+                            m.helpTopic
+                    , helpContinue =
+                        if committed && axis == "x" && m.helpTopic == Just AxesHelp then
+                            False
+
+                        else
+                            m.helpContinue
                   }
                 , if committed then
                     event { m | selected = id } "place" [ ( "axis", E.string axis ), ( "coordinates", S.encodePoint next.point ) ]
@@ -447,7 +620,7 @@ updateCore msg m =
                 a =
                     getAnswer m.selected m
             in
-            if a.note /= Nothing && not m.reader && m.mode /= Training then
+            if a.note /= Nothing && not m.reader then
                 ( { m | answers = Dict.insert m.selected { a | judged = [ "x", "y", "z" ] } m.answers, message = "" }
                 , event m "confirm-position" [ ( "coordinates", S.encodePoint a.point ) ]
                 )
@@ -457,19 +630,20 @@ updateCore msg m =
 
         Open id ->
             if List.any (\v -> v.id == id) (List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions) then
-                ( { m
-                    | selected = id
-                    , reader = True
-                    , closing = False
-                    , message = ""
-                    , tour =
-                        if m.tour == 6 then
-                            7
+                let
+                    next =
+                        { m
+                            | selected = id
+                            , reader = True
+                            , closing = False
+                            , message = ""
+                        }
 
-                        else
-                            m.tour
-                  }
-                , event { m | selected = id } "open" []
+                    ( withHelp, helpCommand ) =
+                        showRatingHelpIfNeeded next
+                in
+                ( withHelp
+                , Cmd.batch [ event { m | selected = id } "open" [], helpCommand ]
                 )
 
             else
@@ -496,7 +670,7 @@ updateCore msg m =
                     else
                         Cmd.none
             in
-            if m.mode == Training || m.reader || m.closing then
+            if m.reader || m.closing then
                 ( m, Cmd.none )
 
             else if a.note == Nothing then
@@ -506,8 +680,14 @@ updateCore msg m =
                 let
                     id =
                         List.drop count q.productions |> List.head |> Maybe.map .id |> Maybe.withDefault ""
+
+                    next =
+                        { confirmed | selected = id, reader = True, closing = False, exposed = Dict.insert q.id (count + 1) m.exposed, message = "" }
+
+                    ( withHelp, helpCommand ) =
+                        showRatingHelpIfNeeded next
                 in
-                ( { confirmed | selected = id, reader = True, closing = False, exposed = Dict.insert q.id (count + 1) m.exposed, message = "" }, Cmd.batch [ confirmation, event { m | selected = id } "reveal" [] ] )
+                ( withHelp, Cmd.batch [ confirmation, event { m | selected = id } "reveal" [], helpCommand ] )
 
             else if S.complete confirmed.answers q then
                 let
@@ -535,16 +715,25 @@ updateCore msg m =
 
                     id =
                         List.head remaining |> Maybe.map .id |> Maybe.withDefault m.selected
+
+                    next =
+                        { confirmed | selected = id, reader = True, closing = False, message = "Terminez l’évaluation de cette rédaction pour poursuivre." }
+
+                    ( withHelp, helpCommand ) =
+                        showRatingHelpIfNeeded next
                 in
-                ( { confirmed | selected = id, reader = True, closing = False, message = "Terminez l’évaluation de cette rédaction pour poursuivre." }, Cmd.batch [ confirmation, event { m | selected = id } "open" [] ] )
+                ( withHelp, Cmd.batch [ confirmation, event { m | selected = id } "open" [], helpCommand ] )
 
         GoQuestion idx ->
             if idx >= 0 && idx < List.length m.questions then
                 let
                     next =
                         openQuestion idx m
+
+                    ( withHelp, helpCommand ) =
+                        showRatingHelpIfNeeded next
                 in
-                ( next, event next "question" [] )
+                ( withHelp, Cmd.batch [ event withHelp "question" [], helpCommand ] )
 
             else
                 ( m, Cmd.none )
@@ -565,8 +754,11 @@ updateCore msg m =
                 let
                     following =
                         openQuestion (m.index + 1) next
+
+                    ( withHelp, helpCommand ) =
+                        showRatingHelpIfNeeded following
                 in
-                ( following, Cmd.batch [ event m "skip" [], event following "question" [] ] )
+                ( withHelp, Cmd.batch [ event m "skip" [], event withHelp "question" [], helpCommand ] )
 
             else
                 ( { next | mode = Finished, reader = False }, event m "skip" [] )
@@ -586,15 +778,51 @@ updateCore msg m =
         RetrySave ->
             ( m, emit "retry-save" [] )
 
-        Help ->
-            ( { m | mode = Training, tour = 0, selected = "practice-1", reader = True, closing = False, answers = Dict.remove "practice-1" m.answers, exposed = Dict.insert "practice" 1 m.exposed, message = "" }, Cmd.none )
+        ToggleMenu ->
+            ( { m | menuOpen = not m.menuOpen }, Cmd.none )
 
-        TourNext ->
+        ShowHelp topic ->
+            showHelp topic False m
+
+        HelpNext ->
+            case m.helpTopic of
+                Just WelcomeHelp ->
+                    if m.helpContinue && m.reader && m.help.enabled && not m.help.ratingSeen then
+                        showHelp RatingHelp False (hideHelp m)
+
+                    else
+                        ( hideHelp m, Cmd.none )
+
+                _ ->
+                    ( hideHelp m, Cmd.none )
+
+        SkipHelp ->
             let
-                next =
-                    openQuestion m.index { m | mode = Running, tour = -1, answers = Dict.remove "practice-1" m.answers }
+                nextHelp =
+                    { enabled = False
+                    , introSeen = True
+                    , ratingSeen = m.help.ratingSeen
+                    , axesSeen = m.help.axesSeen
+                    }
             in
-            ( next, event next "question" [] )
+            ( { m | help = nextHelp, helpTopic = Nothing, helpContinue = False }, persistHelp nextHelp )
+
+        DismissHelp ->
+            if m.helpTopic == Just WelcomeHelp then
+                updateCore HelpNext m
+
+            else
+                ( hideHelp m, Cmd.none )
+
+        ResetHelp ->
+            showHelp WelcomeHelp True { m | help = defaultHelp }
+
+        Escape ->
+            if m.helpTopic /= Nothing then
+                updateCore DismissHelp m
+
+            else
+                updateCore Close m
 
         Compare ->
             let
@@ -639,11 +867,38 @@ view m =
           else
             header [ class "topbar" ]
                 [ brand
-                , if m.mode == Running || m.mode == Training then
-                    button [ class "quiet help-button", onClick Help, disabled (m.mode == Training) ] [ icon "help", text "Mode d’emploi" ]
+                , div [ class "topbar-actions" ]
+                    [ if m.mode == Running then
+                        span [ class "topbar-caption" ] [ text "Rédactions mathématiques" ]
 
-                  else
-                    span [ class "topbar-caption" ] [ text "Rédactions mathématiques" ]
+                      else
+                        text ""
+                    , button
+                        [ class "icon-button menu-button"
+                        , onClick ToggleMenu
+                        , attribute "aria-label"
+                            (if m.menuOpen then
+                                "Fermer le menu"
+
+                             else
+                                "Ouvrir le menu"
+                            )
+                        , attribute "aria-expanded"
+                            (if m.menuOpen then
+                                "true"
+
+                             else
+                                "false"
+                            )
+                        , attribute "aria-haspopup" "menu"
+                        ]
+                        [ icon "menu" ]
+                    , if m.menuOpen then
+                        viewMenu m
+
+                      else
+                        text ""
+                    ]
                 ]
         , case m.mode of
             Setup ->
@@ -656,12 +911,44 @@ view m =
                 viewWorkspace m
         , if m.mode /= Setup then
             div [ class "save-status", attribute "role" "status", attribute "aria-live" "polite", attribute "data-status" m.saveStatus ]
-                [ text (if m.saveMessage /= "" then m.saveMessage else if m.saveStatus == "completed" then "Participation enregistrée et validée." else if m.saveStatus == "saved" then "Réponses enregistrées." else if (m.saveStatus == "error" || m.saveStatus == "submit-error") then "Enregistrement en attente. Vos réponses sont conservées sur cet appareil." else "Enregistrement en cours…")
-                , if (m.saveStatus == "error" || m.saveStatus == "submit-error") then button [ class "quiet", onClick RetrySave ] [ text "Réessayer l’enregistrement" ] else text ""
+                [ text
+                    (if m.saveMessage /= "" then
+                        m.saveMessage
+
+                     else if m.saveStatus == "completed" then
+                        "Participation enregistrée et validée."
+
+                     else if m.saveStatus == "saved" then
+                        "Réponses enregistrées."
+
+                     else if m.saveStatus == "error" || m.saveStatus == "submit-error" then
+                        "Enregistrement en attente. Vos réponses sont conservées sur cet appareil."
+
+                     else
+                        "Enregistrement en cours…"
+                    )
+                , if m.saveStatus == "error" || m.saveStatus == "submit-error" then
+                    button [ class "quiet", onClick RetrySave ] [ text "Réessayer l’enregistrement" ]
+
+                  else
+                    text ""
                 ]
 
           else
             text ""
+        , if m.mode /= Setup then
+            viewHelp m
+
+          else
+            text ""
+        ]
+
+
+viewMenu : Model -> Html Msg
+viewMenu _ =
+    div [ class "help-menu", attribute "role" "menu" ]
+        [ button [ class "menu-item", onClick (ShowHelp WelcomeHelp), attribute "role" "menuitem" ] [ icon "help", text "Accéder à l’aide" ]
+        , button [ class "menu-item", onClick ResetHelp, attribute "role" "menuitem" ] [ icon "reset", text "Réinitialiser l’aide" ]
         ]
 
 
@@ -729,14 +1016,7 @@ viewWorkspace m =
         [ header [ class "question-panel", id "question-panel" ]
             [ div [ class "question-meta" ]
                 [ span [ class "eyebrow" ]
-                    [ text
-                        (if m.mode == Training then
-                            "Essai guidé"
-
-                         else
-                            "Question " ++ String.fromInt (m.index + 1) ++ " / " ++ String.fromInt (List.length m.questions)
-                        )
-                    ]
+                    [ text ("Question " ++ String.fromInt (m.index + 1) ++ " / " ++ String.fromInt (List.length m.questions)) ]
                 , span [ class "question-level" ] [ text q.level ]
                 ]
             , rich q.statement
@@ -775,7 +1055,7 @@ viewWorkspace m =
                         S.axes
                     )
                 , if List.length a.judged < 3 then
-                    button [ class "quiet confirm-position", id "confirm-position", onClick Confirm, disabled (a.note == Nothing || m.mode == Training) ] [ icon "check", text "Conserver cette position" ]
+                    button [ class "quiet confirm-position", id "confirm-position", onClick Confirm, disabled (a.note == Nothing) ] [ icon "check", text "Conserver cette position" ]
 
                   else
                     span [ class "position-ready" ] [ icon "check", text "Les trois repères sont placés" ]
@@ -795,7 +1075,7 @@ viewWorkspace m =
 
                   else
                     text ""
-                , button [ class "primary next-production", id "next-production", onClick NextProduction, disabled (m.mode == Training) ]
+                , button [ class "primary next-production", id "next-production", onClick NextProduction ]
                     [ text
                         (if isLast then
                             if m.index + 1 == List.length m.questions then
@@ -812,20 +1092,17 @@ viewWorkspace m =
                 ]
             ]
         , div [ class "question-navigation" ]
-            [ button [ class "quiet", onClick (GoQuestion (m.index - 1)), disabled (m.index == 0 || m.mode == Training) ] [ text "← Question précédente" ]
+            [ button [ class "quiet", onClick (GoQuestion (m.index - 1)), disabled (m.index == 0) ] [ text "← Question précédente" ]
             , span [ class "navigation-message", attribute "role" "status" ]
                 [ text
                     (if m.message /= "" then
                         m.message
 
-                     else if m.mode == Training then
-                        "Cet essai ne fait pas partie de vos réponses."
-
                      else
                         "Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier."
                     )
                 ]
-            , button [ class "quiet", onClick Skip, disabled (m.mode == Training) ] [ text "Passer cette question" ]
+            , button [ class "quiet", onClick Skip ] [ text "Passer cette question" ]
             ]
         , if m.reader then
             viewReader m
@@ -834,11 +1111,6 @@ viewWorkspace m =
             text ""
         , if m.compare then
             viewCompare m shown
-
-          else
-            text ""
-        , if m.mode == Training then
-            viewTour m
 
           else
             text ""
@@ -877,7 +1149,13 @@ viewReader m =
         [ div [ class "reader-backdrop", onClick Close ] []
         , Html.node "reading-card"
             [ class "reader", id "reading-card", attribute "production-id" m.selected, attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "reader-title", tabindex -1 ]
-            [ header [ class "reader-header" ] [ div [] [ span [ class "step-tag" ] [ text "Prenez le temps de lire" ], h2 [ id "reader-title" ] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ] ], button [ class "icon-button", onClick Close, attribute "aria-label" "Réduire la rédaction" ] [ icon "close" ] ]
+            [ header [ class "reader-header" ]
+                [ div [] [ span [ class "step-tag" ] [ text "Prenez le temps de lire" ], h2 [ id "reader-title" ] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ] ]
+                , div [ class "reader-actions" ]
+                    [ button [ class "icon-button", id "reader-help-button", onClick (ShowHelp ReaderHelp), attribute "aria-label" "Aide sur la fiche de rédaction" ] [ icon "help" ]
+                    , button [ class "icon-button", onClick Close, attribute "aria-label" "Fermer la rédaction" ] [ icon "close" ]
+                    ]
+                ]
             , div [ class "reader-content", onClick Close ] [ rich (chosen m).content ]
             , div [ class "reader-footer" ]
                 [ div [ class "rating", id "rating" ]
@@ -907,7 +1185,7 @@ viewReader m =
                             )
                         ]
                     ]
-                , button [ class "primary place-button", id "place-button", onClick Close, disabled (a.note == Nothing || m.closing) ] [ text "Placer cette rédaction", icon "shrink" ]
+                , button [ class "primary validate-reading", id "validate-reading", onClick Close, disabled (a.note == Nothing || m.closing) ] [ text "Valider", icon "check" ]
                 , p [ class "error", attribute "role" "status" ] [ text m.message ]
                 ]
             ]
@@ -923,46 +1201,53 @@ viewCompare m shown =
     div [ class "comparison-layer" ] [ div [ class "reader-backdrop", onClick Close ] [], section [ class "comparison", attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-label" "Comparer les rédactions" ] [ header [] [ h2 [] [ text "Deux regards côte à côte" ], button [ class "icon-button", onClick Close, attribute "aria-label" "Fermer la comparaison" ] [ icon "close" ] ], div [ class "comparison-columns" ] [ Html.article [] [ h2 [] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ], rich (chosen m).content ], Html.article [] [ Html.select [ onInput CompareWith, attribute "aria-label" "Choisir la rédaction à comparer" ] (List.map (\v -> Html.option [ value v.id, selected (v.id == other.id) ] [ text ("Rédaction " ++ String.fromInt (number v.id m)) ]) shown), rich other.content ] ] ] ]
 
 
-viewTour : Model -> Html Msg
-viewTour m =
-    let
-        ( target, heading, body ) =
-            case m.tour of
-                0 ->
-                    ( "#reading-card", "D’abord, votre note", "Lisez cette rédaction, puis attrapez la bille pour lui donner une note. Les deux traits intermédiaires marquent un et deux points. Le déplacement avance par quarts de point, indépendamment des trois axes." )
+viewHelp : Model -> Html Msg
+viewHelp m =
+    case m.helpTopic of
+        Nothing ->
+            text ""
 
-                1 ->
-                    ( "#place-button", "La fiche devient une bille", "Appuyez sur ce bouton. La rédaction se réduit pour rejoindre l’espace de comparaison. Son aperçu vous permettra de la reconnaître." )
+        Just WelcomeHelp ->
+            div [ class "help-dialog-layer" ]
+                [ div [ class "help-backdrop", onClick DismissHelp ] []
+                , section [ class "help-dialog", attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "help-title" ]
+                    [ span [ class "eyebrow" ] [ text "Une aide quand vous en avez besoin" ]
+                    , h2 [ id "help-title" ] [ text "Comment se déroule l’évaluation ?" ]
+                    , p [] [ text "Vous allez lire des rédactions mathématiques, leur attribuer une note, puis les situer sur trois axes : lisibilité, précision et validité." ]
+                    , p [ class "muted" ] [ text "Vous pourrez revenir sur vos choix à tout moment." ]
+                    , div [ class "help-dialog-actions" ]
+                        [ button [ class "quiet", onClick SkipHelp ] [ text "Passer l’aide" ]
+                        , button [ class "primary", onClick HelpNext ]
+                            [ text
+                                (if m.helpContinue then
+                                    "Suivant"
 
-                2 ->
-                    ( "#axis-x", "Un premier repère", "Attrapez la bille numérotée et faites-la glisser entre Confus et Lisible. Elle part de sa position actuelle, sans saut. Seule la lisibilité change." )
+                                 else
+                                    "Fermer"
+                                )
+                            ]
+                        ]
+                    ]
+                ]
 
-                3 ->
-                    ( "#axis-y", "Ajustez la précision", "Déplacez cette bille entre Vague et Précis. Le trait du milieu représente ce que vous attendriez ici, pas forcément un idéal. Plus précis peut aussi être trop précis : vous décidez." )
+        Just ReaderHelp ->
+            contextHelp "reader-help-button" "Lire et noter" "Lisez la production, attribuez-lui une note, puis appuyez sur « Valider ». Vous pourrez ensuite la situer sur les trois axes." "Fermer"
 
-                4 ->
-                    ( "#axis-z", "Puis la validité", "Placez enfin la bille entre Fautif et Valide. Chaque barre règle un seul axe ; les deux autres restent exactement en place. Votre note reste indépendante." )
+        Just RatingHelp ->
+            contextHelp "rating" "Attribuer une note" "Déplacez ce curseur pour évaluer la production." "Compris"
 
-                5 ->
-                    ( "#space", "Tournez autour", "Faites glisser le fond avec le doigt ou la souris. Seul votre point de vue change. Les pointillés relient la bille aux faces et situent la rédaction dans le volume." )
+        Just AxesHelp ->
+            contextHelp "axis-x" "Placer la rédaction" "Déplacez les trois curseurs pour situer cette rédaction sur les trois axes." "Compris"
 
-                6 ->
-                    ( "#axis-x", "La même bille, la même rédaction", "Touchez le numéro sur cette barre pour relire la rédaction. Les billes proches se dégageront au-dessus de la barre ; leurs traits indiqueront leur position exacte." )
 
-                _ ->
-                    ( "#reading-card", "Vous avez la main", "Notez chaque rédaction, placez ses billes, puis utilisez « Rédaction suivante » pour valider la position affichée. Vous pouvez garder un repère au centre et revenir modifier vos choix. L’ordre des questions et des rédactions varie à chaque session." )
-    in
-    Html.node "spotlight-guide"
-        [ attribute "target" target, attribute "step" (String.fromInt m.tour) ]
-        [ div [ class "coach-card" ]
-            [ div [ class "coach-progress" ] [ span [] [ text ("PRISE EN MAIN · " ++ String.fromInt (m.tour + 1) ++ " / 8") ], div [] (List.range 0 7 |> List.map (\i -> span [ classList [ ( "done", i <= m.tour ) ] ] [])) ]
-            , h2 [] [ text heading ]
+contextHelp : String -> String -> String -> String -> Html Msg
+contextHelp target heading body closeLabel =
+    Html.node "context-help"
+        [ attribute "target" ("#" ++ target) ]
+        [ div [ class "context-help-card" ]
+            [ h2 [] [ text heading ]
             , p [] [ text body ]
-            , if m.tour == 7 then
-                btn "primary" "Commencer mes questions" TourNext
-
-              else
-                p [ class "coach-action" ] [ icon "hand", text "Essayez directement dans la zone éclairée" ]
+            , button [ class "quiet", onClick DismissHelp ] [ text closeLabel ]
             ]
         ]
 
@@ -999,13 +1284,30 @@ viewFinish m =
                     ++ "."
                 )
             ]
-        , p [ class "muted" ] [ text (if m.saveStatus == "completed" then "Vos réponses ont bien été reçues. Merci pour votre participation." else "Vous pouvez encore revoir vos réponses, puis valider votre participation.") ]
+        , p [ class "muted" ]
+            [ text
+                (if m.saveStatus == "completed" then
+                    "Vos réponses ont bien été reçues. Merci pour votre participation."
+
+                 else
+                    "Vous pouvez encore revoir vos réponses, puis valider votre participation."
+                )
+            ]
         , if m.saveStatus == "completed" then
             btn "quiet" "Nouvelle participation" Restart
 
           else
             div [ class "finish-actions" ]
-                [ button [ class "primary", onClick Submit, disabled (m.saveStatus == "submitting") ] [ icon "check", text (if m.saveStatus == "submitting" then "Validation en cours…" else "Valider ma participation") ]
+                [ button [ class "primary", onClick Submit, disabled (m.saveStatus == "submitting") ]
+                    [ icon "check"
+                    , text
+                        (if m.saveStatus == "submitting" then
+                            "Validation en cours…"
+
+                         else
+                            "Valider ma participation"
+                        )
+                    ]
                 , button [ class "secondary", onClick Return, disabled (m.saveStatus == "submitting" || m.saveStatus == "submit-error") ] [ text "Revenir aux questions" ]
                 ]
         ]
