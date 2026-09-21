@@ -1,15 +1,18 @@
 {
   "depot": "MrJ-am/style-mrjam",
-  "revision": "0fa714d16615131e169e8d3658d3c25fc466e29b",
+  "revision": "f91991aa0420b2a2f710ebf6547bb81e38a60779",
   "fichiers": {
     "identite.json": "98805217ea35c28b493c3d1927caba3c7b5747b39a9e4a361275f4d029898c86",
     "public/assets/mrjam/Echologo.svg": "ce9ff8bf622122aaec0b88a22b9633d1c09ef35b32b9f93289f17889d520a0b3",
     "public/assets/mrjam/dialogues.js": "e9c3dbe6276a5d69f6984c876bf604fb185e55043ed148ab2ebdce47f2e374e8",
     "public/assets/mrjam/signature.css": "7d1b958a4073d71d506385fd0dc499169941ed546b4bf5a3da45b66dd8708830",
     "src/MrJam.elm": "e0e0c9ef90a023caaac1c3fda53ce15f61d1d75b8f9166befe7af676c9e96f5e",
-    "src/MrJam/Disposition.elm": "5681da014ba9fb0ad60242c0a1ff63cb58bd912e5066b0540354710d390af1b0",
+    "src/MrJam/Disposition.elm": "76b918d7c6c0c7fa955bdb81bc82cc3e6dc1545e8aacc3fa1952fe0a0d9705e4",
+    "src/MrJam/Donnees.elm": "e99105d7d4027b2c365bfeed4ec424628111832dcb6cc77abb2431879cb2b62f",
+    "src/MrJam/Fenetres.elm": "5335f6ceda0140332950d5da9c715d612daa201ebb19adbb80cd290f53bdd315",
     "src/MrJam/Identite.elm": "f5d318e9b86ed5ae000b4492827048a30cd30c30a04fed643c7b0b33cbc22dca",
-    "src/MrJam/Tableaux.elm": "6ee5dea9286e35392c045646fe72eb40e73ed225a3a7f2d17a770563ededf7b5",
+    "src/MrJam/Lecture.elm": "2442ec08a0770ac42cb0bfbe3ede1103ff532d0407d346a73951c35e83e086fc",
+    "src/MrJam/Tableaux.elm": "7b50371a63bf8e1448c1c9b80ec3458d3239ee9e3165d4d667f090a4e77de67a",
     "src/MrJam/Theme.elm": "7fcb0ad75b1b3de7f9a8e20e60ecf24db93728a692684563f3ba395676343058"
   }
 }
