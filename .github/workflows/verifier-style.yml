@@ -1,0 +1,139 @@
+name: Vérifier le portage ElmUI sans publier
+on:
+  push:
+    branches: [migration/style-mrjam]
+    paths:
+      - .github/workflows/verifier-style.yml
+      - docs/src/**
+      - docs/scripts/**
+      - docs/tests/**
+      - docs/site/**
+      - docs/elm.json
+      - docs/style-mrjam.json
+      - docs/package*.json
+      - docs/playwright.config.cjs
+      - docs/migration/**
+permissions:
+  contents: read
+concurrency:
+  group: portage-mrjam-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      integrer: ${{ steps.sources.outputs.integrer }}
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: matheval_api_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ELM_HOME: /tmp/memoire-elm-cache
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/matheval_api_test
+      BROWSER_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/matheval_browser_test
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer les outils verrouillés et les bases jetables
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils postgresql-client
+          npm --prefix docs ci
+          npm --prefix server ci
+          createdb -h 127.0.0.1 -U postgres matheval_browser_test
+      - name: Préparer les sources du lot contrôlé
+        id: sources
+        run: |
+          set -euo pipefail
+          if test -f docs/migration/porter-style.py; then
+            python3 docs/migration/porter-style.py
+            mkdir -p "$RUNNER_TEMP/sources"
+            git diff --no-ext-diff --full-index --binary -- docs/src/Main.elm docs/src/Survey.elm docs/site/admin/admin.js docs/tests/e2e/collection-admin.spec.js docs/tests/e2e/survey.spec.js docs/tests/e2e/survey-gestures.spec.js > "$RUNNER_TEMP/sources/sources.patch"
+            (cd "$RUNNER_TEMP/sources" && sha256sum sources.patch > SHA256SUMS)
+            echo 'integrer=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Vérifier les données, les contrats et les sources Elm
+        run: |
+          set -euo pipefail
+          npm --prefix docs run check:data
+          npm --prefix docs run test:data
+          python3 -m unittest discover -s docs/tests -p 'test_published_site.py'
+          node docs/scripts/test-survey.cjs
+          npm --prefix docs run test:construction
+          npm --prefix docs run test:logic
+          npm --prefix server test
+          docs/node_modules/.bin/elm-format docs/src/Main.elm docs/src/Survey.elm docs/src/Administration.elm --validate
+      - name: Compiler les trois points d’entrée avec le style figé
+        run: |
+          npm --prefix docs run build:main
+          node -e "const v=require('./docs/style-mrjam.json'); if(v.revision!=='52ad33f881b50feef91d60915d17bae90abfc592') throw Error('Révision inattendue');"
+          git diff --exit-code -- research docs/data docs/site/data
+      - name: Tester les interfaces HTTP et la collecte réelle
+        run: |
+          npm --prefix docs run test:e2e:install:ci
+          npm --prefix docs run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: controles-portage-mrjam
+          path: docs/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Conserver les JavaScript vérifiés, sans publication ni police
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/artefacts/admin"
+          cp docs/site/main.js docs/site/survey.js "$RUNNER_TEMP/artefacts/"
+          cp docs/site/admin/administration.js "$RUNNER_TEMP/artefacts/admin/"
+          cp docs/style-mrjam.json "$RUNNER_TEMP/artefacts/"
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/artefacts/commit-verifie.txt"
+          (cd "$RUNNER_TEMP/artefacts" && sha256sum main.js survey.js admin/administration.js style-mrjam.json > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javascript-portage-mrjam
+          path: ${{ runner.temp }}/artefacts
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: steps.sources.outputs.integrer == 'true'
+        with:
+          name: sources-portage-mrjam
+          path: ${{ runner.temp }}/sources
+          retention-days: 3
+  integrer:
+    if: needs.verifier.outputs.integrer == 'true' && github.ref == 'refs/heads/migration/style-mrjam'
+    needs: verifier
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: sources-portage-mrjam
+          path: ${{ runner.temp }}/sources
+      - name: Enregistrer uniquement les sources validées sur la migration
+        run: |
+          set -euo pipefail
+          (cd "$RUNNER_TEMP/sources" && sha256sum --check SHA256SUMS)
+          git apply --check --index "$RUNNER_TEMP/sources/sources.patch"
+          git apply --index "$RUNNER_TEMP/sources/sources.patch"
+          git rm docs/migration/porter-style.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Raccorder le style figé et porter les premiers écrans ElmUI'
+          git push origin HEAD:refs/heads/migration/style-mrjam

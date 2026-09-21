@@ -21,4 +21,17 @@ html = html.replace(/((?:src|href)=")([^"]+)(")/g, (whole, prefix, ref, suffix) 
   return assets.has(clean) ? `${prefix}${clean}?v=${hash(fs.readFileSync(path.join(site, clean)))}${suffix}` : whole;
 });
 for (const name of ['index.html', 'enquete.html']) fs.writeFileSync(path.join(site, name), html);
+// Chaque point d’entrée conserve ses chemins relatifs, administration comprise.
+function versionnerPage(nom, ressources) {
+  const fichier = path.join(site, nom);
+  const contenu = fs.readFileSync(fichier, 'utf8').replace(/((?:src|href)=")([^"]+)(")/g, (original, prefixe, reference, suffixe) => {
+    const chemin = reference.split('?')[0];
+    return ressources.includes(chemin)
+      ? `${prefixe}${chemin}?v=${hash(fs.readFileSync(path.join(path.dirname(fichier), chemin)))}${suffixe}`
+      : original;
+  });
+  fs.writeFileSync(fichier, contenu);
+}
+versionnerPage('prototype.html', ['main.js', 'prototype.js', 'rich-text.js']);
+versionnerPage('admin/index.html', ['administration.js', 'admin.js', 'admin.css', '../rich-text.js']);
 console.log('Modules et feuilles de style versionnés.');
