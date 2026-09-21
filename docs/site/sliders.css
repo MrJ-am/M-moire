@@ -78,3 +78,5 @@ grade-slider:focus-within .grade-knob{outline:3px solid #36a896;outline-offset:4
 
 /* Préserver l'accès aux trois axes sous l'énoncé fixe sur un écran bas. */
 @media(max-height:760px) and (min-width:900px){#axes-panel .axes-heading{display:none}#axes-panel .axis-sliders{margin-top:0!important}}
+
+@media(max-height:600px) and (max-width:759px){#axes-panel{padding-top:8px}}
