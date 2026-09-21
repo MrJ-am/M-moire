@@ -14,6 +14,8 @@ Les tests navigateur sont obligatoires aussi pour une modification des seules do
 
 | Fichier | Parcours vérifié |
 | ~collection-admin.spec.js~ | Reprise après rechargement et coupure réseau, connexion administrateur, corpus, statistiques et réponses individuelles |
+| ~style-mrjam.spec.js~ | Connexion ElmUI, libellés, touche Entrée, requêtes protégées, tailles tactiles et largeurs 320, 390, 768 et 1363 pixels |
+| ~portage-complet.spec.js~ | Activation du compte, confirmation du secret, focus des dialogues, fond inerte, restitution du focus et chargement des polices originales |
 | ~survey.spec.js~ | Clavier, animations réduites, coordonnées indépendantes, révisions, enregistrement et disposition des petits écrans |
 | ~survey-gestures.spec.js~ | Souris, animations actives, aide contextuelle puis session entière sans saut de question, coordonnées conservées au centre, maintien d’une bille surélevée sous le pointeur, synchronisation de la note |
 | ~survey.touch.spec.js~ | Gestes tactiles Chromium : aide contextuelle, glissement horizontal, défilement vertical, annulation de geste, ouverture d’une rédaction et navigation |
