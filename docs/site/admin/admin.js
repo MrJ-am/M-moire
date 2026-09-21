@@ -28,7 +28,23 @@ async function request(path, options = {}) {
   return data;
 }
 function brand() { return e('div', { class: 'brand' }, e('span', { class: 'brand-mark', 'aria-hidden': 'true' }, '≋'), 'Matheval', e('span', { class: 'badge' }, 'Admin')); }
+// Le pont conserve le contrat HTTP ; ElmUI construit réellement les contrôles.
+function ouvrirConnexion() {
+  const noeud = document.createElement('div');
+  root.replaceChildren(noeud);
+  const application = Elm.Administration.init({ node: noeud });
+  application.ports.connexion.subscribe(async saisie => {
+    try {
+      const data = await request('login', { method: 'POST', body: JSON.stringify(saisie) });
+      username = data.username;
+      await initialize();
+    } catch (erreur) {
+      application.ports.retourConnexion.send(erreur.message);
+    }
+  });
+}
 function login() {
+  if (!setupToken) { ouvrirConnexion(); return; }
   const error = e('div', { role: 'alert' });
   const user = e('input', { name: 'username', autocomplete: 'username', required: '', minlength: 3, maxlength: 80, value: 'admin' });
   const password = e('input', { type: 'password', name: 'password', autocomplete: setupToken ? 'new-password' : 'current-password', required: '', minlength: setupToken ? 14 : 1, maxlength: 256 });

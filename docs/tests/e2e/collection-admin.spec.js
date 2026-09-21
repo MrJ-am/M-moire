@@ -36,8 +36,9 @@ test('une confirmation perdue se retrouve au rechargement sans créer une second
     await page.locator('#validate-reading').click();
     await expect(page.locator('reading-card')).toHaveCount(0);
     await page.getByRole('button', { name: 'Passer cette question', exact: true }).click();
-    await expect(page.locator('reading-card, .finish-panel')).toBeVisible();
+    await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
   }
+  await expect(page.locator('context-help')).toHaveCount(0);
   const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);
   await page.route('**/api/sessions/**', async route => {
     if (route.request().method() === 'PUT' && route.request().postDataJSON().final) {

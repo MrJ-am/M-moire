@@ -7,11 +7,13 @@ import Browser
 import Browser.Dom as Dom
 import Browser.Events
 import Dict exposing (Dict)
+import Element as Interface
 import Html exposing (Html, div, h1, h2, h3, p, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onClick, preventDefaultOn, stopPropagationOn)
 import Http
 import Json.Decode as Decode
+import MrJam
 import Process
 import Task
 import Time
@@ -461,6 +463,7 @@ view model =
         , style "padding" "12px"
         , style "display" "flex"
         , style "flex-direction" "column"
+        , style "gap" "12px"
         , style "background" "#eaf0fb"
         , style "font-family" "system-ui, sans-serif"
         ]
@@ -471,24 +474,19 @@ view model =
 
 topHeader : Model -> Html msg
 topHeader model =
-    div
-        [ attribute "data-testid" "header"
-        , style "padding" "10px 12px"
-        , style "border" "1px solid #d5deef"
-        , style "border-radius" "10px"
-        , style "background" "white"
-        , style "margin-bottom" "10px"
-        , style "flex-shrink" "0"
-        , style "position" "relative"
-        , style "z-index" "1"
+    Interface.layout
+        [ Interface.width Interface.fill
+        , Interface.height Interface.shrink
+        , Interface.htmlAttribute (style "min-height" "0")
+        , Interface.htmlAttribute (style "flex-shrink" "0")
+        , Interface.htmlAttribute (attribute "data-testid" "header")
         ]
-        (case model.exercise of
-            Just exercise ->
-                [ h1 [ style "margin" "0", style "font-size" "24px" ] [ text exercise.title ]
-                , div [ style "margin" "6px 0 0", style "color" "#33425f" ]
-                    [ richText exercise.statement ]
-                , p [ style "margin" "4px 0 0", style "font-size" "13px", style "color" "#4f6185" ]
-                    [ text
+        (MrJam.carte
+            (case model.exercise of
+                Just exercise ->
+                    [ MrJam.sousTitre exercise.title
+                    , Interface.html (richText exercise.statement)
+                    , MrJam.texteSecondaire
                         ("Selection : "
                             ++ selectedBadgeLabel model.selectedPropositionId model.propositions
                             ++ " | Placees : "
@@ -497,18 +495,12 @@ topHeader model =
                             ++ String.fromInt (List.length model.propositions)
                         )
                     ]
-                ]
 
-            Nothing ->
-                [ h1 [ style "margin" "0", style "font-size" "24px" ] [ text "Evaluation de productions d'eleves" ]
-                , p [ style "margin" "6px 0 0", style "color" "#4f6185" ]
-                    [ text
-                        (Maybe.withDefault
-                            "Chargement des productions..."
-                            model.contentError
-                        )
+                Nothing ->
+                    [ MrJam.sousTitre "Evaluation de productions d'eleves"
+                    , MrJam.texteSecondaire (Maybe.withDefault "Chargement des productions..." model.contentError)
                     ]
-                ]
+            )
         )
 
 
@@ -627,8 +619,10 @@ cardIsZooming model propositionId =
 
 boardHasZoomingCard : Model -> Bool
 boardHasZoomingCard model =
-    Animator.current model.zoomTimeline /= AllMini
-        || Animator.arrived model.zoomTimeline /= AllMini
+    Animator.current model.zoomTimeline
+        /= AllMini
+        || Animator.arrived model.zoomTimeline
+        /= AllMini
 
 
 expandedCenter : Model -> Position

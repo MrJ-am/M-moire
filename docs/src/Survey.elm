@@ -3,11 +3,13 @@ port module Survey exposing (main)
 import Browser
 import Browser.Events
 import Dict exposing (Dict)
+import Element as Interface
 import Html exposing (Html, button, div, h1, h2, header, input, label, main_, p, section, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
+import MrJam
 import Survey.Model as S exposing (Answer, Point, Production, Question)
 
 
@@ -762,10 +764,10 @@ updateCore msg m =
                 ( withHelp, Cmd.batch [ event m "skip" [], event withHelp "question" [], helpCommand ] )
 
             else
-                ( { next | mode = Finished, reader = False }, event m "skip" [] )
+                ( hideHelp { next | mode = Finished, reader = False }, event m "skip" [] )
 
         Finish ->
-            ( { m | mode = Finished, reader = False }, event m "finish" [] )
+            ( hideHelp { m | mode = Finished, reader = False }, event m "finish" [] )
 
         Return ->
             ( { m | mode = Running, reader = False }, Cmd.none )
@@ -861,7 +863,15 @@ btn cls txt msg =
 
 view : Model -> Html Msg
 view m =
-    main_ [ class "experience" ]
+    main_
+        [ class
+            (if m.mode == Running then
+                "experience"
+
+             else
+                "experience-mrjam"
+            )
+        ]
         [ if m.mode == Setup then
             text ""
 
@@ -955,43 +965,38 @@ viewMenu _ =
 
 viewSetup : Model -> Html Msg
 viewSetup m =
-    section [ class "welcome" ]
-        [ div [ class "welcome-copy" ]
-            [ h1 [] [ text "Critères d’évaluations ", span [] [ text "en mathématiques" ] ]
-            , p [ class "intro" ] [ text "Ce sondage fait partie d’un projet de recherche qui cherche à mettre en lumière les critères que les enseignantes et enseignants de mathématiques exploitent pour noter leurs élèves." ]
-            , div [ class "local-note" ] [ icon "info", p [] [ text "Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche." ] ]
-            ]
-        , div [ class "level-panel" ]
-            [ h2 [] [ text "Quels niveaux avez-vous enseignés ?" ]
-            , div [ class "levels" ]
-                (List.map
-                    (\l ->
-                        label [ classList [ ( "level-option", True ), ( "checked", List.member l m.levels ) ] ]
-                            [ input [ type_ "checkbox", checked (List.member l m.levels), onCheck (ToggleLevel l) ] []
-                            , span []
-                                [ text
-                                    (case l of
-                                        "Sup 1" ->
-                                            "Études supérieures"
+    MrJam.page "Critères d’évaluations en mathématiques"
+        [ MrJam.paragraphe "Ce sondage fait partie d’un projet de recherche qui cherche à mettre en lumière les critères que les enseignantes et enseignants de mathématiques exploitent pour noter leurs élèves."
+        , MrJam.avis MrJam.Information "Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche."
+        , MrJam.section "Quels niveaux avez-vous enseignés ?"
+            (List.map
+                (\niveau ->
+                    MrJam.caseACocher
+                        (case niveau of
+                            "Sup 1" ->
+                                "Études supérieures"
 
-                                        "1re spé" ->
-                                            "1re"
+                            "1re spé" ->
+                                "1re"
 
-                                        "Tle spé" ->
-                                            "Tle"
+                            "Tle spé" ->
+                                "Tle"
 
-                                        _ ->
-                                            l
-                                    )
-                                ]
-                            , icon "check"
-                            ]
-                    )
-                    m.available
+                            _ ->
+                                niveau
+                        )
+                        (List.member niveau m.levels)
+                        (ToggleLevel niveau)
                 )
-            , button [ class "primary start-button", onClick Begin ] [ text "Commencer", icon "arrow" ]
-            , p [ class "error", attribute "role" "alert" ] [ text m.message ]
-            ]
+                m.available
+                ++ [ MrJam.bouton "Commencer" Begin
+                   , if m.message == "" then
+                        Interface.none
+
+                     else
+                        MrJam.avis MrJam.Erreur m.message
+                   ]
+            )
         ]
 
 
@@ -1258,57 +1263,41 @@ viewFinish m =
     let
         done =
             List.filter (S.complete m.answers) m.questions |> List.length
+
+        pluriel =
+            if done > 1 then
+                "s"
+
+            else
+                ""
     in
-    section [ class "finish-panel" ]
-        [ div [ class "finish-icon" ] [ icon "check" ]
-        , span [ class "eyebrow" ] [ text "Merci pour votre regard" ]
-        , h1 [] [ text "Chaque nuance compte." ]
-        , p [ class "intro" ]
-            [ text
-                (String.fromInt done
-                    ++ " question"
-                    ++ (if done > 1 then
-                            "s"
+    MrJam.page "Chaque nuance compte."
+        [ Interface.el [ Interface.htmlAttribute (class "finish-panel-mrjam") ]
+            (MrJam.section "Merci pour votre regard"
+                [ MrJam.paragraphe (String.fromInt done ++ " question" ++ pluriel ++ " entièrement évaluée" ++ pluriel ++ " sur " ++ String.fromInt (List.length m.questions) ++ ".")
+                , MrJam.texteSecondaire
+                    (if m.saveStatus == "completed" then
+                        "Vos réponses ont bien été reçues. Merci pour votre participation."
 
-                        else
-                            ""
-                       )
-                    ++ " entièrement évaluée"
-                    ++ (if done > 1 then
-                            "s"
+                     else
+                        "Vous pouvez encore revoir vos réponses, puis valider votre participation."
+                    )
+                , if m.saveStatus == "completed" then
+                    MrJam.boutonSecondaire "Nouvelle participation" Restart
 
-                        else
-                            ""
-                       )
-                    ++ " sur "
-                    ++ String.fromInt (List.length m.questions)
-                    ++ "."
-                )
-            ]
-        , p [ class "muted" ]
-            [ text
-                (if m.saveStatus == "completed" then
-                    "Vos réponses ont bien été reçues. Merci pour votre participation."
+                  else
+                    MrJam.actions
+                        [ if m.saveStatus == "submitting" then
+                            MrJam.boutonEnCours "Validation en cours…"
 
-                 else
-                    "Vous pouvez encore revoir vos réponses, puis valider votre participation."
-                )
-            ]
-        , if m.saveStatus == "completed" then
-            btn "quiet" "Nouvelle participation" Restart
+                          else
+                            MrJam.bouton "Valider ma participation" Submit
+                        , if m.saveStatus == "submitting" || m.saveStatus == "submit-error" then
+                            MrJam.boutonInactif "Revenir aux questions"
 
-          else
-            div [ class "finish-actions" ]
-                [ button [ class "primary", onClick Submit, disabled (m.saveStatus == "submitting") ]
-                    [ icon "check"
-                    , text
-                        (if m.saveStatus == "submitting" then
-                            "Validation en cours…"
-
-                         else
-                            "Valider ma participation"
-                        )
-                    ]
-                , button [ class "secondary", onClick Return, disabled (m.saveStatus == "submitting" || m.saveStatus == "submit-error") ] [ text "Revenir aux questions" ]
+                          else
+                            MrJam.boutonSecondaire "Revenir aux questions" Return
+                        ]
                 ]
+            )
         ]

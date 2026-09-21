@@ -19,9 +19,15 @@ async function close(page) {
   const contextual = page.locator('context-help');
   if (await contextual.count()) await contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }).click();
 }
+// ElmUI actualise aria-checked au prochain rendu, pas pendant le clic natif.
+async function cocherNiveau(page, niveau) {
+  const caseNiveau = page.getByRole('checkbox', { name: niveau, exact: true });
+  if (!(await caseNiveau.isChecked())) await caseNiveau.click();
+  await expect(caseNiveau).toBeChecked();
+}
 async function start(page, level = '3e') {
   await page.goto('./');
-  await page.getByRole('checkbox', { name: level, exact: true }).check();
+  await cocherNiveau(page, level);
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
   await expect(page.locator('.help-dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
@@ -34,7 +40,7 @@ async function start(page, level = '3e') {
 
 test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('checkbox', { name: '3e', exact: true }).check();
+  await cocherNiveau(page, '3e');
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
   await expect(page.locator('.help-dialog')).toBeVisible();
   await expect(page.locator('.help-dialog')).toContainText('Vous allez être amené');
@@ -64,7 +70,7 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
 
 test('les aides contextuelles apparaissent une seule fois à l’étape concernée', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('checkbox', { name: '3e', exact: true }).check();
+  await cocherNiveau(page, '3e');
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
@@ -82,7 +88,7 @@ async function finishBySkipping(page) {
   while (await page.getByRole('button', { name: 'Passer cette question', exact: true }).count()) {
     if (await page.locator('reading-card').count()) { await grade(page, 6); await close(page); }
     await page.getByRole('button', { name: 'Passer cette question', exact: true }).click();
-    await expect(page.locator('reading-card, .finish-panel')).toBeVisible();
+    await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
   }
 }
 

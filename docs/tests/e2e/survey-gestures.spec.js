@@ -37,7 +37,7 @@ test('parcours entier à la souris : suivant valide aussi les coordonnées conse
     const coordinates = await page.locator(`.orb[data-id="${id}"]`).evaluate(el => Object.fromEntries(['x','y','z'].map(a => [a, Number(el.dataset[a])])));
     answers.set(id, { note: value, coordinates });
     await d.click(page.locator('#next-production'));
-    await expect(page.locator('reading-card, .finish-panel')).toBeVisible();
+    await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
     if (await page.locator('reading-card').count()) await settled(page.locator('reading-card'));
   }
   expect(answers.size).toBeGreaterThan(3);
