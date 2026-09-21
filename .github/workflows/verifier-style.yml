@@ -12,7 +12,7 @@ on:
       - docs/style-mrjam.json
       - docs/package*.json
       - docs/playwright.config.cjs
-      - docs/migration/**
+      - docs/PORTAGE-ELMUI.md
 permissions:
   contents: read
 concurrency:
@@ -22,8 +22,6 @@ jobs:
   verifier:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      integrer: ${{ steps.sources.outputs.integrer }}
     services:
       postgres:
         image: postgres:17
@@ -54,17 +52,6 @@ jobs:
           npm --prefix docs ci
           npm --prefix server ci
           createdb -h 127.0.0.1 -U postgres matheval_browser_test
-      - name: Préparer les sources du lot contrôlé
-        id: sources
-        run: |
-          set -euo pipefail
-          if test -f docs/migration/porter-style.py; then
-            python3 docs/migration/porter-style.py
-            mkdir -p "$RUNNER_TEMP/sources"
-            git diff --no-ext-diff --full-index --binary -- docs/src/Main.elm docs/src/Survey.elm docs/site/admin/admin.js docs/tests/e2e/collection-admin.spec.js docs/tests/e2e/survey.spec.js docs/tests/e2e/survey-gestures.spec.js > "$RUNNER_TEMP/sources/sources.patch"
-            (cd "$RUNNER_TEMP/sources" && sha256sum sources.patch > SHA256SUMS)
-            echo 'integrer=true' >> "$GITHUB_OUTPUT"
-          fi
       - name: Vérifier les données, les contrats et les sources Elm
         run: |
           set -euo pipefail
@@ -84,7 +71,7 @@ jobs:
       - name: Tester les interfaces HTTP et la collecte réelle
         run: |
           npm --prefix docs run test:e2e:install:ci
-          npm --prefix docs run test:e2e
+          PLAYWRIGHT_JUNIT_OUTPUT_FILE=test-results/resultats.xml npm --prefix docs run test:e2e -- --reporter=list,junit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -106,34 +93,3 @@ jobs:
           name: javascript-portage-mrjam
           path: ${{ runner.temp }}/artefacts
           retention-days: 7
-      - uses: actions/upload-artifact@v4
-        if: steps.sources.outputs.integrer == 'true'
-        with:
-          name: sources-portage-mrjam
-          path: ${{ runner.temp }}/sources
-          retention-days: 3
-  integrer:
-    if: needs.verifier.outputs.integrer == 'true' && github.ref == 'refs/heads/migration/style-mrjam'
-    needs: verifier
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: sources-portage-mrjam
-          path: ${{ runner.temp }}/sources
-      - name: Enregistrer uniquement les sources validées sur la migration
-        run: |
-          set -euo pipefail
-          (cd "$RUNNER_TEMP/sources" && sha256sum --check SHA256SUMS)
-          git apply --check --index "$RUNNER_TEMP/sources/sources.patch"
-          git apply --index "$RUNNER_TEMP/sources/sources.patch"
-          git rm docs/migration/porter-style.py
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Raccorder le style figé et porter les premiers écrans ElmUI'
-          git push origin HEAD:refs/heads/migration/style-mrjam
