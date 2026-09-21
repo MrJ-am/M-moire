@@ -884,16 +884,7 @@ view m =
                                     Interface.none
                                 )
                             ]
-                            (MrJam.boutonDevoiler "help-menu"
-                                (if m.menuOpen then
-                                    "Fermer le menu"
-
-                                 else
-                                    "Ouvrir le menu"
-                                )
-                                m.menuOpen
-                                ToggleMenu
-                            )
+                            (Disposition.boutonMenu "help-menu" m.menuOpen ToggleMenu)
                         ]
                     )
                 )
@@ -1146,8 +1137,8 @@ viewReader m =
             [ class "reader", id "reading-card", attribute "production-id" m.selected, attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "reader-title", attribute "data-mrjam-dialogue" "", tabindex -1 ]
             [ Disposition.fragment
                 (Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 8, repere "reader-header" ]
-                    [ Interface.el [ Interface.htmlAttribute (id "reader-title") ] (MrJam.sousTitre ("Rédaction " ++ String.fromInt (number m.selected m)))
-                    , MrJam.actions
+                    [ Interface.el [ Interface.width Interface.fill, Interface.htmlAttribute (id "reader-title") ] (MrJam.sousTitre ("Rédaction " ++ String.fromInt (number m.selected m)))
+                    , Interface.row [ Interface.width Interface.shrink, Interface.spacing 8 ]
                         [ Interface.el [ Interface.htmlAttribute (id "reader-help-button") ] (Disposition.boutonIcone "Aide sur la fiche de rédaction" "?" (ShowHelp ReaderHelp))
                         , Disposition.boutonIcone "Fermer la rédaction" "×" Close
                         ]
