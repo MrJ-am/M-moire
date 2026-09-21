@@ -92,6 +92,7 @@ viewFinish m =
 '''
 # Garder les identifiants et transitions ; les styles historiques ne ciblent pas les nouveaux panneaux.
 s=s.replace('main_ [ class "experience" ]', 'main_ [ class (if m.mode == Running then "experience" else "experience-mrjam") ]')
+s=s.replace('( { next | mode = Finished, reader = False }, event m "skip" [] )', '( hideHelp { next | mode = Finished, reader = False }, event m "skip" [] )').replace('( { m | mode = Finished, reader = False }, event m "finish" [] )', '( hideHelp { m | mode = Finished, reader = False }, event m "finish" [] )')
 p.write_text(s)
 p=r/'src/Main.elm'; s=p.read_text().replace('import Dict exposing (Dict)','import Dict exposing (Dict)\nimport Element as Interface\nimport MrJam')
 a=s.index('topHeader :'); b=s.index('\n\nplacedCount :',a)
@@ -100,6 +101,7 @@ topHeader model =
     Interface.layout
         [ Interface.width Interface.fill
         , Interface.height Interface.shrink
+        , Interface.htmlAttribute (style "min-height" "0")
         , Interface.htmlAttribute (style "flex-shrink" "0")
         , Interface.htmlAttribute (attribute "data-testid" "header")
         ]
@@ -132,5 +134,7 @@ p.write_text(s)
 for nom in ['docs/tests/e2e/collection-admin.spec.js', 'docs/tests/e2e/survey.spec.js', 'docs/tests/e2e/survey-gestures.spec.js']:
     p=r.parent/nom
     p.write_text(p.read_text().replace(".finish-panel", ".finish-panel-mrjam"))
+p=r/'tests/e2e/collection-admin.spec.js'
+p.write_text(p.read_text().replace("  const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);", "  await expect(page.locator('context-help')).toHaveCount(0);\n  const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);"))
 subprocess.run([str(r/"node_modules/.bin/elm-format"),str(r/"src/Main.elm"),str(r/"src/Survey.elm"),"--yes"],check=True)
-verifier({'docs/src/Main.elm': 'e8a0470920ef80dfdfa5b69e8ccb0bf088245027549e560212f94feea76a2334', 'docs/src/Survey.elm': 'c06451b17f62e1ea9b89e705c0fa1e63497c02bca5da286d1f930bd49a5d7a59', 'docs/site/admin/admin.js': '231c475e5b6b670f9a05daf5a6e3a1ac26c29b1e151b57b2f7c6cdad4d2adfdb', 'docs/tests/e2e/collection-admin.spec.js': '2d220521db2662ae6a996fa753cdd6a33776cf0c3f57bdb30f5ea438153afcdf', 'docs/tests/e2e/survey.spec.js': 'e873a7afafe54681638fd9065ae1a13bed04024f4b9ba4ee4c5c1b6115e000d5', 'docs/tests/e2e/survey-gestures.spec.js': 'fdc420f332566d37f96096bee24f6efbe8b229f7accca7f3fddb046c19aeb6db'})
+verifier({'docs/src/Main.elm': '6190abfbe8ba173e79a50f4dbdd88e8d9af7da723a641a8e205d73e0a5d0ac66', 'docs/src/Survey.elm': '7f21cf804a10c00839968260f17c3513c7be80e0c9b98862c01fe72cbcaa82e0', 'docs/site/admin/admin.js': '231c475e5b6b670f9a05daf5a6e3a1ac26c29b1e151b57b2f7c6cdad4d2adfdb', 'docs/tests/e2e/collection-admin.spec.js': 'a0f2d9749d1d2e56097e6dd0c10405b87bdb2f5d325fac5702bdd4f406036d61', 'docs/tests/e2e/survey.spec.js': 'e873a7afafe54681638fd9065ae1a13bed04024f4b9ba4ee4c5c1b6115e000d5', 'docs/tests/e2e/survey-gestures.spec.js': 'fdc420f332566d37f96096bee24f6efbe8b229f7accca7f3fddb046c19aeb6db'})
