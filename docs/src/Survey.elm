@@ -1059,18 +1059,20 @@ viewWorkspace m =
                                 )
                                 S.axes
                             )
-                        , if List.length a.judged < 3 then
-                            Disposition.boutonIdentifie "confirm-position"
-                                "Conserver cette position"
-                                (if a.note == Nothing then
-                                    Nothing
+                        , Interface.el [ Interface.width Interface.fill, Interface.height (Interface.minimum 44 Interface.shrink) ]
+                            (if List.length a.judged < 3 then
+                                Disposition.boutonIdentifie "confirm-position"
+                                    "Conserver cette position"
+                                    (if a.note == Nothing then
+                                        Nothing
 
-                                 else
-                                    Just Confirm
-                                )
+                                     else
+                                        Just Confirm
+                                    )
 
-                          else
-                            MrJam.texteSecondaire "Les trois repères sont placés"
+                             else
+                                Interface.el [ Interface.centerY ] (MrJam.texteSecondaire "Les trois repères sont placés")
+                            )
                         ]
                     )
                 , Html.node "evaluation-space"
@@ -1154,7 +1156,7 @@ viewReader m =
             , div [ class "reader-content", onClick Close ] [ rich (chosen m).content ]
             , Disposition.fragment
                 (Interface.column [ Interface.width Interface.fill, Interface.spacing 8, repere "reader-footer" ]
-                    [ Interface.column [ Interface.width Interface.fill, Interface.spacing 4, Interface.htmlAttribute (id "rating") ]
+                    [ Interface.column [ Interface.width (Interface.maximum 640 Interface.fill), Interface.spacing 4, Interface.htmlAttribute (id "rating") ]
                         [ MrJam.paragraphe "Quelle note lui donneriez-vous ?"
                         , Interface.html
                             (div [ class "grade-track" ]

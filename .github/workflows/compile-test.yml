@@ -112,9 +112,13 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
       - name: Installer la version vérifiée
+        id: installation
         env:
           MATHEVAL_HOST: ${{ vars.MATHEVAL_HOST }}
         run: |
+          precedente="$(ssh "matheval-deploy@${MATHEVAL_HOST}" 'basename "$(readlink -f /srv/matheval/current)"')"
+          [[ "$precedente" =~ ^[a-f0-9]{40}$ ]]
+          printf 'precedente=%s\n' "$precedente" >> "$GITHUB_OUTPUT"
           scp matheval.tar.gz "matheval-deploy@${MATHEVAL_HOST}:/srv/matheval/incoming/${GITHUB_SHA}.tar.gz"
           ssh "matheval-deploy@${MATHEVAL_HOST}" "matheval-release ${GITHUB_SHA}"
       - name: Vérifier les fichiers servis
@@ -124,3 +128,29 @@ jobs:
           tar -xzf matheval.tar.gz release-manifest.json
           export EXPECTED_SITE="$(cat release-manifest.json)"
           python3 docs/scripts/check-published-site.py verify
+      - name: Vérifier le service et le refus des accès anonymes
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          from urllib.request import urlopen
+          from urllib.error import HTTPError
+          base = 'https://principiipetit.io/matheval/api/'
+          with urlopen(base + 'health', timeout=10) as reponse:
+              assert json.load(reponse)['status'] == 'ok'
+          for chemin in ['admin/me', 'admin/statistics']:
+              try:
+                  urlopen(base + chemin, timeout=10)
+              except HTTPError as erreur:
+                  assert erreur.code == 401, (chemin, erreur.code)
+              else:
+                  raise AssertionError('Accès anonyme accepté : ' + chemin)
+          print('Service actif ; accès administratifs anonymes refusés.')
+          PYTHON
+      - name: Revenir à la version précédente si les contrôles de publication échouent
+        if: failure() && steps.installation.outputs.precedente != ''
+        env:
+          MATHEVAL_HOST: ${{ vars.MATHEVAL_HOST }}
+          PRECEDENTE: ${{ steps.installation.outputs.precedente }}
+        run: |
+          [[ "$PRECEDENTE" =~ ^[a-f0-9]{40}$ ]]
+          ssh "matheval-deploy@${MATHEVAL_HOST}" "matheval-release ${PRECEDENTE}"

@@ -17,4 +17,8 @@ try {
   fs.copyFileSync(path.join(tmp, 'administration.js'), path.join(root, 'site/admin/administration.js'));
   installerIdentite(commun, path.join(root, 'site/assets/mrjam'));
   installerIdentite(commun, path.join(root, 'site/admin/assets/mrjam'));
+  const style = JSON.parse(fs.readFileSync(path.join(root, 'style-mrjam.json'), 'utf8'));
+  const identite = JSON.parse(fs.readFileSync(path.join(root, 'identite/provenance.json'), 'utf8'));
+  const application = process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+  fs.writeFileSync(path.join(root, 'site/interface.json'), JSON.stringify({ application, style: style.revision, signature: identite.revision }, null, 2) + '\n');
 } finally { fs.rmSync(tmp, { recursive: true, force: true }); }

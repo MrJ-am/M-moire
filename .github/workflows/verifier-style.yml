@@ -65,7 +65,7 @@ jobs:
           npm --prefix docs run test:logic
           npm --prefix server test
           docs/node_modules/.bin/elm-format docs/src/Main.elm docs/src/Survey.elm docs/src/Administration.elm docs/src/DemoCard.elm --validate
-      - name: Compiler les trois points d’entrée avec le style figé
+      - name: Vérifier les quatre points d’entrée avec le style figé
         run: |
           npm --prefix docs run build:main
           node -e "const v=require('./docs/style-mrjam.json'); if(!/^[a-f0-9]{40}$/.test(v.revision)) throw Error('Révision inattendue');"
@@ -85,11 +85,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/artefacts/admin"
-          cp docs/site/main.js docs/site/survey.js "$RUNNER_TEMP/artefacts/"
+          cp docs/site/main.js docs/site/survey.js docs/site/demo-card.js docs/site/interface.json "$RUNNER_TEMP/artefacts/"
           cp docs/site/admin/administration.js "$RUNNER_TEMP/artefacts/admin/"
           cp docs/style-mrjam.json "$RUNNER_TEMP/artefacts/"
           printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/artefacts/commit-verifie.txt"
-          (cd "$RUNNER_TEMP/artefacts" && sha256sum main.js survey.js admin/administration.js style-mrjam.json > SHA256SUMS)
+          (cd "$RUNNER_TEMP/artefacts" && sha256sum main.js survey.js demo-card.js admin/administration.js interface.json style-mrjam.json > SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: javascript-portage-mrjam

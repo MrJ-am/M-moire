@@ -290,6 +290,7 @@ actualiser message modele =
                         , statistiques = vide
                         , details = vide
                         , reponses = []
+                        , contexte = modele.contexte + 1
                         , secret = ""
                         , confirmation = ""
                         , erreur =
@@ -351,7 +352,9 @@ actualiser message modele =
 
 ouvrirSession : E.Value -> Modele -> ( Modele, Cmd Message )
 ouvrirSession donnees modele =
-    ( { modele | compte = Just (chaine "username" donnees), activation = False, enCours = False, erreur = "", secret = "", confirmation = "" }, demander modele.contexte "versions" "corpora" )
+    ( { modele | compte = Just (chaine "username" donnees), activation = False, enCours = False, erreur = "", secret = "", confirmation = "", contexte = modele.contexte + 1 }
+    , demander (modele.contexte + 1) "versions" "corpora"
+    )
 
 
 chaine : String -> E.Value -> String
@@ -535,7 +538,10 @@ afficher modele =
                   else
                     UI.none
                 , afficherErreur modele
-                , if modele.attente > 0 then
+                , if modele.erreur /= "" then
+                    M.boutonSecondaire "Réessayer" (Naviguer modele.vue)
+
+                  else if modele.attente > 0 then
                     M.texteSecondaire "Chargement des résultats…"
 
                   else
