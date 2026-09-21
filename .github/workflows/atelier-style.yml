@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Installer l’outil de contrôle PDF
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - name: Vérifier les sources avant toute transformation
         run: |
           set -euo pipefail
