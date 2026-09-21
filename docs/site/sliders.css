@@ -75,3 +75,6 @@ grade-slider:focus-within .grade-knob{outline:3px solid #36a896;outline-offset:4
 }
 
 .evaluation-layout>.s{min-width:0;height:100%}.evaluation-layout .axes-panel{height:100%}.evaluation-layout{width:100%}
+
+/* Préserver l'accès aux trois axes sous l'énoncé fixe sur un écran bas. */
+@media(max-height:760px) and (min-width:900px){#axes-panel .axes-heading{display:none}#axes-panel .axis-sliders{margin-top:0!important}}
