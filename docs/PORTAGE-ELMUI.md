@@ -6,7 +6,7 @@ projection 3D conservent leurs ponts spécialisés. Le corpus et les contrats
 HTTP, JSON, cookies et PostgreSQL restent inchangés.
 
 Le style est figé dans `style-mrjam.json`, révision
-`0fa5657a0ce5747d96ef60bac739d91bb1f3f6b4` de la branche
+`553e5a85fc28d09ab2d034401c6cb912ef97320d` de la branche
 `integration/matheval-complet`. Il intègre les ajouts Matheval préparés à
 `a160ec1` et les composants Vision déjà publiés à `c7b4d6e`. Les empreintes de tous les
 modules et des ressources sont vérifiées à chaque construction.
