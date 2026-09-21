@@ -9,6 +9,8 @@ jobs:
   reference:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ELM_HOME: ${{ runner.temp }}/elm-cache
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +35,7 @@ jobs:
           git rev-parse HEAD > "$RUNNER_TEMP/atelier/commit.txt"
           git archive HEAD docs server research deploy AGENTS.md .github > "$RUNNER_TEMP/atelier/sources.tar"
           tar -czf "$RUNNER_TEMP/atelier/node_modules.tar.gz" docs/node_modules
-          tar -czf "$RUNNER_TEMP/atelier/elm-home.tar.gz" -C "$HOME" .elm
+          tar -czf "$RUNNER_TEMP/atelier/elm-home.tar.gz" -C "$ELM_HOME" .
       - uses: actions/upload-artifact@v4
         with:
           name: atelier-style-reference
