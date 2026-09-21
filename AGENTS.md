@@ -65,3 +65,13 @@ Après les validations pertinentes pour les changements :
 2. Pousser les changements sur le dépôt distant (`origin`) et la branche courante.
 
 En cas d'échec d'une validation requise, du commit ou du push, l'indiquer explicitement dans la réponse. Une compilation non nécessaire ne constitue pas une validation manquante et ne doit pas bloquer la synchronisation.
+
+## Style MrJ.am et francisation
+
+- Lire `docs/STYLE-MRJAM.md` avant de modifier les interfaces. Le passage de toutes les interfaces, administration comprise, à ElmUI est décidé ; la préparation n’est pas encore une migration publiée.
+- Consommer la bibliothèque `MrJ-am/style-mrjam` à une révision Git exacte lors de la compilation. Appeler les composants usuels simplement, par exemple `bouton "Valider" Valider`, sans répéter leurs réglages décoratifs. Les variantes portent une intention distincte.
+- Franciser tout nom contrôlé et garder le code lisible et compact. Pour les noms existants, compiler la référence, renommer un seul symbole avec ses usages, recompiler tous les points d’entrée consommateurs et vérifier les contrats non typés avant de passer au symbole suivant.
+- Préserver les noms imposés, identifiants persistants, ports et clés échangées tant que leur éventuelle migration compatible n’est pas définie. Ne pas faire de remplacement aveugle dans les données.
+- L’atelier de compilation temporaire devra aussi recevoir la bibliothèque commune à sa révision vérifiée ; ne pas ajouter un chemin dans `elm.json` sans adapter cette copie. Conserver Main et Survey et la compatibilité Android.
+- Le logo et la signature sont d’utilisation strictement réservée ; `MrJ-am/Signature` reste la source à version précise. Préserver le texte sélectionnable `MrJ.am`.
+- Une nouvelle version du style reconstruit et redéploie tous les projets concernés après validation collective, sans changement implicite de données ni de configuration système. Ne pas confondre compilation, validation fonctionnelle et publication effective.
