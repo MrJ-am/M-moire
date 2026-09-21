@@ -1,2 +1,2 @@
 /* Pont de rendu mathématique ; la présentation administrative appartient à ElmUI. */
-body{margin:0}*{box-sizing:border-box}rich-text{display:block;line-height:1.7;overflow-wrap:anywhere}rich-text p{margin:0 0 1em}rich-text .katex-display{overflow-x:auto;overflow-y:hidden;padding:8px 0}button,input,select{font:inherit;touch-action:manipulation}
+body{margin:0}*{box-sizing:border-box}rich-text{display:block;width:100%;min-width:0;white-space:normal;line-height:1.7;overflow-wrap:anywhere}rich-text p{margin:0 0 1em}rich-text .katex-display{overflow-x:auto;overflow-y:hidden;padding:8px 0}button,input,select{font:inherit;touch-action:manipulation}

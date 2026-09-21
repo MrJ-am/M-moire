@@ -3,8 +3,8 @@
 .axes-heading{display:flex;align-items:center;gap:9px;font-size:.875rem;font-weight:600;color:var(--green);margin-bottom:8px}
 .axes-heading .selected-label{margin-left:auto;font-size:.75rem;color:var(--muted);font-weight:500}
 .axes-heading ui-icon{width:19px;height:19px;flex-basis:19px}
-.axis-sliders{display:flex;flex-direction:column;gap:9px}
-axis-slider{display:block;position:relative;color:var(--green);min-width:0;user-select:none}
+#axes-panel .axis-sliders{gap:0}
+axis-slider{display:block;width:100%;position:relative;color:var(--green);min-width:0;user-select:none}
 axis-slider[axis=y]{color:#1686a0}axis-slider[axis=z]{color:#7863b1}
 .slider-poles{display:flex;justify-content:space-between;font-size:.8125rem;font-weight:600;padding:0 3px;line-height:1.4}
 .slider-field{position:relative;touch-action:pan-y;isolation:isolate;min-height:44px}
@@ -60,8 +60,10 @@ grade-slider:focus-within .grade-knob{outline:3px solid #36a896;outline-offset:4
 
 /* Compact bars whenever the panels stack, including unfolded portrait phones. */
 @media(max-width:759px),(max-width:899px) and (orientation:portrait){
-  .axes-panel{padding:12px 16px 8px;align-self:start}
-  .axes-heading{display:none}
+  #axes-panel{padding:12px 16px 8px;align-self:start;height:auto!important}
+  .evaluation-layout>.s{height:auto!important}
+  #axes-panel .axis-sliders{margin-top:0!important}
+  #axes-panel .axes-heading{display:none}
   .axis-sliders{gap:4px}
   axis-slider .slider-poles{position:absolute;inset:0;display:block;pointer-events:none}
   axis-slider .slider-poles span{position:absolute;top:var(--rail-y);transform:translateY(-50%);font-size:.6875rem}
