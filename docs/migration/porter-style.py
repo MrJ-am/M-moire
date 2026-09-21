@@ -95,6 +95,7 @@ s=s.replace('main_ [ class "experience" ]', 'main_ [ class (if m.mode == Running
 s=s.replace('( { next | mode = Finished, reader = False }, event m "skip" [] )', '( hideHelp { next | mode = Finished, reader = False }, event m "skip" [] )').replace('( { m | mode = Finished, reader = False }, event m "finish" [] )', '( hideHelp { m | mode = Finished, reader = False }, event m "finish" [] )')
 p.write_text(s)
 p=r/'src/Main.elm'; s=p.read_text().replace('import Dict exposing (Dict)','import Dict exposing (Dict)\nimport Element as Interface\nimport MrJam')
+s=s.replace('        , style "flex-direction" "column"', '        , style "flex-direction" "column"\n        , style "gap" "12px"', 1)
 a=s.index('topHeader :'); b=s.index('\n\nplacedCount :',a)
 s=s[:a]+'''topHeader : Model -> Html msg
 topHeader model =
@@ -136,5 +137,9 @@ for nom in ['docs/tests/e2e/collection-admin.spec.js', 'docs/tests/e2e/survey.sp
     p.write_text(p.read_text().replace(".finish-panel", ".finish-panel-mrjam"))
 p=r/'tests/e2e/collection-admin.spec.js'
 p.write_text(p.read_text().replace("  const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);", "  await expect(page.locator('context-help')).toHaveCount(0);\n  const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);"))
+p=r/'tests/e2e/survey.spec.js'
+s=p.read_text().replace("async function start(page, level = '3e') {", "// ElmUI actualise aria-checked au prochain rendu, pas pendant le clic natif.\nasync function cocherNiveau(page, niveau) {\n  const caseNiveau = page.getByRole('checkbox', { name: niveau, exact: true });\n  if (!(await caseNiveau.isChecked())) await caseNiveau.click();\n  await expect(caseNiveau).toBeChecked();\n}\n" + "async function start(page, level = '3e') {")
+s=s.replace("await page.getByRole('checkbox', { name: level, exact: true }).check();", "await cocherNiveau(page, level);").replace("await page.getByRole('checkbox', { name: '3e', exact: true }).check();", "await cocherNiveau(page, '3e');")
+p.write_text(s)
 subprocess.run([str(r/"node_modules/.bin/elm-format"),str(r/"src/Main.elm"),str(r/"src/Survey.elm"),"--yes"],check=True)
-verifier({'docs/src/Main.elm': '6190abfbe8ba173e79a50f4dbdd88e8d9af7da723a641a8e205d73e0a5d0ac66', 'docs/src/Survey.elm': '7f21cf804a10c00839968260f17c3513c7be80e0c9b98862c01fe72cbcaa82e0', 'docs/site/admin/admin.js': '231c475e5b6b670f9a05daf5a6e3a1ac26c29b1e151b57b2f7c6cdad4d2adfdb', 'docs/tests/e2e/collection-admin.spec.js': 'a0f2d9749d1d2e56097e6dd0c10405b87bdb2f5d325fac5702bdd4f406036d61', 'docs/tests/e2e/survey.spec.js': 'e873a7afafe54681638fd9065ae1a13bed04024f4b9ba4ee4c5c1b6115e000d5', 'docs/tests/e2e/survey-gestures.spec.js': 'fdc420f332566d37f96096bee24f6efbe8b229f7accca7f3fddb046c19aeb6db'})
+verifier({'docs/src/Main.elm': '4401edb7cf1a7cffc9f58bdda66f08a31381bde0c3f4d25b4c6954e6924944e5', 'docs/src/Survey.elm': '7f21cf804a10c00839968260f17c3513c7be80e0c9b98862c01fe72cbcaa82e0', 'docs/site/admin/admin.js': '231c475e5b6b670f9a05daf5a6e3a1ac26c29b1e151b57b2f7c6cdad4d2adfdb', 'docs/tests/e2e/collection-admin.spec.js': 'a0f2d9749d1d2e56097e6dd0c10405b87bdb2f5d325fac5702bdd4f406036d61', 'docs/tests/e2e/survey.spec.js': '31857e71592f6a64460a5e3982e99c7013ff20a78c3826e309b58a5005c5e4b3', 'docs/tests/e2e/survey-gestures.spec.js': 'fdc420f332566d37f96096bee24f6efbe8b229f7accca7f3fddb046c19aeb6db'})

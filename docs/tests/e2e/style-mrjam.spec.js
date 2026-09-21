@@ -37,6 +37,11 @@ for (const largeur of [320, 390, 768, 1363]) {
     await page.setViewportSize({ width: largeur, height: 844 });
     await page.goto('./');
     await expect(page.getByRole('heading', { name: 'Quels niveaux avez-vous enseignés ?', exact: true })).toBeVisible();
+    const souris = page.getByRole('checkbox', { name: '3e', exact: true });
+    await souris.click();
+    await expect(souris).toBeChecked();
+    await souris.click();
+    await expect(souris).not.toBeChecked();
     const niveau = page.getByRole('checkbox', { name: '5e', exact: true });
     await niveau.focus();
     await niveau.press('Space');
