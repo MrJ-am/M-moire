@@ -8,3 +8,10 @@ __pycache__/
 !.env.example
 *.dump
 *.sql.gz
+# Sorties régénérées et vérifiées avant toute publication.
+docs/site/main.js
+docs/site/survey.js
+docs/site/demo-card.js
+docs/site/admin/administration.js
+docs/site/assets/mrjam/
+docs/site/admin/assets/mrjam/

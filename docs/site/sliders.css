@@ -1,5 +1,5 @@
 .evaluation-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:stretch;--slider-reserve:0px}
-.axes-panel{min-width:0;background:#ffffffd9;border:1px solid #fff;border-radius:25px;padding:20px 22px 14px;box-shadow:var(--shadow)}
+.axes-panel{min-width:0}
 .axes-heading{display:flex;align-items:center;gap:9px;font-size:.875rem;font-weight:600;color:var(--green);margin-bottom:8px}
 .axes-heading .selected-label{margin-left:auto;font-size:.75rem;color:var(--muted);font-weight:500}
 .axes-heading ui-icon{width:19px;height:19px;flex-basis:19px}
@@ -48,7 +48,7 @@ grade-slider:focus-within .grade-knob{outline:3px solid #36a896;outline-offset:4
   .evaluation-layout evaluation-space{height:100%;min-height:370px}
 }
 @media(max-width:700px){
-  .axes-panel{border-radius:19px;padding:14px 16px 10px}.axes-heading{font-size:.8125rem;margin-bottom:6px}
+  .axes-panel{padding:14px 16px 10px}.axes-heading{font-size:.8125rem;margin-bottom:6px}
   .axes-heading .selected-label{font-size:.6875rem}.axis-sliders{gap:2px}.slider-poles{font-size:.75rem}
   .evaluation-layout{gap:10px}.question-panel{top:4px}
 }
@@ -71,3 +71,5 @@ grade-slider:focus-within .grade-knob{outline:3px solid #36a896;outline-offset:4
 @media(max-width:700px){
   .evaluation-layout evaluation-space{height:clamp(240px,calc(100dvh - 560px),340px);min-height:240px}
 }
+
+.evaluation-layout>.s{min-width:0;height:100%}.evaluation-layout .axes-panel{height:100%}.evaluation-layout{width:100%}

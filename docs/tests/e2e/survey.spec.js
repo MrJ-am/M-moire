@@ -57,7 +57,7 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   if (await axesHelp.count()) await axesHelp.getByRole('button', { name: 'Compris', exact: true }).click();
 
   await page.getByRole('button', { name: 'Ouvrir le menu', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Réinitialiser l’aide', exact: true }).click();
+  await page.getByRole('button', { name: 'Réinitialiser l’aide', exact: true }).click();
   await expect(page.locator('.help-dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
   await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);

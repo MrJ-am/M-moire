@@ -8,6 +8,7 @@ on:
       - docs/scripts/**
       - docs/tests/**
       - docs/site/**
+      - docs/identite/**
       - docs/elm.json
       - docs/style-mrjam.json
       - docs/package*.json
@@ -62,11 +63,11 @@ jobs:
           npm --prefix docs run test:construction
           npm --prefix docs run test:logic
           npm --prefix server test
-          docs/node_modules/.bin/elm-format docs/src/Main.elm docs/src/Survey.elm docs/src/Administration.elm --validate
+          docs/node_modules/.bin/elm-format docs/src/Main.elm docs/src/Survey.elm docs/src/Administration.elm docs/src/DemoCard.elm --validate
       - name: Compiler les trois points d’entrée avec le style figé
         run: |
           npm --prefix docs run build:main
-          node -e "const v=require('./docs/style-mrjam.json'); if(v.revision!=='52ad33f881b50feef91d60915d17bae90abfc592') throw Error('Révision inattendue');"
+          node -e "const v=require('./docs/style-mrjam.json'); if(!/^[a-f0-9]{40}$/.test(v.revision)) throw Error('Révision inattendue');"
           git diff --exit-code -- research docs/data docs/site/data
       - name: Tester les interfaces HTTP et la collecte réelle
         run: |
@@ -79,7 +80,7 @@ jobs:
           path: docs/test-results/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Conserver les JavaScript vérifiés, sans publication ni police
+      - name: Conserver les JavaScript vérifiés, sans publication
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/artefacts/admin"

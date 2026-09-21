@@ -14,6 +14,7 @@ import Html.Events exposing (on, onClick, preventDefaultOn, stopPropagationOn)
 import Http
 import Json.Decode as Decode
 import MrJam
+import MrJam.Disposition as Disposition
 import Process
 import Task
 import Time
@@ -453,54 +454,31 @@ propositionPosition propositionId propositions =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ attribute "data-testid" "app-root"
-        , style "margin" "0"
-        , style "height" "100dvh"
-        , style "min-height" "0"
-        , style "max-height" "100dvh"
-        , style "overflow" "hidden"
-        , style "padding" "12px"
-        , style "display" "flex"
-        , style "flex-direction" "column"
-        , style "gap" "12px"
-        , style "background" "#eaf0fb"
-        , style "font-family" "system-ui, sans-serif"
+    Disposition.cadre
+        [ Interface.htmlAttribute (attribute "data-testid" "app-root")
+        , Interface.htmlAttribute (style "height" "100dvh")
+        , Interface.htmlAttribute (style "max-height" "100dvh")
+        , Interface.htmlAttribute (style "overflow" "hidden")
         ]
-        [ topHeader model
-        , boardView model
-        ]
+        (Interface.column [ Interface.width Interface.fill, Interface.height Interface.fill, Interface.padding 12, Interface.spacing 12 ]
+            [ topHeader model
+            , Interface.el [ Interface.width Interface.fill, Interface.height Interface.fill, Interface.htmlAttribute (style "min-height" "0") ] (Interface.html (boardView model))
+            ]
+        )
 
 
-topHeader : Model -> Html msg
+topHeader : Model -> Interface.Element msg
 topHeader model =
-    Interface.layout
-        [ Interface.width Interface.fill
-        , Interface.height Interface.shrink
-        , Interface.htmlAttribute (style "min-height" "0")
-        , Interface.htmlAttribute (style "flex-shrink" "0")
-        , Interface.htmlAttribute (attribute "data-testid" "header")
-        ]
-        (MrJam.carte
-            (case model.exercise of
-                Just exercise ->
-                    [ MrJam.sousTitre exercise.title
-                    , Interface.html (richText exercise.statement)
-                    , MrJam.texteSecondaire
-                        ("Selection : "
-                            ++ selectedBadgeLabel model.selectedPropositionId model.propositions
-                            ++ " | Placees : "
-                            ++ String.fromInt (placedCount model.propositions)
-                            ++ "/"
-                            ++ String.fromInt (List.length model.propositions)
-                        )
-                    ]
+    Disposition.panneau [ Interface.htmlAttribute (attribute "data-testid" "header") ]
+        (case model.exercise of
+            Just exercise ->
+                [ MrJam.sousTitre exercise.title
+                , Interface.html (richText exercise.statement)
+                , MrJam.texteSecondaire ("Sélection : " ++ selectedBadgeLabel model.selectedPropositionId model.propositions ++ " | Placées : " ++ String.fromInt (placedCount model.propositions) ++ "/" ++ String.fromInt (List.length model.propositions))
+                ]
 
-                Nothing ->
-                    [ MrJam.sousTitre "Evaluation de productions d'eleves"
-                    , MrJam.texteSecondaire (Maybe.withDefault "Chargement des productions..." model.contentError)
-                    ]
-            )
+            Nothing ->
+                [ MrJam.sousTitre "Évaluation de productions d’élèves", MrJam.texteSecondaire (Maybe.withDefault "Chargement des productions…" model.contentError) ]
         )
 
 
@@ -530,12 +508,9 @@ boardView model =
          , onClick CloseCard
          , style "position" "relative"
          , style "z-index" "2"
-         , style "flex" "1 1 0"
+         , style "height" "100%"
          , style "min-height" "0"
          , style "width" "100%"
-         , style "border" "1px solid #b9c9e6"
-         , style "border-radius" "12px"
-         , style "background" "linear-gradient(180deg, #f9fbff 0%, #f2f6ff 100%)"
          , style "overflow"
             (if boardHasZoomingCard model then
                 "visible"
@@ -762,26 +737,6 @@ viewCard model item =
                            , style "transform-origin" "center center"
                            , style "flex" "0 0 auto"
                            , style "position" "relative"
-                           , style "border"
-                                (if isDragging then
-                                    "2px solid #2563eb"
-
-                                 else
-                                    "1px solid #c7d3ea"
-                                )
-                           , style "border-radius" "12px"
-                           , style "background" "#fbfdff"
-                           , style "box-shadow"
-                                (if isZooming then
-                                    "0 18px 60px rgba(15,34,80,0.30)"
-
-                                 else if isDragging then
-                                    "0 12px 24px rgba(15,34,80,0.25)"
-
-                                 else
-                                    "0 4px 12px rgba(0,0,0,0.14)"
-                                )
-                           , style "padding" "12px"
                            , style "overflow"
                                 (if isZooming then
                                     "auto"
@@ -829,17 +784,14 @@ viewCard model item =
 
 viewCardContent : Proposition -> Html msg
 viewCardContent item =
-    div []
-        [ div [ style "position" "relative", style "padding-top" "2px" ] [ notchBadge item.badge ]
-        , div [ style "margin-left" "54px", style "margin-top" "2px" ]
-            [ h2 [ style "margin" "0 0 4px" ] [ text item.title ]
-            , p [ style "margin" "0", style "font-size" "13px", style "color" "#4f6185" ] [ text item.subtitle ]
+    Disposition.fragment
+        (Disposition.panneau [ Interface.height Interface.fill ]
+            [ MrJam.actions [ Disposition.etiquette item.badge, MrJam.sousTitre item.title ]
+            , MrJam.texteSecondaire item.subtitle
+            , Interface.html (richText item.preview)
+            , Interface.html (richText item.content)
             ]
-        , div [ style "margin-top" "10px", style "font-size" "18px", style "color" "#243353" ]
-            [ richText item.preview ]
-        , div [ style "margin-top" "12px", style "color" "#1f2a44" ]
-            [ richText item.content ]
-        ]
+        )
 
 
 richText : String -> Html msg
@@ -849,28 +801,6 @@ richText source =
         , style "display" "block"
         ]
         []
-
-
-notchBadge : String -> Html msg
-notchBadge badge =
-    div
-        [ style "position" "absolute"
-        , style "top" "8px"
-        , style "left" "8px"
-        , style "min-width" "34px"
-        , style "height" "26px"
-        , style "padding" "0 8px"
-        , style "border-radius" "999px"
-        , style "display" "flex"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        , style "font-size" "14px"
-        , style "font-weight" "800"
-        , style "color" "white"
-        , style "background" "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)"
-        , style "box-shadow" "0 2px 8px rgba(29,78,216,0.35)"
-        ]
-        [ text badge ]
 
 
 selectedBadgeLabel : Maybe Int -> List Proposition -> String

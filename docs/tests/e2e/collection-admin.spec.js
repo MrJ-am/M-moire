@@ -98,11 +98,11 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
   await expect(page.getByRole('heading', { name: 'Analyse de conception', exact: true }).first()).toBeVisible();
   await expect(page.locator('.katex').first()).toBeVisible();
   await page.getByRole('button', { name: 'Participations', exact: true }).click();
-  await expect(page.locator('table')).toBeVisible();
+  await expect(page.getByRole('table')).toBeVisible();
   await page.getByRole('button', { name: id.slice(0, 8), exact: true }).click();
   await expect(page.getByRole('heading', { name: /Participation/ }).first()).toBeVisible();
-  const answer = page.locator('article.production').filter({ has: page.getByRole('heading', { name: production.id, exact: true }) });
-  await expect(answer.locator('tbody td')).toHaveText(['1', '0', '0', 'Non évalué', 'Non évalué']);
+  const answer = page.locator('.production').filter({ has: page.getByRole('heading', { name: production.id, exact: true }) });
+  await expect(answer.getByRole('cell')).toHaveText(['1', '0', '0', 'Non évalué', 'Non évalué']);
   await page.screenshot({ path: test.info().outputPath('participation-admin.png'), fullPage: true });
   await page.getByRole('button', { name: 'Déconnexion', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible();

@@ -53,6 +53,7 @@ jobs:
           npm --prefix docs run test:data
           python3 -m unittest discover -s docs/tests -p 'test_published_site.py'
           node docs/scripts/test-survey.cjs
+          npm --prefix docs run test:construction
           npm --prefix docs run test:logic
           npm --prefix server test
       - name: Évaluer la configuration NixOS historique sans la construire ni l'activer

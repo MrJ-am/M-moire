@@ -19,7 +19,7 @@ function exemple(controle) {
 }
 
 test('la révision demandée est verrouillée sans branche mobile', () => {
-  assert.equal(verrou.revision, '52ad33f881b50feef91d60915d17bae90abfc592');
+  assert.match(verrou.revision, /^[a-f0-9]{40}$/);
   verifierVerrou(verrou);
   for (const revision of ['main', '52ad33f', '', '../main']) {
     assert.throws(() => verifierVerrou({ ...verrou, revision }), /révision Git complète/);

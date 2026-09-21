@@ -4,12 +4,15 @@ import Browser
 import Browser.Events
 import Dict exposing (Dict)
 import Element as Interface
+import Element.Region as Region
 import Html exposing (Html, button, div, h1, h2, header, input, label, main_, p, section, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onCheck, onClick, onInput)
 import Json.Decode as D
 import Json.Encode as E
 import MrJam
+import MrJam.Disposition as Disposition
+import MrJam.Identite as Identite
 import Survey.Model as S exposing (Answer, Point, Production, Question)
 
 
@@ -846,126 +849,123 @@ rich content =
     Html.node "rich-text" [ attribute "content" content ] []
 
 
-icon : String -> Html Msg
-icon name =
-    Html.node "ui-icon" [ attribute "name" name, attribute "aria-hidden" "true" ] []
+repere : String -> Interface.Attribute message
+repere nom =
+    Interface.htmlAttribute (class nom)
 
 
-brand : Html Msg
-brand =
-    div [ class "brand" ] [ span [ class "brand-mark" ] [ icon "layers" ], text "Regards", span [ class "brand-dot" ] [ text "." ] ]
-
-
-btn : String -> String -> Msg -> Html Msg
-btn cls txt msg =
-    button [ class cls, onClick msg ] [ text txt ]
+blocRiche : String -> Interface.Element Msg
+blocRiche contenu =
+    Interface.el [ Interface.width Interface.fill ] (Interface.html (rich contenu))
 
 
 view : Model -> Html Msg
 view m =
-    main_
-        [ class
-            (if m.mode == Running then
-                "experience"
-
-             else
-                "experience-mrjam"
-            )
-        ]
-        [ if m.mode == Setup then
-            text ""
-
-          else
-            header [ class "topbar" ]
-                [ brand
-                , div [ class "topbar-actions" ]
-                    [ if m.mode == Running then
-                        span [ class "topbar-caption" ] [ text "Rédactions mathématiques" ]
-
-                      else
-                        text ""
-                    , button
-                        [ class "icon-button menu-button"
-                        , onClick ToggleMenu
-                        , attribute "aria-label"
-                            (if m.menuOpen then
-                                "Fermer le menu"
-
-                             else
-                                "Ouvrir le menu"
-                            )
-                        , attribute "aria-expanded"
-                            (if m.menuOpen then
-                                "true"
-
-                             else
-                                "false"
-                            )
-                        , attribute "aria-haspopup" "menu"
-                        ]
-                        [ icon "menu" ]
-                    , if m.menuOpen then
-                        viewMenu m
-
-                      else
-                        text ""
-                    ]
-                ]
-        , case m.mode of
-            Setup ->
-                viewSetup m
-
-            Finished ->
-                viewFinish m
-
-            _ ->
-                viewWorkspace m
-        , if m.mode /= Setup then
-            div [ class "save-status", attribute "role" "status", attribute "aria-live" "polite", attribute "data-status" m.saveStatus ]
-                [ text
-                    (if m.saveMessage /= "" then
-                        m.saveMessage
-
-                     else if m.saveStatus == "completed" then
-                        "Participation enregistrée et validée."
-
-                     else if m.saveStatus == "saved" then
-                        "Réponses enregistrées."
-
-                     else if m.saveStatus == "error" || m.saveStatus == "submit-error" then
-                        "Enregistrement en attente. Vos réponses sont conservées sur cet appareil."
+    Disposition.cadre []
+        (Interface.column [ Interface.width (Interface.maximum 1380 Interface.fill), Interface.centerX, Interface.padding 12, Interface.spacing 12 ]
+            [ Interface.el [ Interface.width Interface.fill, Region.navigation, repere "topbar" ]
+                (Disposition.bandeau
+                    (if m.mode == Setup then
+                        "Critères d’évaluations en mathématiques"
 
                      else
-                        "Enregistrement en cours…"
+                        "Regards"
                     )
-                , if m.saveStatus == "error" || m.saveStatus == "submit-error" then
-                    button [ class "quiet", onClick RetrySave ] [ text "Réessayer l’enregistrement" ]
+                    (if m.mode == Setup then
+                        []
 
-                  else
-                    text ""
-                ]
+                     else
+                        [ Interface.el
+                            [ Interface.below
+                                (if m.menuOpen then
+                                    viewMenu m
 
-          else
-            text ""
-        , if m.mode /= Setup then
-            viewHelp m
+                                 else
+                                    Interface.none
+                                )
+                            ]
+                            (MrJam.boutonDevoiler "help-menu"
+                                (if m.menuOpen then
+                                    "Fermer le menu"
 
-          else
-            text ""
-        ]
+                                 else
+                                    "Ouvrir le menu"
+                                )
+                                m.menuOpen
+                                ToggleMenu
+                            )
+                        ]
+                    )
+                )
+            , Interface.el [ Interface.width Interface.fill, Region.mainContent ]
+                (case m.mode of
+                    Setup ->
+                        viewSetup m
+
+                    Finished ->
+                        viewFinish m
+
+                    Running ->
+                        viewWorkspace m
+                )
+            , if m.mode == Setup then
+                Interface.none
+
+              else
+                Interface.column [ Interface.width Interface.fill, Interface.spacing 8, repere "save-status", Interface.htmlAttribute (attribute "role" "status"), Interface.htmlAttribute (attribute "aria-live" "polite"), Interface.htmlAttribute (attribute "data-status" m.saveStatus), Interface.htmlAttribute (attribute "data-mrjam-compagnon" "") ]
+                    [ MrJam.texteSecondaire
+                        (if m.saveMessage /= "" then
+                            m.saveMessage
+
+                         else if m.saveStatus == "completed" then
+                            "Participation enregistrée et validée."
+
+                         else if m.saveStatus == "saved" then
+                            "Réponses enregistrées."
+
+                         else if m.saveStatus == "error" || m.saveStatus == "submit-error" then
+                            "Enregistrement en attente. Vos réponses sont conservées sur cet appareil."
+
+                         else
+                            "Enregistrement en cours…"
+                        )
+                    , if m.saveStatus == "error" || m.saveStatus == "submit-error" then
+                        MrJam.boutonSecondaire "Réessayer l’enregistrement" RetrySave
+
+                      else
+                        Interface.none
+                    ]
+            , Identite.piedDePage
+            , if m.reader && m.mode == Running then
+                Interface.html (viewReader m)
+
+              else
+                Interface.none
+            , if m.compare && m.mode == Running then
+                viewCompare m (List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions)
+
+              else
+                Interface.none
+            , if m.mode /= Setup then
+                viewHelp m
+
+              else
+                Interface.none
+            ]
+        )
 
 
-viewMenu : Model -> Html Msg
+viewMenu : Model -> Interface.Element Msg
 viewMenu _ =
-    div [ class "help-menu", attribute "role" "menu" ]
-        [ button [ class "menu-item", onClick (ShowHelp WelcomeHelp), attribute "role" "menuitem" ] [ icon "help", text "Accéder à l’aide" ]
-        , button [ class "menu-item", onClick ResetHelp, attribute "role" "menuitem" ] [ icon "reset", text "Réinitialiser l’aide" ]
+    Disposition.panneau [ Interface.htmlAttribute (id "help-menu"), repere "help-menu" ]
+        [ MrJam.boutonSecondaire "Accéder à l’aide" (ShowHelp WelcomeHelp)
+        , MrJam.boutonSecondaire "Réinitialiser l’aide" ResetHelp
         ]
 
 
-viewSetup : Model -> Html Msg
+viewSetup : Model -> Interface.Element Msg
 viewSetup m =
-    MrJam.page "Critères d’évaluations en mathématiques"
+    MrJam.pile
         [ MrJam.paragraphe "Ce sondage fait partie d’un projet de recherche qui cherche à mettre en lumière les critères que les enseignantes et enseignants de mathématiques exploitent pour noter leurs élèves."
         , MrJam.avis MrJam.Information "Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche."
         , MrJam.section "Quels niveaux avez-vous enseignés ?"
@@ -1000,7 +1000,7 @@ viewSetup m =
         ]
 
 
-viewWorkspace : Model -> Html Msg
+viewWorkspace : Model -> Interface.Element Msg
 viewWorkspace m =
     let
         q =
@@ -1017,109 +1017,96 @@ viewWorkspace m =
 
         isLast =
             List.length shown == List.length q.productions
+
+        nomSuivant =
+            if isLast then
+                if m.index + 1 == List.length m.questions then
+                    "Terminer la session"
+
+                else
+                    "Question suivante"
+
+            else
+                "Rédaction suivante"
     in
-    section [ class "workspace" ]
-        [ header [ class "question-panel", id "question-panel" ]
-            [ div [ class "question-meta" ]
-                [ span [ class "eyebrow" ]
-                    [ text ("Question " ++ String.fromInt (m.index + 1) ++ " / " ++ String.fromInt (List.length m.questions)) ]
-                , span [ class "question-level" ] [ text q.level ]
-                ]
-            , rich q.statement
-            , div [ class "question-progress", attribute "aria-label" "Progression de la session" ] [ div [ style "width" (String.fromFloat (100 * toFloat done / toFloat (Basics.max 1 (List.length m.questions))) ++ "%") ] [] ]
+    Interface.column [ Interface.width Interface.fill, Interface.spacing 12, repere "workspace" ]
+        [ Disposition.panneau [ repere "question-panel", Interface.htmlAttribute (id "question-panel") ]
+            [ Interface.wrappedRow [ Interface.spacing 12, repere "question-meta" ]
+                [ MrJam.texteSecondaire ("Question " ++ String.fromInt (m.index + 1) ++ " / " ++ String.fromInt (List.length m.questions)), Disposition.etiquette q.level ]
+            , blocRiche q.statement
+            , Disposition.progression "Progression de la session" (100 * toFloat done / toFloat (Basics.max 1 (List.length m.questions)))
             ]
-        , div [ class "production-strip", attribute "aria-label" "Rédactions déjà lues" ]
-            (List.map
-                (\v ->
-                    button [ classList [ ( "production-chip", True ), ( "selected", v.id == m.selected ) ], onClick (Open v.id), attribute "aria-label" ("Relire la rédaction " ++ String.fromInt (number v.id m)) ]
-                        [ span [] [ text (String.fromInt (number v.id m)) ]
-                        , text "Rédaction"
-                        , if List.length (getAnswer v.id m).judged == 3 then
-                            icon "check"
+        , Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 8, repere "production-strip", Interface.htmlAttribute (attribute "aria-label" "Rédactions déjà lues") ]
+            (List.map (\v -> Disposition.boutonSelection (v.id == m.selected) ("Relire la rédaction " ++ String.fromInt (number v.id m)) (Open v.id)) shown)
+        , Interface.html
+            (div [ class "evaluation-layout" ]
+                [ Disposition.fragment
+                    (Disposition.panneau [ repere "axes-panel", Interface.htmlAttribute (id "axes-panel"), Interface.htmlAttribute (attribute "aria-label" "Placer les rédactions sur les trois axes"), Interface.height Interface.fill ]
+                        [ Interface.el [ repere "axes-heading" ] (MrJam.texteSecondaire ("Vos repères · Rédaction " ++ String.fromInt (number m.selected m)))
+                        , Interface.column [ Interface.width Interface.fill, Interface.spacing 4, repere "axis-sliders" ]
+                            (List.map
+                                (\( axis, _, _ ) ->
+                                    Interface.html
+                                        (Html.node "axis-slider"
+                                            [ id ("axis-" ++ axis)
+                                            , attribute "axis" axis
+                                            , attribute "payload" (spacePayload m shown)
+                                            , on "placement" (D.map4 Place (D.at [ "detail", "id" ] D.string) (D.at [ "detail", "axis" ] D.string) (D.at [ "detail", "value" ] D.float) (D.at [ "detail", "committed" ] D.bool))
+                                            , on "read" (D.map Open (D.at [ "detail", "id" ] D.string))
+                                            ]
+                                            []
+                                        )
+                                )
+                                S.axes
+                            )
+                        , if List.length a.judged < 3 then
+                            Disposition.boutonIdentifie "confirm-position"
+                                "Conserver cette position"
+                                (if a.note == Nothing then
+                                    Nothing
+
+                                 else
+                                    Just Confirm
+                                )
 
                           else
-                            text ""
+                            MrJam.texteSecondaire "Les trois repères sont placés"
                         ]
-                )
-                shown
-            )
-        , div [ class "evaluation-layout" ]
-            [ section [ class "axes-panel", id "axes-panel", attribute "aria-label" "Placer les rédactions sur les trois axes" ]
-                [ div [ class "axes-heading" ] [ icon "sliders", span [] [ text "Vos repères" ], span [ class "selected-label" ] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ] ]
-                , div [ class "axis-sliders" ]
-                    (List.map
-                        (\( axis, _, _ ) ->
-                            Html.node "axis-slider"
-                                [ id ("axis-" ++ axis)
-                                , attribute "axis" axis
-                                , attribute "payload" (spacePayload m shown)
-                                , on "placement" (D.map4 Place (D.at [ "detail", "id" ] D.string) (D.at [ "detail", "axis" ] D.string) (D.at [ "detail", "value" ] D.float) (D.at [ "detail", "committed" ] D.bool))
-                                , on "read" (D.map Open (D.at [ "detail", "id" ] D.string))
-                                ]
-                                []
-                        )
-                        S.axes
                     )
-                , if List.length a.judged < 3 then
-                    button [ class "quiet confirm-position", id "confirm-position", onClick Confirm, disabled (a.note == Nothing) ] [ icon "check", text "Conserver cette position" ]
-
-                  else
-                    span [ class "position-ready" ] [ icon "check", text "Les trois repères sont placés" ]
-                ]
-            , Html.node "evaluation-space"
-                [ id "space"
-                , attribute "payload" (spacePayload m shown)
-                , on "read" (D.map Open (D.at [ "detail", "id" ] D.string))
-                , on "orbit" (D.succeed (Receive (E.object [ ( "type", E.string "orbit" ) ])))
-                ]
-                []
-            ]
-        , div [ class "production-navigation" ]
-            [ div [ class "next-group" ]
-                [ if List.length shown > 1 then
-                    button [ class "quiet", onClick Compare ] [ icon "compare", text "Comparer" ]
-
-                  else
-                    text ""
-                , button [ class "primary next-production", id "next-production", onClick NextProduction ]
-                    [ text
-                        (if isLast then
-                            if m.index + 1 == List.length m.questions then
-                                "Terminer la session"
-
-                            else
-                                "Question suivante"
-
-                         else
-                            "Rédaction suivante"
-                        )
-                    , icon "arrow"
+                , Html.node "evaluation-space"
+                    [ id "space"
+                    , attribute "payload" (spacePayload m shown)
+                    , on "read" (D.map Open (D.at [ "detail", "id" ] D.string))
+                    , on "orbit" (D.succeed (Receive (E.object [ ( "type", E.string "orbit" ) ])))
                     ]
+                    []
                 ]
+            )
+        , MrJam.actions
+            [ if List.length shown > 1 then
+                MrJam.boutonSecondaire "Comparer" Compare
+
+              else
+                Interface.none
+            , Disposition.boutonIdentifie "next-production" nomSuivant (Just NextProduction)
             ]
-        , div [ class "question-navigation" ]
-            [ button [ class "quiet", onClick (GoQuestion (m.index - 1)), disabled (m.index == 0) ] [ text "← Question précédente" ]
-            , span [ class "navigation-message", attribute "role" "status" ]
-                [ text
-                    (if m.message /= "" then
-                        m.message
+        , MrJam.actions
+            [ if m.index == 0 then
+                MrJam.boutonInactif "← Question précédente"
 
-                     else
-                        "Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier."
-                    )
-                ]
-            , button [ class "quiet", onClick Skip ] [ text "Passer cette question" ]
+              else
+                MrJam.boutonSecondaire "← Question précédente" (GoQuestion (m.index - 1))
+            , MrJam.boutonSecondaire "Passer cette question" Skip
             ]
-        , if m.reader then
-            viewReader m
+        , Interface.el [ Interface.htmlAttribute (attribute "role" "status") ]
+            (MrJam.texteSecondaire
+                (if m.message /= "" then
+                    m.message
 
-          else
-            text ""
-        , if m.compare then
-            viewCompare m shown
-
-          else
-            text ""
+                 else
+                    "Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier."
+                )
+            )
         ]
 
 
@@ -1154,85 +1141,111 @@ viewReader m =
     div [ class "reader-layer" ]
         [ div [ class "reader-backdrop", onClick Close ] []
         , Html.node "reading-card"
-            [ class "reader", id "reading-card", attribute "production-id" m.selected, attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "reader-title", tabindex -1 ]
-            [ header [ class "reader-header" ]
-                [ div [] [ span [ class "step-tag" ] [ text "Prenez le temps de lire" ], h2 [ id "reader-title" ] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ] ]
-                , div [ class "reader-actions" ]
-                    [ button [ class "icon-button", id "reader-help-button", onClick (ShowHelp ReaderHelp), attribute "aria-label" "Aide sur la fiche de rédaction" ] [ icon "help" ]
-                    , button [ class "icon-button", onClick Close, attribute "aria-label" "Fermer la rédaction" ] [ icon "close" ]
+            [ class "reader", id "reading-card", attribute "production-id" m.selected, attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "reader-title", attribute "data-mrjam-dialogue" "", tabindex -1 ]
+            [ Disposition.fragment
+                (Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 8, repere "reader-header" ]
+                    [ Interface.el [ Interface.htmlAttribute (id "reader-title") ] (MrJam.sousTitre ("Rédaction " ++ String.fromInt (number m.selected m)))
+                    , MrJam.actions
+                        [ Interface.el [ Interface.htmlAttribute (id "reader-help-button") ] (Disposition.boutonIcone "Aide sur la fiche de rédaction" "?" (ShowHelp ReaderHelp))
+                        , Disposition.boutonIcone "Fermer la rédaction" "×" Close
+                        ]
                     ]
-                ]
+                )
             , div [ class "reader-content", onClick Close ] [ rich (chosen m).content ]
-            , div [ class "reader-footer" ]
-                [ div [ class "rating", id "rating" ]
-                    [ label [ for "grade" ] [ text "Quelle note lui donneriez-vous ?" ]
-                    , div [ class "grade-track" ]
-                        [ span [] [ text "0" ]
-                        , Html.node "grade-slider"
-                            [ attribute "value" (Maybe.withDefault 1.5 a.note |> String.fromFloat)
-                            , attribute "ungraded"
+            , Disposition.fragment
+                (Interface.column [ Interface.width Interface.fill, Interface.spacing 8, repere "reader-footer" ]
+                    [ Interface.column [ Interface.width Interface.fill, Interface.spacing 4, Interface.htmlAttribute (id "rating") ]
+                        [ MrJam.paragraphe "Quelle note lui donneriez-vous ?"
+                        , Interface.html
+                            (div [ class "grade-track" ]
+                                [ span [] [ text "0" ]
+                                , Html.node "grade-slider"
+                                    [ attribute "value" (Maybe.withDefault 1.5 a.note |> String.fromFloat)
+                                    , attribute "ungraded"
+                                        (if a.note == Nothing then
+                                            "true"
+
+                                         else
+                                            "false"
+                                        )
+                                    ]
+                                    [ input [ id "grade", type_ "range", Html.Attributes.min "0", Html.Attributes.max "3", step "0.25", value (Maybe.withDefault 1.5 a.note |> String.fromFloat), onInput Grade, on "change" (D.map Grade (D.at [ "target", "value" ] D.string)), classList [ ( "ungraded", a.note == Nothing ) ], attribute "aria-label" "Note sur 3", attribute "aria-describedby" "grade-help" ] [] ]
+                                , span [] [ text "3" ]
+                                ]
+                            )
+                        , Interface.el [ Interface.htmlAttribute (id "grade-help") ]
+                            (MrJam.texteSecondaire
                                 (if a.note == Nothing then
-                                    "true"
+                                    "Choisissez une note pour poursuivre."
 
                                  else
-                                    "false"
+                                    "Vous pourrez revenir sur cette note."
                                 )
-                            ]
-                            [ input [ id "grade", type_ "range", Html.Attributes.min "0", Html.Attributes.max "3", step "0.25", value (Maybe.withDefault 1.5 a.note |> String.fromFloat), onInput Grade, on "change" (D.map Grade (D.at [ "target", "value" ] D.string)), classList [ ( "ungraded", a.note == Nothing ) ], attribute "aria-label" "Note sur 3", attribute "aria-describedby" "grade-help" ] [] ]
-                        , span [] [ text "3" ]
-                        ]
-                    , p [ id "grade-help", class "rating-help" ]
-                        [ text
-                            (if a.note == Nothing then
-                                "Choisissez une note pour poursuivre."
-
-                             else
-                                "Vous pourrez revenir sur cette note."
                             )
                         ]
+                    , Disposition.boutonIdentifie "validate-reading"
+                        "Valider"
+                        (if a.note == Nothing || m.closing then
+                            Nothing
+
+                         else
+                            Just Close
+                        )
+                    , if m.message == "" then
+                        Interface.none
+
+                      else
+                        MrJam.avis MrJam.Erreur m.message
                     ]
-                , button [ class "primary validate-reading", id "validate-reading", onClick Close, disabled (a.note == Nothing || m.closing) ] [ text "Valider", icon "check" ]
-                , p [ class "error", attribute "role" "status" ] [ text m.message ]
-                ]
+                )
             ]
         ]
 
 
-viewCompare : Model -> List Production -> Html Msg
+viewCompare : Model -> List Production -> Interface.Element Msg
 viewCompare m shown =
     let
         other =
             List.filter (\v -> v.id == m.compareId) shown |> List.head |> Maybe.withDefault (chosen m)
     in
-    div [ class "comparison-layer" ] [ div [ class "reader-backdrop", onClick Close ] [], section [ class "comparison", attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-label" "Comparer les rédactions" ] [ header [] [ h2 [] [ text "Deux regards côte à côte" ], button [ class "icon-button", onClick Close, attribute "aria-label" "Fermer la comparaison" ] [ icon "close" ] ], div [ class "comparison-columns" ] [ Html.article [] [ h2 [] [ text ("Rédaction " ++ String.fromInt (number m.selected m)) ], rich (chosen m).content ], Html.article [] [ Html.select [ onInput CompareWith, attribute "aria-label" "Choisir la rédaction à comparer" ] (List.map (\v -> Html.option [ value v.id, selected (v.id == other.id) ] [ text ("Rédaction " ++ String.fromInt (number v.id m)) ]) shown), rich other.content ] ] ] ]
+    Disposition.dialogue "comparison"
+        "Comparer les rédactions"
+        "Fermer la comparaison"
+        Close
+        [ Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 20, repere "comparison-columns" ]
+            [ Interface.column [ Interface.width (Interface.minimum 240 Interface.fill), Interface.spacing 16 ] [ MrJam.sousTitre ("Rédaction " ++ String.fromInt (number m.selected m)), blocRiche (chosen m).content ]
+            , Interface.column [ Interface.width (Interface.minimum 240 Interface.fill), Interface.spacing 16 ]
+                [ MrJam.selecteur "Choisir la rédaction à comparer" (List.map (\v -> ( v.id, "Rédaction " ++ String.fromInt (number v.id m) )) shown) other.id CompareWith
+                , blocRiche other.content
+                ]
+            ]
+        ]
 
 
-viewHelp : Model -> Html Msg
+viewHelp : Model -> Interface.Element Msg
 viewHelp m =
     case m.helpTopic of
         Nothing ->
-            text ""
+            Interface.none
 
         Just WelcomeHelp ->
-            div [ class "help-dialog-layer" ]
-                [ div [ class "help-backdrop", onClick DismissHelp ] []
-                , section [ class "help-dialog", attribute "role" "dialog", attribute "aria-modal" "true", attribute "aria-labelledby" "help-title" ]
-                    [ span [ class "eyebrow" ] [ text "Une aide quand vous en avez besoin" ]
-                    , h2 [ id "help-title" ] [ text "Comment se déroule l’évaluation ?" ]
-                    , p [] [ text "Vous allez être amené à juger des rédactions mathématiques, à leur attribuer une note, puis à les situer sur trois axes : lisibilité, précision et validité." ]
-                    , p [ class "muted" ] [ text "Vous pourrez revenir sur vos choix à tout moment." ]
-                    , div [ class "help-dialog-actions" ]
-                        [ button [ class "quiet", onClick SkipHelp ] [ text "Passer l’aide" ]
-                        , button [ class "primary", onClick HelpNext ]
-                            [ text
-                                (if m.helpContinue then
-                                    "Suivant"
+            Disposition.dialogue "help-dialog"
+                "Comment se déroule l’évaluation ?"
+                "Fermer l’aide"
+                DismissHelp
+                [ MrJam.texteSecondaire "Une aide quand vous en avez besoin"
+                , MrJam.paragraphe "Vous allez être amené à juger des rédactions mathématiques, à leur attribuer une note, puis à les situer sur trois axes : lisibilité, précision et validité."
+                , MrJam.texteSecondaire "Vous pourrez revenir sur vos choix à tout moment."
+                , MrJam.actions
+                    [ MrJam.boutonSecondaire "Passer l’aide" SkipHelp
+                    , MrJam.bouton
+                        (if m.helpContinue then
+                            "Suivant"
 
-                                 else
-                                    "Fermer"
-                                )
-                            ]
-                        ]
+                         else
+                            "Fermer"
+                        )
+                        HelpNext
                     ]
                 ]
 
@@ -1246,19 +1259,16 @@ viewHelp m =
             contextHelp "axis-x" "Placer la rédaction" "Déplacez les trois curseurs pour situer cette rédaction sur les trois axes." "Compris"
 
 
-contextHelp : String -> String -> String -> String -> Html Msg
-contextHelp target heading body closeLabel =
-    Html.node "context-help"
-        [ class "context-help", attribute "target" ("#" ++ target) ]
-        [ div [ class "context-help-card" ]
-            [ h2 [] [ text heading ]
-            , p [] [ text body ]
-            , button [ class "quiet", onClick DismissHelp ] [ text closeLabel ]
-            ]
-        ]
+contextHelp : String -> String -> String -> String -> Interface.Element Msg
+contextHelp cible titre contenu fermeture =
+    Interface.html
+        (Html.node "context-help"
+            [ class "context-help", attribute "target" ("#" ++ cible), attribute "data-mrjam-compagnon" "" ]
+            [ Disposition.fragment (Disposition.panneau [ repere "context-help-card" ] [ MrJam.sousTitre titre, MrJam.paragraphe contenu, MrJam.boutonSecondaire fermeture DismissHelp ]) ]
+        )
 
 
-viewFinish : Model -> Html Msg
+viewFinish : Model -> Interface.Element Msg
 viewFinish m =
     let
         done =
@@ -1271,7 +1281,7 @@ viewFinish m =
             else
                 ""
     in
-    MrJam.page "Chaque nuance compte."
+    MrJam.pile
         [ Interface.el [ Interface.htmlAttribute (class "finish-panel-mrjam") ]
             (MrJam.section "Merci pour votre regard"
                 [ MrJam.paragraphe (String.fromInt done ++ " question" ++ pluriel ++ " entièrement évaluée" ++ pluriel ++ " sur " ++ String.fromInt (List.length m.questions) ++ ".")

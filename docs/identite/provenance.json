@@ -1,0 +1,15 @@
+{
+  "depot": "MrJ-am/Signature",
+  "revision": "17495b13cefa24473e37434b98336b27caec8cdf",
+  "droits": "Logo et signature : toute utilisation strictement réservée. Distribution applicative autorisée par le titulaire.",
+  "fichiers": {
+    "MrJamSignature.woff2": {
+      "git_blob": "f0bf416230cce723e3e6b5795fef1840605fa2e2",
+      "sha256": "1525a85c58cdea88dcb93e077c4da98d2af1ff70ae7e6710fdeda36e8af28604"
+    },
+    "EchoPoint.woff2": {
+      "git_blob": "26105a1a46b9fbeb288ce3dc3479d3c583c2b9be",
+      "sha256": "816109c8291b12a0b2a8f0f981cc260a074a55190d94df322b57196755caebda"
+    }
+  }
+}

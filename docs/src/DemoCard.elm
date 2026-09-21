@@ -4,10 +4,13 @@ import Animator
 import Animator.Inline
 import Browser
 import Browser.Events
+import Element as Interface
 import Html exposing (Html, div, h2, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
 import Json.Decode as Decode
+import MrJam
+import MrJam.Disposition as Disposition
 import Time
 
 
@@ -180,17 +183,8 @@ animateZoom target timeline =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ style "margin" "0"
-        , style "width" "100vw"
-        , style "height" "100vh"
-        , style "background" "white"
-        , style "position" "relative"
-        , style "overflow" "hidden"
-        , style "font-family" "Georgia, serif"
-        , onClick Close
-        ]
-        [ viewCard model ]
+    Disposition.cadre [ Interface.htmlAttribute (style "height" "100vh"), Interface.htmlAttribute (onClick Close) ]
+        (Interface.html (viewCard model))
 
 
 viewCard : Model -> Html Msg
@@ -226,19 +220,17 @@ viewCard model =
         , style "width" "min(1100px, 94vw)"
         , style "max-height" "92vh"
         , style "overflow" "auto"
-        , style "padding" "24px"
-        , style "border" "1px solid #8ba7d6"
-        , style "border-radius" "14px"
-        , style "background" "#f9fbff"
-        , style "box-shadow" "0 24px 50px rgba(0,0,0,0.18)"
         , style "cursor" cursorStyle
         , style "user-select" "none"
         ]
-        [ h2 [ style "margin" "0 0 10px", style "font-size" "40px" ] [ text "Proposition A" ]
-        , p [ style "margin" "0", style "font-size" "30px", style "line-height" "1.5" ] [ text "On part de cos(2x) = sin(x), puis on ecrit 1 - 2sin^2(x) = sin(x)." ]
-        , p [ style "margin" "14px 0 0", style "font-size" "30px", style "line-height" "1.5" ] [ text "On obtient 2sin^2(x) + sin(x) - 1 = 0, puis (2sin(x)-1)(sin(x)+1)=0." ]
-        , p [ style "margin" "14px 0 0", style "font-size" "26px", style "line-height" "1.5" ] [ text "Solutions sur [0;2pi[: x = pi/6, 5pi/6, 3pi/2." ]
-        , p [ style "margin" "16px 0 0", style "font-size" "20px", style "color" "#5a6785" ] [ text "Cliquer sur la fiche pour agrandir. Cliquer ailleurs pour reduire. Maintenir + glisser pour deplacer." ]
+        [ Disposition.fragment
+            (MrJam.section "Proposition A"
+                [ MrJam.paragraphe "On part de cos(2x) = sin(x), puis on écrit 1 - 2sin²(x) = sin(x)."
+                , MrJam.paragraphe "On obtient 2sin²(x) + sin(x) - 1 = 0, puis (2sin(x)-1)(sin(x)+1)=0."
+                , MrJam.paragraphe "Solutions sur [0;2π[ : x = π/6, 5π/6, 3π/2."
+                , MrJam.texteSecondaire "Cliquer sur la fiche pour agrandir. Cliquer ailleurs pour réduire. Maintenir et glisser pour déplacer."
+                ]
+            )
         ]
 
 

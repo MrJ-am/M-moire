@@ -14,7 +14,7 @@ function versionModule(name) {
   fs.writeFileSync(file, source); const version = hash(source); visited.set(name, version); return version;
 }
 versionModule('enquete.js');
-const assets = new Set(['survey.js', 'enquete.js', 'enquete.css', 'sliders.css', 'rich-text.js']);
+const assets = new Set(['survey.js', 'enquete.js', 'enquete.css', 'sliders.css', 'rich-text.js', 'assets/mrjam/signature.css', 'assets/mrjam/dialogues.js']);
 let html = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
 html = html.replace(/((?:src|href)=")([^"]+)(")/g, (whole, prefix, ref, suffix) => {
   const clean = ref.split('?')[0];
@@ -32,6 +32,6 @@ function versionnerPage(nom, ressources) {
   });
   fs.writeFileSync(fichier, contenu);
 }
-versionnerPage('prototype.html', ['main.js', 'prototype.js', 'rich-text.js']);
-versionnerPage('admin/index.html', ['administration.js', 'admin.js', 'admin.css', '../rich-text.js']);
+versionnerPage('prototype.html', ['main.js', 'prototype.js', 'rich-text.js', 'assets/mrjam/signature.css', 'assets/mrjam/dialogues.js']);
+versionnerPage('admin/index.html', ['administration.js', 'admin.js', 'admin.css', '../rich-text.js', 'assets/mrjam/signature.css', 'assets/mrjam/dialogues.js']);
 console.log('Modules et feuilles de style versionnés.');

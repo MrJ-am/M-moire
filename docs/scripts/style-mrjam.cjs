@@ -89,6 +89,17 @@ function installerIdentite(commun, destination) {
   for (const nom of Object.keys(verrou.fichiers).filter(n => n.startsWith('public/assets/mrjam/'))) {
     fs.copyFileSync(path.join(commun, nom), path.join(destination, path.basename(nom)));
   }
+  const provenance = JSON.parse(fs.readFileSync(path.join(racine, 'identite/provenance.json'), 'utf8'));
+  const identite = JSON.parse(fs.readFileSync(path.join(commun, 'identite.json'), 'utf8'));
+  if (provenance.revision !== identite.revision || provenance.depot !== identite.depot) throw new Error('Révision typographique différente du style.');
+  for (const [nom, attendu] of Object.entries(provenance.fichiers)) {
+    if (path.basename(nom) !== nom) throw new Error('Chemin typographique invalide.');
+    const contenu = fs.readFileSync(path.join(racine, 'identite', nom));
+    const blob = createHash('sha1').update(Buffer.from(`blob ${contenu.length}\0`)).update(contenu).digest('hex');
+    if (blob !== identite.ressources_externes[`web/${nom}`] || blob !== attendu.git_blob || createHash('sha256').update(contenu).digest('hex') !== attendu.sha256) throw new Error(`Police non conforme : ${nom}`);
+    fs.writeFileSync(path.join(destination, nom), contenu);
+  }
+  fs.copyFileSync(path.join(racine, 'identite/provenance.json'), path.join(destination, 'polices.json'));
   fs.copyFileSync(path.join(commun, 'identite.json'), path.join(destination, 'identite.json'));
 }
 
