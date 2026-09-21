@@ -49,6 +49,7 @@ jobs:
           for module in deploy/matheval.nix deploy/legacy-nginx.nix deploy/legacy-postgresql.nix deploy/hostinger/*.nix; do
             sudo nix-instantiate --store local --parse "$module" >/dev/null
           done
+          npm --prefix docs run build:main
           npm --prefix docs run check:data
           npm --prefix docs run test:data
           python3 -m unittest discover -s docs/tests -p 'test_published_site.py'

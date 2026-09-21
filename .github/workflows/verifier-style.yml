@@ -56,6 +56,7 @@ jobs:
       - name: Vérifier les données, les contrats et les sources Elm
         run: |
           set -euo pipefail
+          npm --prefix docs run build:main
           npm --prefix docs run check:data
           npm --prefix docs run test:data
           python3 -m unittest discover -s docs/tests -p 'test_published_site.py'
