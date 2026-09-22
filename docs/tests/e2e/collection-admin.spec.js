@@ -82,10 +82,13 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
   });
   expect(saved.status()).toBe(200);
   const creds = { username: 'admin-browser-tests', password: 'mot-de-passe-des-tests-navigateur' };
-  await page.request.post('api/admin/setup', { headers, data: { ...creds, token: 'a'.repeat(64) } });
+  const activation = await page.request.post('api/admin/setup', { headers, data: { ...creds, token: 'a'.repeat(64) } });
+  expect([200, 409]).toContain(activation.status());
   // L'activation crée aussi une session : la fermer évite de remplir un
   // formulaire que la réponse /me est sur le point de remplacer.
-  expect((await page.request.post('api/admin/logout', { headers, data: {} })).status()).toBe(200);
+  if (activation.status() === 200) {
+    expect((await page.request.post('api/admin/logout', { headers, data: {} })).status()).toBe(200);
+  }
   await page.goto('admin/');
   await page.getByLabel('Identifiant', { exact: true }).fill(creds.username);
   await page.getByLabel('Mot de passe', { exact: true }).fill(creds.password);
