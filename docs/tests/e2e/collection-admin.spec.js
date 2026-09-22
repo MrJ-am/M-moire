@@ -31,11 +31,12 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
 test('une confirmation perdue se retrouve au rechargement sans créer une seconde participation', async ({ page }) => {
   const d = await driver(page);
   await start(page, d);
-  while (await page.getByRole('button', { name: 'Passer cette question', exact: true }).count()) {
+  while (await page.locator('#next-production').count()) {
     await page.locator('#grade').evaluate(el => { el.value = '1.5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.locator('#validate-reading').click();
     await expect(page.locator('reading-card')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Passer cette question', exact: true }).click();
+    await page.locator('#next-production').click();
+    await page.getByRole('button', { name: 'Passer quand même', exact: true }).click();
     await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
   }
   await expect(page.locator('context-help')).toHaveCount(0);

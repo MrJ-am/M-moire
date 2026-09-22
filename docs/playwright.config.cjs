@@ -34,7 +34,7 @@ module.exports = defineConfig({
     },
     {
       name: 'chromium',
-      testMatch: ['**/survey-gestures.spec.js', '**/collection-admin.spec.js', '**/style-mrjam.spec.js', '**/portage-complet.spec.js'],
+      testMatch: ['**/survey-gestures.spec.js', '**/navigation-libre.spec.js', '**/collection-admin.spec.js', '**/style-mrjam.spec.js', '**/portage-complet.spec.js'],
       use: { ...devices['Desktop Chrome'], browserName: 'chromium', launchOptions }
     },
     {

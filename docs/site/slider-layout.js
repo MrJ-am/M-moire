@@ -18,7 +18,7 @@ export function layoutThumbs(points, width, preferred, gap = 42, grabbed = null)
       y: grabbed.y
     } : null;
     for (let level = 0; !candidate; level++) {
-      const shifts = level === 0 ? [0] : [0, ...Array.from({ length: points.length }, (_, i) => [-(i + 1) * gap, (i + 1) * gap]).flat()];
+      const shifts = [0, ...Array.from({ length: points.length }, (_, i) => [-(i + 1) * gap, (i + 1) * gap]).flat()];
       for (const shift of shifts) {
         const x = clamp(anchor + shift, inset, Math.max(inset, width - inset)), y = level === 0 ? 0 : -level * gap;
         if (placed.every(other => Math.hypot(x - other.x, y - other.y) >= gap - .01)) {

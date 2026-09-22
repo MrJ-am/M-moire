@@ -11,7 +11,9 @@ function svg(name, attrs = {}) { const n = document.createElementNS(SVG, name); 
 export class EvaluationSpace extends HTMLElement {
   static get observedAttributes() { return ['payload']; }
   connectedCallback() {
-    this.azimuth = .64; this.elevation = .38; this.basis = orbitBasis(this.azimuth, this.elevation); this.cards = new Map();
+    this.azimuth ??= .64; this.elevation ??= .38; this.basis = orbitBasis(this.azimuth, this.elevation); this.cards = new Map();
+    // Un élément reconnecté ne doit jamais conserver une ancienne couche immobile.
+    this.replaceChildren(); this.drag = null;
     this.svg = svg('svg', { class: 'space-svg', 'aria-hidden': 'true' });
     this.walls = svg('g'); this.lines = svg('g'); this.guides = svg('g'); this.svg.append(this.walls, this.lines, this.guides);
     this.labels = document.createElement('div'); this.labels.className = 'axis-labels';
@@ -49,6 +51,8 @@ export class EvaluationSpace extends HTMLElement {
       }
       orb.classList.toggle('selected', p.id === next.selected); orb.classList.toggle('pending', p.judged.length < 3); orb.classList.toggle('being-read', p.id === next.selected && next.reader);
       orb.setAttribute('aria-label', `Rédaction ${p.number}. Appuyer pour lire.`);
+      orb.querySelector('.orb-caption strong').textContent = p.number;
+      orb.querySelector('rich-text').setAttribute('content', p.content);
 
     }
     this.draw();
@@ -58,10 +62,13 @@ export class EvaluationSpace extends HTMLElement {
   draw() {
     if (!this.data || !this.clientWidth) return;
     const w = this.clientWidth, h = this.clientHeight, free = true; this.cx = w / 2; this.cy = h / 2;
-    const diameter = Math.max(50, Math.min(72, Math.min(w, h) * .16));
+    const diameter = Math.max(49, Math.min(68, Math.min(w, h) * .125));
     this.style.setProperty('--orb-size', `${diameter}px`);
     this.style.setProperty('--orb-preview-scale', String(diameter * .78 / 285));
-    this.unit = Math.max(3, free ? Math.min((w - 120) / 34, (h - 86) / 31) : Math.min((w - 110) / 25, (h - 78) / 25));
+    // L'enveloppe du cube projeté varie avec la caméra ; elle tient dans la scène.
+    const largeur = 20 * xyz.reduce((s, a) => s + Math.abs(this.basis[0][a]), 0);
+    const hauteur = 20 * xyz.reduce((s, a) => s + Math.abs(this.basis[1][a]), 0);
+    this.unit = Math.max(1, Math.min((w - diameter * 1.3 - 32) / largeur, (h - diameter * 1.3 - 40) / hauteur));
     this.svg.setAttribute('viewBox', `0 0 ${w} ${h}`); this.walls.replaceChildren(); this.lines.replaceChildren(); this.guides.replaceChildren(); this.labels.replaceChildren();
     for (const pair of ['xy', 'xz', 'yz']) {
       const [a, b] = pair, hidden = xyz.find(axis => !pair.includes(axis)), base = point(); base[hidden] = free ? -10 : 0;

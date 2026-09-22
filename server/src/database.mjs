@@ -17,10 +17,10 @@ export async function transaction(pool, work) {
   finally { client.release(); }
 }
 export async function migrate(pool) {
-  const sql = await readFile(new URL('../migrations/001-collecte.sql', import.meta.url), 'utf8');
+  const migrations = await Promise.all(['001-collecte.sql', '002-sessions-administrateur.sql'].map(nom => readFile(new URL('../migrations/' + nom, import.meta.url), 'utf8')));
   await transaction(pool, async client => {
     await client.query('SELECT pg_advisory_xact_lock(78041001)');
-    await client.query(sql);
+    for (const sql of migrations) await client.query(sql);
   });
 }
 export async function importCorpus(pool, bank, codebook) {

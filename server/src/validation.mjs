@@ -32,7 +32,7 @@ export function validateCheckpoint(data, participation, bank) {
   const fail = message => { const error = new Error(message); error.status = 400; throw error; };
   if (Object.keys(snapshot.answers).some(p => !productions.has(p))) fail('Rédaction inconnue dans cette participation.');
   for (const a of Object.values(snapshot.answers)) {
-    if (a.note === null && (a.initialNote !== null || a.evaluatedAxes.length)) fail('Une évaluation exige une note.');
+    if (a.note === null && a.initialNote !== null) fail('Une note initiale exige une note.');
   }
   if (new Set(snapshot.skippedQuestions).size !== snapshot.skippedQuestions.length || snapshot.skippedQuestions.some(q => !questions.has(q))) fail('Question passée inconnue.');
   if (snapshot.progress.index >= participation.question_order.length) fail('Position de reprise invalide.');

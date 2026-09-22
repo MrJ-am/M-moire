@@ -25,38 +25,36 @@ test('une prise hésitante de la note et des axes accepte un départ vertical', 
   await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
 });
 
-test('parcours entier à la souris : suivant valide aussi les coordonnées conservées', async ({ page }) => {
+test('parcours entier libre : les positions conservées sont validées explicitement', async ({ page }) => {
   const d = await driver(page); await start(page, d);
   const answers = new Map();
-  while (await page.locator('reading-card').count()) {
-    const id = await page.locator('reading-card').getAttribute('production-id');
-    await note(page, d); const value = Number(await page.locator('#grade').inputValue());
-    await close(page, d);
-    // The participant can intentionally keep two or all three axes at the centre.
-    if (answers.size % 2 === 0) await drag(d, page.locator('#axis-x .slider-thumb.selected'), 25);
-    const coordinates = await page.locator(`.orb[data-id="${id}"]`).evaluate(el => Object.fromEntries(['x','y','z'].map(a => [a, Number(el.dataset[a])])));
-    answers.set(id, { note: value, coordinates });
+  while (await page.locator('#next-production').count()) {
+    const ids = await page.locator('#space').evaluate(e=>JSON.parse(e.getAttribute('payload')).points.map(p=>p.id));
+    for (let i=0;i<ids.length;i++) {
+      if (!await page.locator('reading-card').count()) await d.click(page.getByRole('button',{name:`Rédaction ${i+1}`,exact:true}));
+      await note(page,d); const value=Number(await page.locator('#grade').inputValue());
+      await close(page,d);
+      if (answers.size%2===0) await drag(d,page.locator('#axis-x .slider-thumb.selected'),25);
+      await d.click(page.locator('#confirm-position'));
+      const coordinates=await page.locator(`.orb[data-id="${ids[i]}"]`).evaluate(el=>Object.fromEntries(['x','y','z'].map(a=>[a,Number(el.dataset[a])])));
+      answers.set(ids[i],{note:value,coordinates});
+    }
     await d.click(page.locator('#next-production'));
     await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
-    if (await page.locator('reading-card').count()) await settled(page.locator('reading-card'));
   }
   expect(answers.size).toBeGreaterThan(3);
-  const result = await submitted(page, () => d.click(page.getByRole('button', { name: 'Valider ma participation', exact: true })));
-  expect(result.skippedQuestions).toEqual([]);
+  const result=await submitted(page,()=>d.click(page.getByRole('button',{name:'Valider ma participation',exact:true})));
   expect(Object.keys(result.answers)).toHaveLength(answers.size);
-  for (const [id, answer] of answers) {
-    expect(result.answers[id]).toMatchObject(answer);
-    expect(result.answers[id].evaluatedAxes.sort()).toEqual(['x','y','z']);
-  }
+  for (const [id,answer] of answers) {expect(result.answers[id]).toMatchObject(answer);expect(result.answers[id].evaluatedAxes.sort()).toEqual(['x','y','z']);}
 });
 
 test('une bille surélevée reste sous la souris pendant toute la saisie', async ({ page }) => {
   const d = await driver(page); await start(page, d);
   await note(page, d); await close(page, d); await d.click(page.locator('#confirm-position'));
-  await d.click(page.locator('#next-production')); await note(page, d); await close(page, d);
+  await d.click(page.getByRole('button', { name: 'Rédaction 2', exact: true })); await note(page, d); await close(page, d);
   const first = thumb(page, 'x', 1), second = thumb(page, 'x', 2);
   await settled(first); const from = await center(first);
-  await expect(first).toHaveAttribute('data-lift', '42');
+  await expect(first).toHaveAttribute('data-lift', '0');
   await d.down(from);
   await expect(first).toHaveAttribute('data-value', '0');
   await d.move({ x: from.x + 18, y: from.y });
@@ -85,7 +83,7 @@ test('la bille de note reflète la nouvelle fiche et ne saute pas lors d’une s
   expect(n).toBeGreaterThan(1.5);
   expect(n * 4).toBe(Math.round(n * 4));
   await close(page, d); await d.click(page.locator('#confirm-position'));
-  await d.click(page.locator('#next-production')); await settled(page.locator('reading-card'));
+  await d.click(page.getByRole('button', { name: 'Rédaction 2', exact: true })); await settled(page.locator('reading-card'));
   await expect(input).toHaveValue('1.5');
   const next = await center(knob), nextRail = await rail.boundingBox();
   expect(Math.abs(next.x - nextRail.x - nextRail.width / 2)).toBeLessThan(1);

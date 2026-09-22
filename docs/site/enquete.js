@@ -1,8 +1,8 @@
 /* Browser integration only. Survey state and coordinate invariants live in Elm. */
 import { createSeed } from './session.js?v=44fc617998f1';
 import { Collection } from './collection.js?v=74a6e0c9ba96';
-import './space.js?v=68e5e5433449';
-import './sliders.js?v=e690453bfce2';
+import './space.js?v=07e4b088f430';
+import './sliders.js?v=8e8f506abd6f';
 const root = document.getElementById('app');
 let application, bank, starting = false;
 const collection = new Collection(message => send(message));
@@ -37,7 +37,7 @@ function showQuestion() {
 function positionComparison() {
   const layer = document.querySelector('.comparison-layer');
   if (layer) {
-    layer.style.paddingTop = `${Math.max(12, (document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140) + 14)}px`;
+    layer.style.paddingTop = `${Math.min((window.visualViewport?.height || window.innerHeight) * .25, Math.max(12, (document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140) + 14))}px`;
     layer.style.paddingBottom = saveNoticeSpace();
   }
 }
@@ -56,7 +56,8 @@ class ReadingCard extends HTMLElement {
   connectedCallback() {
     this.layout = () => {
       const bottom = document.querySelector('#question-panel')?.getBoundingClientRect().bottom || 140;
-      this.closest('.reader-layer').style.paddingTop = `${Math.max(12, bottom + 14)}px`;
+      const hauteur = window.visualViewport?.height || window.innerHeight;
+      this.closest('.reader-layer').style.paddingTop = `${Math.min(hauteur * .32, Math.max(12, bottom + 14))}px`;
       this.closest('.reader-layer').style.paddingBottom = saveNoticeSpace();
     };
     this.resize = new ResizeObserver(this.layout);
@@ -179,6 +180,12 @@ try {
       case 'retry-save': collection.flush(); break;
       case 'restart': collection.restart(); break;
       case 'help-state': saveHelpState(message.state); break;
+      case 'export': {
+        const donnees = { niveaux: collection.record?.levels, reponses: collection.record?.snapshot?.answers || {} };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' }));
+        const lien = document.createElement('a'); lien.href = url; lien.download = 'mes-reponses-matheval.json'; lien.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000); break;
+      }
     }
   });
   const resumed = await collection.resume();

@@ -80,6 +80,15 @@ test('une validation reçue est durable et ne peut pas être écrasée', async (
   assert.equal((await save({ ...data, revision: 2, final: false })).status, 409);
   assert.ok((await request('/sessions/' + p.id, { secret: p.secret })).body.completedAt);
 });
+test('un axe peut être enregistré sans note ni évaluation implicite des autres axes', async () => {
+  const p = await create(), data = payload(p.session);
+  const reponse = Object.values(data.snapshot.answers)[0];
+  reponse.note = null; reponse.initialNote = null; reponse.coordinates.x = 2;
+  data.events = [];
+  assert.equal((await request('/sessions/' + p.id, {method:'PUT',secret:p.secret,data})).status,200);
+  const sauvegarde = (await request('/sessions/' + p.id, {secret:p.secret})).body;
+  assert.deepEqual(sauvegarde.snapshot.answers,data.snapshot.answers);
+});
 test('les statistiques utilisent les réponses évaluées et les filtres de validation', async () => {
   const data = (await request('/admin/statistics?status=completed', { admin: true })).body;
   assert.equal(data.completed, 1); assert.equal(data.answered, 1); assert.equal(data.summary.grades.n, 1); assert.equal(data.summary.grades.mean, 0);
@@ -104,4 +113,19 @@ test('un corpus modifié doit recevoir une nouvelle version', async () => {
 test('la déconnexion invalide le cookie en base', async () => {
   assert.equal((await request('/admin/logout', { method: 'POST', data: {}, admin: true })).status, 200);
   assert.equal((await request('/admin/me', { admin: true })).status, 401);
+});
+test('une reconnexion remplace son ancien jeton et l’inactivité expire après deux heures', async () => {
+  const connexion = () => request('/admin/login',{method:'POST',data:{username:'admin',password},admin:true});
+  adminCookie = (await connexion()).response.headers.get('set-cookie').split(';')[0];
+  const ancien = adminCookie;
+  const nouveau = (await connexion()).response.headers.get('set-cookie').split(';')[0];
+  assert.notEqual(nouveau,ancien);
+  assert.equal((await request('/admin/me',{admin:true})).status,401);
+  adminCookie=nouveau;
+  assert.equal((await request('/admin/me',{admin:true})).status,200);
+  await pool.query("UPDATE administrator_sessions SET last_seen=now()-interval '2 hours 1 second'");
+  assert.equal((await request('/admin/me',{admin:true})).status,401);
+  adminCookie=(await connexion()).response.headers.get('set-cookie').split(';')[0];
+  await pool.query("UPDATE administrator_sessions SET expires_at=now()-interval '1 second'");
+  assert.equal((await request('/admin/me',{admin:true})).status,401);
 });

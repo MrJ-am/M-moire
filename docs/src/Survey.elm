@@ -60,6 +60,8 @@ type alias Model =
     , helpTopic : Maybe HelpTopic
     , helpContinue : Bool
     , menuOpen : Bool
+    , informations : Bool
+    , quitterQuestion : Maybe Int
     , message : String
     , skipped : List String
     , version : String
@@ -87,6 +89,10 @@ type Msg
     | RetrySave
     | Restart
     | ToggleMenu
+    | Informations
+    | Accueil
+    | ConfirmerQuestion
+    | AnnulerQuestion
     | ShowHelp HelpTopic
     | HelpNext
     | SkipHelp
@@ -141,6 +147,8 @@ init flags =
       , helpTopic = Nothing
       , helpContinue = False
       , menuOpen = False
+      , informations = False
+      , quitterQuestion = Nothing
       , message = ""
       , skipped = []
       , version = D.decodeValue (D.field "version" D.string) flags |> Result.withDefault ""
@@ -266,7 +274,7 @@ hideHelp m =
 
 showRatingHelpIfNeeded : Model -> ( Model, Cmd Msg )
 showRatingHelpIfNeeded m =
-    if m.help.enabled && not m.help.ratingSeen then
+    if m.reader && m.help.enabled && not m.help.ratingSeen then
         showHelp RatingHelp False m
 
     else
@@ -291,7 +299,16 @@ openQuestion idx m =
         first =
             List.head q.productions |> Maybe.map .id |> Maybe.withDefault ""
     in
-    { m | index = idx, selected = first, reader = True, closing = False, compare = False, message = "", exposed = Dict.update q.id (\old -> Just (Maybe.withDefault 1 old)) m.exposed }
+    { m | index = idx, selected = first, reader = True, closing = False, compare = False, message = "", quitterQuestion = Nothing, exposed = Dict.insert q.id (List.length q.productions) m.exposed }
+
+
+avancer : Model -> ( Model, Cmd Msg )
+avancer m =
+    if m.index + 1 < List.length m.questions then
+        updateCore (GoQuestion (m.index + 1)) m
+
+    else
+        updateCore Finish m
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -460,7 +477,7 @@ updateCore msg m =
                                             | questions = qs
                                             , mode = Running
                                             , selected = firstProductionId qs
-                                            , exposed = Dict.singleton question.id 1
+                                            , exposed = Dict.singleton question.id (List.length question.productions)
                                             , answers = Dict.empty
                                             , reader = True
                                             , closing = False
@@ -477,6 +494,9 @@ updateCore msg m =
 
                         Err _ ->
                             ( { m | message = "Impossible de préparer les questions." }, Cmd.none )
+
+                Ok "export" ->
+                    ( m, emit "export" [] )
 
                 Ok "closed" ->
                     updateCore Closed m
@@ -533,9 +553,6 @@ updateCore msg m =
             else if not m.reader || m.closing then
                 ( m, Cmd.none )
 
-            else if (getAnswer m.selected m).note == Nothing then
-                ( { m | message = "Donnez d’abord une note à cette rédaction." }, Cmd.none )
-
             else
                 let
                     a =
@@ -580,7 +597,7 @@ updateCore msg m =
                     getAnswer id m
 
                 valid =
-                    List.any (\v -> v.id == id) (List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions)
+                    List.any (\v -> v.id == id) (current m).productions
 
                 next =
                     { a
@@ -593,7 +610,7 @@ updateCore msg m =
                                 a.judged
                     }
             in
-            if valid && List.member axis [ "x", "y", "z" ] && a.note /= Nothing && not m.reader then
+            if valid && List.member axis [ "x", "y", "z" ] && not m.reader then
                 ( { m
                     | answers = Dict.insert id next m.answers
                     , selected = id
@@ -626,7 +643,7 @@ updateCore msg m =
                 a =
                     getAnswer m.selected m
             in
-            if a.note /= Nothing && not m.reader then
+            if not m.reader then
                 ( { m | answers = Dict.insert m.selected { a | judged = [ "x", "y", "z" ] } m.answers, message = "" }
                 , event m "confirm-position" [ ( "coordinates", S.encodePoint a.point ) ]
                 )
@@ -635,7 +652,7 @@ updateCore msg m =
                 ( m, Cmd.none )
 
         Open id ->
-            if List.any (\v -> v.id == id) (List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions) then
+            if List.any (\v -> v.id == id) (current m).productions then
                 let
                     next =
                         { m
@@ -656,79 +673,26 @@ updateCore msg m =
                 ( m, Cmd.none )
 
         NextProduction ->
-            let
-                q =
-                    current m
-
-                count =
-                    Dict.get q.id m.exposed |> Maybe.withDefault 1
-
-                a =
-                    getAnswer m.selected m
-
-                confirmed =
-                    { m | answers = Dict.insert m.selected { a | judged = [ "x", "y", "z" ] } m.answers }
-
-                confirmation =
-                    if List.length a.judged < 3 then
-                        event m "confirm-position" [ ( "coordinates", S.encodePoint a.point ), ( "source", E.string "next-production" ) ]
-
-                    else
-                        Cmd.none
-            in
-            if m.reader || m.closing then
-                ( m, Cmd.none )
-
-            else if a.note == Nothing then
-                ( { m | reader = True, message = "Donnez d’abord une note à cette rédaction." }, Cmd.none )
-
-            else if count < List.length q.productions then
-                let
-                    id =
-                        List.drop count q.productions |> List.head |> Maybe.map .id |> Maybe.withDefault ""
-
-                    next =
-                        { confirmed | selected = id, reader = True, closing = False, exposed = Dict.insert q.id (count + 1) m.exposed, message = "" }
-
-                    ( withHelp, helpCommand ) =
-                        showRatingHelpIfNeeded next
-                in
-                ( withHelp, Cmd.batch [ confirmation, event { m | selected = id } "reveal" [], helpCommand ] )
-
-            else if S.complete confirmed.answers q then
-                let
-                    ( advanced, command ) =
-                        if m.index + 1 < List.length m.questions then
-                            updateCore (GoQuestion (m.index + 1)) confirmed
-
-                        else
-                            updateCore Finish confirmed
-                in
-                ( advanced, Cmd.batch [ confirmation, command ] )
+            if S.complete m.answers (current m) then
+                avancer m
 
             else
-                let
-                    remaining =
-                        List.filter
-                            (\p ->
-                                let
-                                    answer =
-                                        getAnswer p.id confirmed
-                                in
-                                answer.note == Nothing || List.length answer.judged < 3
-                            )
-                            q.productions
+                ( { m | quitterQuestion = Just (m.index + 1), menuOpen = False }, Cmd.none )
 
-                    id =
-                        List.head remaining |> Maybe.map .id |> Maybe.withDefault m.selected
+        ConfirmerQuestion ->
+            case m.quitterQuestion of
+                Just idx ->
+                    if idx == m.index + 1 then
+                        avancer { m | quitterQuestion = Nothing }
 
-                    next =
-                        { confirmed | selected = id, reader = True, closing = False, message = "Terminez l’évaluation de cette rédaction pour poursuivre." }
+                    else
+                        updateCore (GoQuestion idx) { m | quitterQuestion = Nothing }
 
-                    ( withHelp, helpCommand ) =
-                        showRatingHelpIfNeeded next
-                in
-                ( withHelp, Cmd.batch [ confirmation, event { m | selected = id } "open" [], helpCommand ] )
+                Nothing ->
+                    ( m, Cmd.none )
+
+        AnnulerQuestion ->
+            ( { m | quitterQuestion = Nothing }, Cmd.none )
 
         GoQuestion idx ->
             if idx >= 0 && idx < List.length m.questions then
@@ -745,29 +709,7 @@ updateCore msg m =
                 ( m, Cmd.none )
 
         Skip ->
-            let
-                next =
-                    { m
-                        | skipped =
-                            if List.member (current m).id m.skipped then
-                                m.skipped
-
-                            else
-                                (current m).id :: m.skipped
-                    }
-            in
-            if m.index + 1 < List.length m.questions then
-                let
-                    following =
-                        openQuestion (m.index + 1) next
-
-                    ( withHelp, helpCommand ) =
-                        showRatingHelpIfNeeded following
-                in
-                ( withHelp, Cmd.batch [ event m "skip" [], event withHelp "question" [], helpCommand ] )
-
-            else
-                ( hideHelp { next | mode = Finished, reader = False }, event m "skip" [] )
+            updateCore NextProduction m
 
         Finish ->
             ( hideHelp { m | mode = Finished, reader = False }, event m "finish" [] )
@@ -786,6 +728,12 @@ updateCore msg m =
 
         ToggleMenu ->
             ( { m | menuOpen = not m.menuOpen }, Cmd.none )
+
+        Informations ->
+            ( { m | informations = not m.informations, menuOpen = False }, Cmd.none )
+
+        Accueil ->
+            ( hideHelp { m | mode = Setup, reader = False, menuOpen = False }, Cmd.none )
 
         ShowHelp topic ->
             showHelp topic False m
@@ -824,7 +772,16 @@ updateCore msg m =
             showHelp WelcomeHelp True { m | help = defaultHelp }
 
         Escape ->
-            if m.helpTopic /= Nothing then
+            if m.quitterQuestion /= Nothing then
+                updateCore AnnulerQuestion m
+
+            else if m.informations then
+                updateCore Informations m
+
+            else if m.menuOpen then
+                updateCore ToggleMenu m
+
+            else if m.helpTopic /= Nothing then
                 updateCore DismissHelp m
 
             else
@@ -833,7 +790,7 @@ updateCore msg m =
         Compare ->
             let
                 other =
-                    List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions |> List.filter (\v -> v.id /= m.selected) |> List.head |> Maybe.map .id |> Maybe.withDefault m.selected
+                    (current m).productions |> List.filter (\v -> v.id /= m.selected) |> List.head |> Maybe.map .id |> Maybe.withDefault m.selected
             in
             ( { m | compare = True, compareId = other }, event m "compare" [] )
 
@@ -875,17 +832,7 @@ view m =
                         []
 
                      else
-                        [ Interface.el
-                            [ Interface.below
-                                (if m.menuOpen then
-                                    viewMenu m
-
-                                 else
-                                    Interface.none
-                                )
-                            ]
-                            (Disposition.boutonMenu "help-menu" m.menuOpen ToggleMenu)
-                        ]
+                        [ Disposition.boutonMenu "help-menu" m.menuOpen ToggleMenu ]
                     )
                 )
             , Interface.el [ Interface.width Interface.fill, Region.mainContent ]
@@ -926,6 +873,36 @@ view m =
                       else
                         Interface.none
                     ]
+            , if m.menuOpen then
+                viewMenu m
+
+              else
+                Interface.none
+            , if m.informations then
+                Disposition.dialogue "informations"
+                    "Ma participation"
+                    "Fermer"
+                    Informations
+                    [ MrJam.paragraphe "Ce questionnaire fonctionne sans compte personnel, sans mot de passe et sans adresse électronique."
+                    , MrJam.paragraphe ("Niveaux sélectionnés : " ++ String.join ", " m.levels)
+                    , MrJam.paragraphe "Les notes, les positions et les interactions sont conservées sous un identifiant aléatoire. La reprise est mémorisée sur cet appareil."
+                    , MrJam.boutonSecondaire "Télécharger mes réponses" (Receive (E.object [ ( "type", E.string "export" ) ]))
+                    ]
+
+              else
+                Interface.none
+            , case m.quitterQuestion of
+                Just _ ->
+                    Disposition.dialogue "question-incomplete"
+                        "Évaluations incomplètes"
+                        "Rester"
+                        AnnulerQuestion
+                        [ MrJam.paragraphe "Certaines rédactions n’ont pas de note ou leurs trois repères n’ont pas tous été évalués. Voulez-vous passer à la suite ? Vous pourrez revenir."
+                        , MrJam.bouton "Passer quand même" ConfirmerQuestion
+                        ]
+
+                Nothing ->
+                    Interface.none
             , Identite.piedDePage
             , if m.reader && m.mode == Running then
                 Interface.html (viewReader m)
@@ -933,7 +910,7 @@ view m =
               else
                 Interface.none
             , if m.compare && m.mode == Running then
-                viewCompare m (List.take (Dict.get (current m).id m.exposed |> Maybe.withDefault 1) (current m).productions)
+                viewCompare m (current m).productions
 
               else
                 Interface.none
@@ -948,8 +925,14 @@ view m =
 
 viewMenu : Model -> Interface.Element Msg
 viewMenu _ =
-    Disposition.panneau [ Interface.htmlAttribute (id "help-menu"), repere "help-menu" ]
-        [ MrJam.boutonSecondaire "Accéder à l’aide" (ShowHelp WelcomeHelp)
+    Disposition.dialogue "help-menu"
+        "Menu"
+        "Fermer"
+        ToggleMenu
+        [ MrJam.boutonSecondaire "Accueil" Accueil
+        , MrJam.boutonSecondaire "Ma participation et mes informations" Informations
+        , MrJam.lien "Mon compte administrateur" "admin/"
+        , MrJam.boutonSecondaire "Accéder à l’aide" (ShowHelp WelcomeHelp)
         , MrJam.boutonSecondaire "Réinitialiser l’aide" ResetHelp
         ]
 
@@ -959,35 +942,39 @@ viewSetup m =
     MrJam.pile
         [ MrJam.paragraphe "Ce sondage fait partie d’un projet de recherche qui cherche à mettre en lumière les critères que les enseignantes et enseignants de mathématiques exploitent pour noter leurs élèves."
         , MrJam.avis MrJam.Information "Vos réponses et vos interactions sont enregistrées pour cette recherche sous un identifiant aléatoire, sans compte personnel. Vous pouvez reprendre sur ce navigateur. Les résultats sont accessibles uniquement à l’équipe de recherche."
-        , MrJam.section "Quels niveaux avez-vous enseignés ?"
-            (List.map
-                (\niveau ->
-                    MrJam.caseACocher
-                        (case niveau of
-                            "Sup 1" ->
-                                "Études supérieures"
+        , if not (List.isEmpty m.questions) then
+            MrJam.bouton "Reprendre ma participation" Return
 
-                            "1re spé" ->
-                                "1re"
+          else
+            MrJam.section "Quels niveaux avez-vous enseignés ?"
+                (List.map
+                    (\niveau ->
+                        MrJam.caseACocher
+                            (case niveau of
+                                "Sup 1" ->
+                                    "Études supérieures"
 
-                            "Tle spé" ->
-                                "Tle"
+                                "1re spé" ->
+                                    "1re"
 
-                            _ ->
-                                niveau
-                        )
-                        (List.member niveau m.levels)
-                        (ToggleLevel niveau)
+                                "Tle spé" ->
+                                    "Tle"
+
+                                _ ->
+                                    niveau
+                            )
+                            (List.member niveau m.levels)
+                            (ToggleLevel niveau)
+                    )
+                    m.available
+                    ++ [ MrJam.bouton "Commencer" Begin
+                       , if m.message == "" then
+                            Interface.none
+
+                         else
+                            MrJam.avis MrJam.Erreur m.message
+                       ]
                 )
-                m.available
-                ++ [ MrJam.bouton "Commencer" Begin
-                   , if m.message == "" then
-                        Interface.none
-
-                     else
-                        MrJam.avis MrJam.Erreur m.message
-                   ]
-            )
         ]
 
 
@@ -998,7 +985,7 @@ viewWorkspace m =
             current m
 
         shown =
-            List.take (Dict.get q.id m.exposed |> Maybe.withDefault 1) q.productions
+            q.productions
 
         a =
             getAnswer m.selected m
@@ -1006,19 +993,12 @@ viewWorkspace m =
         done =
             List.filter (S.complete m.answers) m.questions |> List.length
 
-        isLast =
-            List.length shown == List.length q.productions
-
         nomSuivant =
-            if isLast then
-                if m.index + 1 == List.length m.questions then
-                    "Terminer la session"
-
-                else
-                    "Question suivante"
+            if m.index + 1 == List.length m.questions then
+                "Terminer la session"
 
             else
-                "Rédaction suivante"
+                "Énoncé suivant"
     in
     Interface.column [ Interface.width Interface.fill, Interface.spacing 12, repere "workspace" ]
         [ Disposition.panneau [ repere "question-panel", Interface.htmlAttribute (id "question-panel") ]
@@ -1027,12 +1007,12 @@ viewWorkspace m =
             , blocRiche q.statement
             , Disposition.progression "Progression de la session" (100 * toFloat done / toFloat (Basics.max 1 (List.length m.questions)))
             ]
-        , Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 8, repere "production-strip", Interface.htmlAttribute (attribute "aria-label" "Rédactions déjà lues") ]
-            (List.map (\v -> Disposition.boutonSelection (v.id == m.selected) ("Relire la rédaction " ++ String.fromInt (number v.id m)) (Open v.id)) shown)
+        , Interface.wrappedRow [ Interface.width Interface.fill, Interface.spacing 8, repere "production-strip", Interface.htmlAttribute (attribute "aria-label" "Toutes les rédactions") ]
+            (List.map (\v -> Disposition.boutonSelection (v.id == m.selected) ("Rédaction " ++ String.fromInt (number v.id m)) (Open v.id)) shown)
         , Interface.html
             (div [ class "evaluation-layout" ]
                 [ Disposition.fragment
-                    (Disposition.panneau [ repere "axes-panel", Interface.htmlAttribute (id "axes-panel"), Interface.htmlAttribute (attribute "aria-label" "Placer les rédactions sur les trois axes"), Interface.height Interface.fill ]
+                    (Disposition.panneau [ repere "axes-panel", Interface.htmlAttribute (id "axes-panel"), Interface.htmlAttribute (attribute "aria-label" "Placer les rédactions sur les trois axes") ]
                         [ Interface.el [ repere "axes-heading" ] (MrJam.texteSecondaire ("Vos repères · Rédaction " ++ String.fromInt (number m.selected m)))
                         , Interface.column [ Interface.width Interface.fill, Interface.spacing 4, repere "axis-sliders" ]
                             (List.map
@@ -1054,12 +1034,7 @@ viewWorkspace m =
                             (if List.length a.judged < 3 then
                                 Disposition.boutonIdentifie "confirm-position"
                                     "Conserver cette position"
-                                    (if a.note == Nothing then
-                                        Nothing
-
-                                     else
-                                        Just Confirm
-                                    )
+                                    (Just Confirm)
 
                              else
                                 Interface.el [ Interface.centerY ] (MrJam.texteSecondaire "Les trois repères sont placés")
@@ -1089,7 +1064,6 @@ viewWorkspace m =
 
               else
                 MrJam.boutonSecondaire "← Question précédente" (GoQuestion (m.index - 1))
-            , MrJam.boutonSecondaire "Passer cette question" Skip
             ]
         , Interface.el [ Interface.htmlAttribute (attribute "role" "status") ]
             (MrJam.texteSecondaire
@@ -1097,7 +1071,7 @@ viewWorkspace m =
                     m.message
 
                  else
-                    "Passer à la suite valide la position affichée, y compris les repères restés au centre. Vous pourrez la modifier."
+                    ""
                 )
             )
         ]
@@ -1169,7 +1143,7 @@ viewReader m =
                         , Interface.el [ Interface.htmlAttribute (id "grade-help") ]
                             (MrJam.texteSecondaire
                                 (if a.note == Nothing then
-                                    "Choisissez une note pour poursuivre."
+                                    "Note facultative. Vous pouvez fermer et revenir."
 
                                  else
                                     "Vous pourrez revenir sur cette note."
@@ -1177,8 +1151,8 @@ viewReader m =
                             )
                         ]
                     , Disposition.boutonIdentifie "validate-reading"
-                        "Valider"
-                        (if a.note == Nothing || m.closing then
+                        "Fermer"
+                        (if m.closing then
                             Nothing
 
                          else
@@ -1243,7 +1217,7 @@ viewHelp m =
                 ]
 
         Just ReaderHelp ->
-            contextHelp "reader-help-button" "Lire et noter" "Lisez la production, attribuez-lui une note, puis appuyez sur « Valider ». Vous pourrez ensuite la situer sur les trois axes." "Fermer"
+            contextHelp "reader-help-button" "Lire et noter" "Lisez les rédactions dans l’ordre de votre choix. Vous pouvez noter, fermer et revenir à tout moment. Les trois axes s’évaluent indépendamment de la note." "Fermer"
 
         Just RatingHelp ->
             contextHelp "rating" "Attribuer une note" "Déplacez ce curseur pour évaluer la production." "Compris"

@@ -1,5 +1,5 @@
 import { axes } from './session.js?v=44fc617998f1';
-import { dragValue, layoutThumbs } from './slider-layout.js?v=32b2b17402a4';
+import { dragValue, layoutThumbs } from './slider-layout.js?v=99cc66c54b63';
 
 const labels = { x: 'Lisibilité', y: 'Précision', z: 'Validité' };
 const dispatch = (node, name, detail) => node.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
@@ -63,7 +63,7 @@ class AxisSlider extends HTMLElement {
         if (!nearest || nearest.disabled) return;
         const item = this.data.points.find(p => p.id === nearest.dataset.id);
         this.grabbed = { y: -Number(nearest.dataset.lift), offset: parseFloat(nearest.style.left) - Number(nearest.dataset.anchor), baseline: parseFloat(this.style.getPropertyValue('--rail-y')) };
-        this.active = item.id; nearest.focus({ preventScroll: true });
+        this.active = item.id; this.valeurActive = item.point[this.axis]; nearest.focus({ preventScroll: true });
         return { id: item.id, value: item.point[this.axis], width: this.field.clientWidth - 44, min: -10, max: 10, step: .1, direct: Boolean(direct), lockAxis: Boolean(direct || e.target.closest('.slider-rail')) };
       },
       move: (d, committed) => this.propose(d.id, d.current, committed),
@@ -73,7 +73,7 @@ class AxisSlider extends HTMLElement {
           if (d.horizontalMoved) this.propose(d.id, d.current, true);
           else if (!d.moved && d.direct) dispatch(this, 'read', { id: d.id });
         }
-        this.active = null; this.grabbed = null; this.draw();
+        this.active = null; this.valeurActive = undefined; this.grabbed = null; this.draw();
       }
     });
     this.read();
@@ -82,6 +82,10 @@ class AxisSlider extends HTMLElement {
   disconnectedCallback() { this.resize?.disconnect(); this.cleanupDrag?.(); }
   read() {
     try { this.data = JSON.parse(this.getAttribute('payload')); } catch { return; }
+    if (this.active && this.valeurActive !== undefined) {
+      const courante = this.data.points.find(p => p.id === this.active);
+      if (courante) courante.point[this.axis] = this.valeurActive;
+    }
     for (const [id, b] of this.cards) if (!this.data.points.some(p => p.id === id)) { b.remove(); this.cards.delete(id); }
     for (const p of this.data.points) {
       let b = this.cards.get(p.id);
@@ -99,13 +103,14 @@ class AxisSlider extends HTMLElement {
       }
       b.querySelector('.slider-sphere').textContent = p.number;
       b.setAttribute('aria-label', `Rédaction ${p.number} · ${labels[this.axis]}`);
-      b.disabled = this.data.reader || !p.graded;
+      b.disabled = this.data.reader;
     }
     this.draw();
   }
   propose(id, value, committed) {
     const p = this.data.points.find(item => item.id === id); if (!p) return;
     p.point[this.axis] = value;
+    if (id === this.active) this.valeurActive = value;
     this.cards.get(id)?.classList.toggle('dragging', !committed);
     this.draw();
     dispatch(this, 'placement', { id, axis: this.axis, value, committed });
@@ -116,7 +121,7 @@ class AxisSlider extends HTMLElement {
     // Stacked panels need no empty upper row for a lone sphere. Once several
     // productions are visible, keep room for their pop-up without moving the
     // rail or the grabbed sphere in the middle of a gesture.
-    const reserve = Math.max(this.data.points.length > 1 ? 42 : 0, parseFloat(getComputedStyle(this).getPropertyValue('--slider-reserve')) || 0);
+    const reserve = parseFloat(getComputedStyle(this).getPropertyValue('--slider-reserve')) || 0;
     const lift = Math.max(reserve, ...layout.map(p => -p.y)), baseline = this.grabbed?.baseline ?? lift + 22;
     this.field.style.height = `${baseline + 24}px`; this.style.setProperty('--rail-y', `${baseline}px`);
     this.leaders.replaceChildren();
@@ -129,7 +134,7 @@ class AxisSlider extends HTMLElement {
       b.setAttribute('aria-valuenow', String(position.value));
       b.setAttribute('aria-valuetext', !judged ? 'À placer' : position.value === 0 ? 'Au repère central' : `Vers ${position.value < 0 ? axes[this.axis].negative : axes[this.axis].positive}`);
       Object.assign(b.style, { left: `${position.x}px`, top: `${baseline + position.y}px`, zIndex: p.id === (this.active || this.data.selected) ? 5 : 3 });
-      if (position.y !== 0) {
+      if (position.y !== 0 || position.x !== position.anchor) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         for (const [key, value] of Object.entries({ x1: position.anchor, y1: baseline, x2: position.x, y2: baseline + position.y, class: 'slider-leader' })) line.setAttribute(key, value);
         this.leaders.append(line);

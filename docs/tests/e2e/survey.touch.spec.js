@@ -18,7 +18,7 @@ test('gestes tactiles Android : glissement, défilement et rédaction suivante',
   await expect(page.locator('reading-card')).toHaveCount(0);
   await expect(y).toHaveAttribute('data-value', '0');
   await expect(first).toHaveAttribute('data-value', value);
-  await d.click(page.locator('#next-production'));
+  await d.click(page.getByRole('button', { name: 'Rédaction 2', exact: true }));
   await expect(page.locator('#reader-title')).toHaveText('Rédaction 2');
   await note(page, d); await close(page, d);
   await d.click(thumb(page, 'y', 1)); await expect(page.locator('#reader-title')).toHaveText('Rédaction 1');
@@ -59,7 +59,11 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await expect(x).toHaveAttribute('data-value', position);
       await expect(thumb(page, 'y')).toHaveAttribute('data-value', '0');
       await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
-      await expect(thumb(page, 'y')).toBeInViewport({ ratio: 1 });
+      // Un écran court conserve le défilement ; chaque axe doit rester atteignable.
+      for (const axis of ['x','y','z']) {
+        await thumb(page,axis).scrollIntoViewIfNeeded();
+        await expect(thumb(page,axis)).toBeInViewport({ratio:1});
+      }
     });
   });
 }
@@ -80,7 +84,7 @@ test('un geste tactile annulé ne valide ni la note ni la coordonnée', async ({
   await d.down(p); await d.move({ x: p.x + 30, y: p.y }); await d.cancel();
   await expect(page.locator('#grade')).toHaveValue('1.5');
   await expect(page.locator('#grade')).toHaveClass(/ungraded/);
-  await expect(page.locator('#validate-reading')).toBeDisabled();
+  await expect(page.locator('#validate-reading')).toBeEnabled();
   await note(page, d); await close(page, d);
   const x = thumb(page, 'x'); await x.scrollIntoViewIfNeeded(); const q = await center(x);
   await d.down(q); await d.move({ x: q.x + 30, y: q.y }); await d.cancel();

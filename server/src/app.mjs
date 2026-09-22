@@ -74,10 +74,14 @@ export function createApp({ pool, origin = 'http://127.0.0.1:4173', prefix = '/m
     res.json({ revision: result.revision, savedAt: result.updated_at.toISOString(), completedAt: result.completed_at?.toISOString() || null });
   });
   const cookieOptions = { httpOnly: true, secure: origin.startsWith('https:'), sameSite: 'strict', path: `${prefix}/api/admin`, maxAge: 8 * 60 * 60 * 1000 };
-  const signIn = async (res, admin) => {
+  const signIn = async (req, res, admin) => {
     const secret = token();
-    await pool.query('DELETE FROM administrator_sessions WHERE expires_at < now()');
-    await pool.query("INSERT INTO administrator_sessions(token_hash,administrator_id,expires_at) VALUES($1,$2,now()+interval '8 hours')", [digest(secret), admin.id]);
+    await transaction(pool, async client => {
+      await client.query('SELECT id FROM administrators WHERE id=$1 FOR UPDATE', [admin.id]);
+      await client.query("DELETE FROM administrator_sessions WHERE expires_at<=now() OR last_seen<=now()-interval '2 hours' OR token_hash=$1", [digest(cookie(req, 'matheval_admin') || '')]);
+      await client.query("DELETE FROM administrator_sessions WHERE token_hash IN (SELECT token_hash FROM administrator_sessions WHERE administrator_id=$1 ORDER BY last_seen DESC,token_hash OFFSET 19)", [admin.id]);
+      await client.query("INSERT INTO administrator_sessions(token_hash,administrator_id,expires_at) VALUES($1,$2,now()+interval '8 hours')", [digest(secret), admin.id]);
+    });
     res.cookie('matheval_admin', secret, cookieOptions); res.json({ username: admin.username });
   };
   const loginLimit = limit(8, 15 * 60 * 1000);
@@ -90,7 +94,7 @@ export function createApp({ pool, origin = 'http://127.0.0.1:4173', prefix = '/m
       if ((await client.query('SELECT id FROM administrators LIMIT 1')).rowCount) fail(409, 'Le compte administrateur est déjà activé.');
       return (await client.query('INSERT INTO administrators(username,password_hash) VALUES($1,$2) RETURNING id,username', [data.username, passwordHash])).rows[0];
     });
-    await signIn(res, admin);
+    await signIn(req, res, admin);
   });
   api.post('/admin/login', loginLimit, async (req, res) => {
     const data = loginCredentials.parse(req.body);
@@ -98,10 +102,10 @@ export function createApp({ pool, origin = 'http://127.0.0.1:4173', prefix = '/m
     // A constant dummy hash keeps unknown users on the same password-verification path.
     const stored = admin?.password_hash || `scrypt:${'0'.repeat(32)}:${'0'.repeat(128)}`;
     if (!(await checkPassword(data.password, stored)) || !admin) fail(401, 'Identifiant ou mot de passe incorrect.');
-    await signIn(res, admin);
+    await signIn(req, res, admin);
   });
   api.use('/admin', async (req, res, next) => {
-    const admin = (await pool.query(`SELECT a.id,a.username FROM administrator_sessions s JOIN administrators a ON a.id=s.administrator_id WHERE s.token_hash=$1 AND s.expires_at>now()`, [digest(cookie(req, 'matheval_admin') || '')])).rows[0];
+    const admin = (await pool.query(`UPDATE administrator_sessions s SET last_seen=now() FROM administrators a WHERE a.id=s.administrator_id AND s.token_hash=$1 AND s.expires_at>now() AND s.last_seen>now()-interval '2 hours' RETURNING a.id,a.username`, [digest(cookie(req, 'matheval_admin') || '')])).rows[0];
     if (!admin) return res.status(401).json({ error: 'Connectez-vous à l’administration.' });
     req.admin = admin; next();
   });

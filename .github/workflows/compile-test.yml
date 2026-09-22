@@ -1,7 +1,7 @@
 name: Vérifier et publier Matheval
 on:
   push:
-    branches: [master]
+    branches: [master, corrections/interface-20260922]
   pull_request:
     branches: [master]
   workflow_dispatch:
