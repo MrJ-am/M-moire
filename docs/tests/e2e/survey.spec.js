@@ -48,7 +48,7 @@ test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Aide sur la fiche de rédaction', exact: true }).click();
-  await expect(page.locator('context-help')).toContainText('Lisez la production');
+  await expect(page.locator('context-help')).toContainText('dans l’ordre de votre choix');
   await page.locator('context-help').getByRole('button', { name: 'Fermer', exact: true }).click();
   await grade(page, 6);
   await page.locator('#validate-reading').click();
@@ -217,8 +217,10 @@ test('curseurs au-dessus sur téléphone et lecture après rotation de l’écra
   const bars = await page.locator('#axes-panel').boundingBox(), scene = await page.locator('#space').boundingBox();
   expect(bars.y + bars.height).toBeLessThanOrEqual(scene.y);
   expect(bars.height).toBeLessThan(350);
-  // The statement has variable length: measure the controls below it.
-  expect(scene.y - question.y - question.height).toBeLessThan(365);
+  // Le lecteur réduit temporairement l'énoncé : remesurer après sa fermeture.
+  const enonce = await page.locator('#question-panel').boundingBox();
+  const redactions = await page.locator('.production-strip').boundingBox();
+  expect(scene.y - enonce.y - enonce.height).toBeLessThan(redactions.height + bars.height + 26);
   await thumb(page, 'z').press('Shift+ArrowRight');
   await page.screenshot({ path: test.info().outputPath('axes-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 844, height: 390 });

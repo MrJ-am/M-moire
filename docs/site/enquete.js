@@ -2,7 +2,7 @@
 import { createSeed } from './session.js?v=44fc617998f1';
 import { Collection } from './collection.js?v=74a6e0c9ba96';
 import './space.js?v=07e4b088f430';
-import './sliders.js?v=8e8f506abd6f';
+import './sliders.js?v=d29f19b945bf';
 const root = document.getElementById('app');
 let application, bank, starting = false;
 const collection = new Collection(message => send(message));

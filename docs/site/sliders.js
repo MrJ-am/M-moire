@@ -123,7 +123,7 @@ class AxisSlider extends HTMLElement {
     // rail or the grabbed sphere in the middle of a gesture.
     const reserve = parseFloat(getComputedStyle(this).getPropertyValue('--slider-reserve')) || 0;
     const lift = Math.max(reserve, ...layout.map(p => -p.y)), baseline = this.grabbed?.baseline ?? lift + 22;
-    this.field.style.height = `${baseline + 24}px`; this.style.setProperty('--rail-y', `${baseline}px`);
+    this.field.style.height = `${baseline + 22}px`; this.style.setProperty('--rail-y', `${baseline}px`);
     this.leaders.replaceChildren();
     for (const position of layout) {
       const b = this.cards.get(position.id), p = this.data.points.find(item => item.id === position.id);

@@ -27,9 +27,11 @@
 
 /* En portrait, les rails restent compacts et la scène conserve la priorité. */
 @media(max-width:899px) and (orientation:portrait), (max-width:759px){
-  #axes-panel{padding:10px 12px;align-self:start;height:auto!important}
+  #axes-panel{padding:4px 12px;align-self:start;height:auto!important}
   #axes-panel .axes-heading{display:none}
-  #axes-panel .axis-sliders{gap:3px;margin-top:0!important}
+  #axes-panel .slider-poles{font-size:.75rem}
+  #axes-panel .axis-sliders{gap:1px;margin-top:0!important}
+  #axes-panel>.s:last-child{margin-top:0!important}
   .evaluation-layout{--slider-reserve:0px;align-items:start}
   .evaluation-layout evaluation-space{height:clamp(350px,55dvh,650px);min-height:350px}
 }
