@@ -4,6 +4,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 (async () => {
   const { dragValue, layoutThumbs } = await import('../site/slider-layout.js');
+  const { placerBilles } = await import('../site/space-layout.js');
+  for (const [largeur,hauteur] of [[264,350],[366,464],[820,650]]) {
+    for (const [x,y] of [[largeur/2,hauteur/2],[0,0],[largeur,hauteur]]) {
+      const points=Array.from({length:6},(_,id)=>({id,x,y}));
+      const copie=JSON.stringify(points), positions=placerBilles(points,largeur,hauteur,49);
+      assert.equal(JSON.stringify(points),copie,'La séparation préserve les coordonnées');
+      for (const [i,p] of positions.entries()) {
+        assert.ok(p.x>=30&&p.y>=30&&p.x<=largeur-30&&p.y<=hauteur-30,'Bille dans la scène');
+        for(const q of positions.slice(i+1)) assert.ok(Math.hypot(p.x-q.x,p.y-q.y)>54,'Six billes distinctes, même au bord');
+      }
+    }
+  }
   const { prepareSession, axes } = await import('../site/session.js');
   const bank = JSON.parse(fs.readFileSync(path.join(__dirname, '../site/data/bank.json')));
   const levels = [...new Set(bank.questions.map(q => q.level))];

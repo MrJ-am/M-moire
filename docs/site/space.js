@@ -1,6 +1,7 @@
 /* Orthographic XYZ projection. The DOM preserves sharp, accessible mathematics.
    Elm owns the coordinates; this surface rotates the camera and opens productions. */
 import { axes } from './session.js?v=44fc617998f1';
+import { placerBilles } from './space-layout.js?v=de6b204ee1ad';
 const SVG = 'http://www.w3.org/2000/svg';
 const colors = { x: '#087f71', y: '#087ea2', z: '#7260b3' }, xyz = ['x', 'y', 'z'];
 const point = (x = 0, y = 0, z = 0) => ({ x, y, z });
@@ -92,15 +93,12 @@ export class EvaluationSpace extends HTMLElement {
       }
     }
     const projected = this.data.points.map(item => { const pos = this.drag?.id === item.id && this.drag.current ? this.drag.current : item.point; return { item, pos, screen: this.project(pos) }; });
+    const places = new Map(placerBilles(projected.map(p=>({id:p.item.id,x:p.screen.x,y:p.screen.y})),w,h,diameter).map(p=>[p.id,p]));
     for (const { item, pos, screen } of projected) {
       const orb = this.cards.get(item.id);
       // Fan overlapping projections out, with a visible line to the exact coordinate.
-      const gap = diameter * 1.12 + 8;
-      const siblings = projected.filter(p => Math.hypot(p.screen.x - screen.x, p.screen.y - screen.y) < gap).sort((a, b) => a.item.number - b.item.number), order = siblings.findIndex(p => p.item.id === item.id);
-      const offsetX = siblings.length > 1 ? (order - (siblings.length - 1) / 2) * gap : 0, offsetY = siblings.length > 1 ? -diameter * .4 : 0;
-      const inset = diameter * .56 + 6;
-      const x = Math.max(inset, Math.min(w - inset, screen.x + offsetX)), y = Math.max(inset, Math.min(h - inset, screen.y + offsetY));
-      if (offsetX || offsetY || x !== screen.x || y !== screen.y) { this.guides.append(svg('line', { x1: screen.x, y1: screen.y, x2: x, y2: y, stroke: '#526f68', 'stroke-width': '1.1', 'stroke-dasharray': '3 3' })); this.guides.append(svg('circle', { cx: screen.x, cy: screen.y, r: '4', fill: '#087f71', stroke: 'white', 'stroke-width': '1.5' })); }
+      const {x,y} = places.get(item.id);
+      if (x !== screen.x || y !== screen.y) { this.guides.append(svg('line', { x1: screen.x, y1: screen.y, x2: x, y2: y, stroke: '#526f68', 'stroke-width': '1.1', 'stroke-dasharray': '3 3' })); this.guides.append(svg('circle', { cx: screen.x, cy: screen.y, r: '4', fill: '#087f71', stroke: 'white', 'stroke-width': '1.5' })); }
       const size = free ? Math.max(.9, Math.min(1.12, .94 + screen.depth / 110)) : 1;
       Object.assign(orb.style, { left: `${x}px`, top: `${y}px`, transform: `translate(-50%,-50%) scale(${size})`, zIndex: item.id === this.data.selected ? 80 : Math.round(screen.depth + 35) });
       orb.dataset.x = pos.x; orb.dataset.y = pos.y; orb.dataset.z = pos.z;
