@@ -30,7 +30,7 @@ Chaque adoption reconstruit et redéploie tous les projets concernés après val
 
 ## Candidat documentaire du 26 septembre 2026
 
-Le verrou candidat adopte `c6816194ee884887b8ac12daaca3d2866f40624b`.
+Le verrou candidat adopte `3aab7233465ac0abe49464fa26a360765ccb4004`.
 Les contrôles courants et tableaux sont factorisés dans le style ; les boutons
 courts ont une cible nominale de 34 px. Les attentes de densité des tests suivent
 ce contrat, sans copie de décoration dans l’application.

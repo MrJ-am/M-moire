@@ -1,6 +1,6 @@
 {
   "depot": "MrJ-am/style-mrjam",
-  "revision": "c6816194ee884887b8ac12daaca3d2866f40624b",
+  "revision": "3aab7233465ac0abe49464fa26a360765ccb4004",
   "fichiers": {
     "identite.json": "98805217ea35c28b493c3d1927caba3c7b5747b39a9e4a361275f4d029898c86",
     "public/assets/mrjam/Echologo.svg": "ce9ff8bf622122aaec0b88a22b9633d1c09ef35b32b9f93289f17889d520a0b3",
@@ -11,7 +11,7 @@
     "src/MrJam/Disposition.elm": "63c9ada96ae031d856187f01340343c210593f00bffea36acdda020ef118fe1c",
     "src/MrJam/Donnees.elm": "454ab03eb00b931d73ed030c02927ae620b4a327c2ae29057af90ffa2ab43bfc",
     "src/MrJam/Fenetres.elm": "b5967002745783d318a99c822ad61c613aba2e0d1e78a03e4de6fae4507b22ee",
-    "src/MrJam/Identite.elm": "abc71bc249fd555209e5333acf887eb814ae9f60f164f643ddcee7bde9f780e6",
+    "src/MrJam/Identite.elm": "16c62e62f3bced0e55d62a5a25e31c3b4fc8d18622d88ab2eeb70661b9c45f49",
     "src/MrJam/Lecture.elm": "2442ec08a0770ac42cb0bfbe3ede1103ff532d0407d346a73951c35e83e086fc",
     "src/MrJam/Tableaux.elm": "9086134e18c63d01394b054f6ec3596ebcabe2ab17d49a57e24c1a55f5944def",
     "src/MrJam/Theme.elm": "b8d74c73e79df54452f7d767f7f24340a4a091dce077e355b247cec2764bb435",
