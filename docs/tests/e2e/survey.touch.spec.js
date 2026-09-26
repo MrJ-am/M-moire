@@ -61,8 +61,10 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await expect(thumb(page, 'z')).toHaveAttribute('data-value', '0');
       // Un écran court conserve le défilement ; chaque axe doit rester atteignable.
       for (const axis of ['x','y','z']) {
-        await thumb(page,axis).scrollIntoViewIfNeeded();
-        await expect(thumb(page,axis)).toBeInViewport({ratio:1});
+        const controle = thumb(page,axis);
+        // Le défilement conditionnel arrondit un bord de 0,4 px ; centrer réellement.
+        await controle.evaluate(e => e.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+        await expect(controle).toBeInViewport({ratio:1});
       }
     });
   });
