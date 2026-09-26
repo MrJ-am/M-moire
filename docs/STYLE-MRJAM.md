@@ -27,3 +27,20 @@ Tout nom contrôlé doit être français. Avant un renommage, conserver une comp
 Le logo et la signature restent référencés dans `MrJ-am/Signature`, révision `17495b13cefa24473e37434b98336b27caec8cdf`. Toute utilisation est strictement réservée. La signature demeure le texte sélectionnable `MrJ.am` avec le point U+002E. La bibliothèque ne contient pas les fontes. Matheval conserve les fichiers autorisés dans `docs/identite`, vérifie leurs blobs Git et leurs SHA-256 contre la source Signature, puis les installe au moment de la construction. Les contrôles navigateur vérifient leur chargement et la sélection du texte.
 
 Chaque adoption reconstruit et redéploie tous les projets concernés après validation de tous leurs artefacts. Ce raccordement n’est pas encore activé. Préparer et tester la migration sur sa branche ; ne pas déclencher isolément le déploiement collectif. Respecter `deploy/INFRASTRUCTURE.org` : aucun `nixos-rebuild`, changement PostgreSQL ou restauration de données depuis cette migration d’interface. La publication du noyau n’est ni une migration terminée ni un déploiement de Matheval.
+
+## Candidat documentaire du 26 septembre 2026
+
+Le verrou candidat adopte `c6816194ee884887b8ac12daaca3d2866f40624b`.
+Les contrôles courants et tableaux sont factorisés dans le style ; les boutons
+courts ont une cible nominale de 34 px. Les attentes de densité des tests suivent
+ce contrat, sans copie de décoration dans l’application.
+
+Les quatre points d’entrée compilent. Sept parcours Chromium de présentation,
+connexion, activation et signature ont réussi en HTTP local avec refus de session
+simulés. La collecte et les parcours PostgreSQL restent à valider dans la CI
+complète, désormais exécutée également sur `refonte/**`.
+
+La reconstruction finale conserve les SHA-256 des bundles soumis aux tests.
+Ce candidat est préparé localement : aucune nouvelle publication ni activation
+n’est revendiquée. L’adoption doit être coordonnée avec Vision et l’autre
+consommateur, après toutes les validations, avec retour applicatif conservé.

@@ -1,19 +1,21 @@
 {
   "depot": "MrJ-am/style-mrjam",
-  "revision": "b2177c0fd2c46c6f528266d30f7b933d3add1566",
+  "revision": "c6816194ee884887b8ac12daaca3d2866f40624b",
   "fichiers": {
     "identite.json": "98805217ea35c28b493c3d1927caba3c7b5747b39a9e4a361275f4d029898c86",
     "public/assets/mrjam/Echologo.svg": "ce9ff8bf622122aaec0b88a22b9633d1c09ef35b32b9f93289f17889d520a0b3",
     "public/assets/mrjam/curseurs.css": "c33d00b3fa249d41d502d944dd2200a74a2f2e0cf43cfbabf592b333abdb25b0",
     "public/assets/mrjam/dialogues.js": "e9c3dbe6276a5d69f6984c876bf604fb185e55043ed148ab2ebdce47f2e374e8",
     "public/assets/mrjam/signature.css": "7d1b958a4073d71d506385fd0dc499169941ed546b4bf5a3da45b66dd8708830",
-    "src/MrJam.elm": "eb76a6764d9eb61193f3f8b5599d0341736f7565ec28b28e387291ec05cd2e29",
-    "src/MrJam/Disposition.elm": "40122669353d5b3e05528e93a6ce53fdfa258cbc4c63a70dc39798c0c2e8ae18",
-    "src/MrJam/Donnees.elm": "924693ba5aaf25d0717303ded2601c87961e3c1578b929b768be5edd2e924b41",
-    "src/MrJam/Fenetres.elm": "f513b27802fa22c94566864daa40498c79e259696a22474f5a4f600c0ce9b371",
-    "src/MrJam/Identite.elm": "f5d318e9b86ed5ae000b4492827048a30cd30c30a04fed643c7b0b33cbc22dca",
+    "src/MrJam.elm": "b36bd716f24d451c1c0a632a267aba5068b8fbf7f10c5eb16b50941c7ada0b95",
+    "src/MrJam/Disposition.elm": "63c9ada96ae031d856187f01340343c210593f00bffea36acdda020ef118fe1c",
+    "src/MrJam/Donnees.elm": "454ab03eb00b931d73ed030c02927ae620b4a327c2ae29057af90ffa2ab43bfc",
+    "src/MrJam/Fenetres.elm": "b5967002745783d318a99c822ad61c613aba2e0d1e78a03e4de6fae4507b22ee",
+    "src/MrJam/Identite.elm": "abc71bc249fd555209e5333acf887eb814ae9f60f164f643ddcee7bde9f780e6",
     "src/MrJam/Lecture.elm": "2442ec08a0770ac42cb0bfbe3ede1103ff532d0407d346a73951c35e83e086fc",
-    "src/MrJam/Tableaux.elm": "7b50371a63bf8e1448c1c9b80ec3458d3239ee9e3165d4d667f090a4e77de67a",
-    "src/MrJam/Theme.elm": "3a51797c2c3670e56832864b386601f89c6d302d6696c9cb8081315f1d9d07be"
+    "src/MrJam/Tableaux.elm": "9086134e18c63d01394b054f6ec3596ebcabe2ab17d49a57e24c1a55f5944def",
+    "src/MrJam/Theme.elm": "b8d74c73e79df54452f7d767f7f24340a4a091dce077e355b247cec2764bb435",
+    "src/MrJam/Controles.elm": "e55ed3513eda9e8b7392322d349c62de5cfc5ba4696a93a2fbc9fda7086656f8",
+    "src/MrJam/Documents.elm": "f67319524bd2f43fcfeeb59a437d314410e2a6ab9b4861ede02839caabdd5b15"
   }
 }

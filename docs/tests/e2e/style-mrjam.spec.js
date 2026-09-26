@@ -64,7 +64,10 @@ for (const largeur of [320, 390, 768, 1363]) {
       await expect.poll(() => page.locator('img').first().evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const bouton = page.getByRole('button', { name: adresse === './' ? 'Commencer' : 'Se connecter', exact: true });
-      expect((await bouton.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      const boite = await bouton.boundingBox();
+      expect(boite.height).toBeGreaterThanOrEqual(32);
+      expect(boite.height).toBeLessThanOrEqual(38);
+      expect(boite.width).toBeGreaterThanOrEqual(32);
       await page.screenshot({ path: test.info().outputPath(`${adresse === './' ? 'accueil' : 'connexion'}-${largeur}.png`), fullPage: true });
     }
   });
