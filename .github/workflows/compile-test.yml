@@ -2,8 +2,20 @@ name: Vérifier et publier Matheval
 on:
   push:
     branches: [master, corrections/interface-20260922, 'refonte/**']
+    paths:
+      - .github/workflows/compile-test.yml
+      - docs/**
+      - server/**
+      - research/**
+      - deploy/**
   pull_request:
     branches: [master]
+    paths:
+      - .github/workflows/compile-test.yml
+      - docs/**
+      - server/**
+      - research/**
+      - deploy/**
   workflow_dispatch:
 permissions:
   contents: read
