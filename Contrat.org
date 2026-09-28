@@ -1,0 +1,646 @@
+#+TITLE: Contrats de rédaction mathématique — formulations arrêtées et dossier scientifique
+#+LANGUAGE: fr
+#+DATE: 2026-09-28
+#+OPTIONS: toc:2 num:nil
+#+STARTUP: overview
+
+Ce document consolide exclusivement les treize contrats arrêtés dans la discussion du 28 septembre 2026. Les phrases des sous-parties « Énoncé » sont conservées sans modification. Les titres facilitent la navigation ; ils ne se substituent pas à ces phrases. Les numéros C01–C13 servent uniquement à ce document : ils ne remplacent pas automatiquement les codes du sondage.
+
+L'objet de la recherche est d'étudier l'importance que les enseignantes et les enseignants accordent à ces prescriptions dans leurs jugements sur des rédactions. Il ne s'agit ni de publier une liste de lois universelles de la démonstration, ni de définir une bonne copie par addition de contrats respectés. Une prescription peut être enseignée, reconnue comme pertinente, puis ne pas être sanctionnée dans une situation donnée. Une transgression peut même servir une intention mathématique ou pédagogique légitime.
+
+Les contrats portent sur des conduites de rédaction ; les axes Confus–Lisible, Vague–Précis et Fautif–Valide portent sur les jugements recueillis. Leur découplage est méthodologique : les rédactions sont construites en faisant varier le respect des prescriptions, non en leur assignant à l'avance une position sur les axes. Il n'implique ni absence de corrélation empirique ni indépendance de tous les contrats entre eux. Une justification manquante, par exemple, peut affecter plusieurs jugements, sans que le contrat se réduise à l'un de ces axes. La note constitue encore une autre réponse, qui ne mesure pas directement une adhésion déclarée au contrat.
+
+Les observations ci-dessous distinguent trois situations : une transgression littérale compatible avec une interprétation mathématique recevable ; une transgression seulement apparente, liée à une convention implicite ; une véritable erreur qui ne devient pas valide parce que le lecteur devine une intention correcte. Cette distinction est particulièrement importante pour les portées et la nature des objets. Les commentaires ne corrigent pas les formulations retenues pour supprimer leurs tensions.
+
+Les exemples issus de la discussion sont signalés comme tels. Les illustrations supplémentaires servent à expliquer les mêmes contrats ; elles ne constituent ni de nouveaux contrats ni des copies effectivement recueillies. Les références distinguent l'observation d'une prescription ou d'une pratique d'évaluation, un rapprochement théorique et les limites de ce rapprochement. Une catégorie employée par des chercheurs pour analyser des preuves n'est pas, à elle seule, la preuve qu'une règle autonome est explicitement enseignée aux élèves.
+
+La revue est ciblée sur ces treize contrats, à partir du corpus fourni et de compléments identifiés en suivant ses thèmes. Ce n'est pas une revue systématique exhaustive. Les passages mobilisés dans les PDF du corpus ont été relus ; les numéros « PDF » désignent leur position physique, couverture comprise, et non nécessairement la pagination de la revue. Les liens =docview= permettent de les ouvrir dans Emacs. Les références complémentaires sont données par DOI ou lien vers une source primaire ; elles ne sont pas présentées comme des fichiers déjà présents dans =bib/=. Le document de Gautreau porte 2026 dans son nom de fichier, mais son statut éditorial n'est pas établi ici. La thèse numérisée de Balacheff (1988), dont le texte n'était pas exploitable lors de cette vérification, n'est pas utilisée pour soutenir des passages précis.
+
+Des appuis méthodologiques transversaux encadrent les rapprochements. Herbst et Chazan décrivent des expériences virtuelles de transgression : les réactions à des représentations de pratiques permettent d'interroger des normes, sans demander seulement si une règle abstraite est approuvée. Notre emploi de rédactions contrastées est un rapprochement méthodologique, non une reproduction de leur dispositif. Voir [[file:bib/Herbst_Chazan_2023_Practical_rationality.pdf][Herbst, P. G. et Chazan, D. (2023), Keeping Theorizing in Touch with Practice: Practical Rationality as a Middle Range Theory of Mathematics Teaching]], dans /Theorizing Teaching/, [[https://doi.org/10.1007/978-3-031-25613-4_7][DOI]], [[docview:bib/Herbst_Chazan_2023_Practical_rationality.pdf::15][p. 203–204 ; PDF 15–16]]. Leur notion de norme peut inclure du tacite ; notre sélection retient des prescriptions suffisamment explicitables pour être adressées à un élève.
+
+La revue de [[file:bib/Stylianides_et_al_2023_Systematic_review.pdf][Stylianides, G. J., Stylianides, A. J. et Moutsios-Rentzos, A. (2023), Proof and proving in school and university mathematics education research: a systematic review]], /ZDM – Mathematics Education/, [[https://doi.org/10.1007/s11858-023-01518-y][DOI]], [[docview:bib/Stylianides_et_al_2023_Systematic_review.pdf::1][résumé et cadre de la revue, PDF 1–3]], porte sur 103 articles et distingue notamment les relations entre enseignants, élèves et contenu. Elle soutient l'intérêt de ne pas rabattre l'évaluation sur la seule structure mathématique du texte ; elle ne fournit pas la présente liste de contrats.
+
+Inglis, M., Mejía-Ramos, J. P., Weber, K. et Alcock, L. (2013), /On Mathematicians’ Different Standards When Evaluating Elementary Proofs/, /Topics in Cognitive Science/, 5(2), 270–282, [[https://doi.org/10.1111/tops.12019][DOI]], [[file:bib/Inglis_et_al_2013_Different_standards.pdf][manuscrit]], [[docview:bib/Inglis_et_al_2013_Different_standards.pdf::2][résumé, PDF p. 2]], observent des désaccords de validation parmi 109 mathématiciens actifs en recherche. Cela justifie de recueillir les jugements plutôt que de supposer un standard évaluatif uniforme. Ce résultat n’implique ni que toutes les lectures se valent ni que la validité logique se réduise à une préférence.
+
+Ce fichier est une consolidation scientifique. Il ne modifie ni [[file:research/contrats.org][le référentiel opérationnel existant]], ni [[file:research/questions.org][les questions]], ni les codages et données collectées. Leur mise en correspondance ultérieure devra être explicite et préserver l'historique.
+
+* C01 — Difficulté de la question
+:PROPERTIES:
+:CUSTOM_ID: C01
+:END:
+
+** Énoncé
+
+La difficulté à établir la conclusion ne doit pas être contournée en admettant sans justification un résultat intermédiaire qui contient l’essentiel de cette difficulté.
+
+** Observations
+
+*** Ce que la prescription vise
+
+Le contrat ne se limite pas à l'interdiction d'admettre la conclusion. Il vise aussi l'admission d'un résultat équivalent ou plus fort qui prend en charge le travail demandé. C'est cette extension qui a motivé la reformulation du premier contrat dans la discussion. Le problème n'est pas qu'une conclusion découle rapidement d'un lemme : un lemme légitime peut précisément avoir cette fonction.
+
+Il faut distinguer la vérité du résultat intermédiaire, son établissement dans la rédaction et sa disponibilité dans le contexte de l'exercice. Un théorème vrai n'appartient pas nécessairement au bagage autorisé de la tâche. Inversement, réutiliser un théorème effectivement acquis ne constitue pas en soi une défaillance logique.
+
+*** Respect, transgression et légitimité
+
+Une rédaction respecte la prescription lorsqu'elle traite la difficulté, éventuellement en démontrant le lemme qui la concentre, ou en mobilisant un résultat dont l'usage est admis dans la tâche. Elle la transgresse lorsqu'elle remplace cette difficulté par un résultat simplement posé comme disponible, sans rendre compte de cette admission.
+
+Illustration construite : pour établir \((a+b)^2\leq 2(a^2+b^2)\), invoquer Cauchy–Schwarz fournit une preuve correcte dès lors que ce théorème est acquis et applicable. Dans un exercice destiné à faire établir directement cette inégalité, cette même solution peut être perçue comme un contournement du travail attendu. La légitimité de l'usage dépend alors de la bibliothèque de résultats reconnue, pas de la longueur du calcul final.
+
+Il ne s'agit pas de déclarer valide une preuve reposant sur un lemme réellement non établi dans la théorie considérée. Le cas intéressant est le conflit entre un résultat recevable dans une communauté mathématique et une restriction didactique de la tâche. Une admission circulaire pure reste un cas différent : elle ne fournit pas la justification demandée.
+
+*** Enjeu pour l'enquête
+
+Le contraste doit préciser les résultats déjà disponibles. Sinon, une différence de jugement peut venir d'une reconstruction différente du cours plutôt que du poids accordé au contrat. Le contrat peut entrer en tension avec [[#C11][l'économie]] : la voie la plus courte n'est pas toujours la voie que l'exercice cherche à faire produire. Il ne se confond pas avec [[#C03][l'origine des assertions]] : un théorème peut être parfaitement nommé et pourtant jugé didactiquement illégitime ici.
+
+** Références
+
+*** Weber (2008) — Un théorème qui rendrait l'exercice presque immédiat
+
+Keith Weber, /How Mathematicians Determine if an Argument Is a Valid Proof/, /Journal for Research in Mathematics Education/, 39(4), 431–459. [[file:bib/Weber_2008_Valid_proof.pdf][Manuscrit du corpus]], [[docview:bib/Weber_2008_Valid_proof.pdf::27][section 5.1, PDF et manuscrit p. 27–30]].
+
+Dans cette étude auprès de huit mathématiciens, la preuve examinée passe de \(3\mid n^2\) à \(3\mid n\). Les participants reconnaissent qu'un théorème sur les diviseurs premiers d'un produit justifierait le passage. L'un d'eux estime cependant que l'exercice aurait peu d'intérêt si ce théorème était déjà disponible et en infère qu'il ne doit pas être admis dans le cours. D'autres distinguent l'acceptabilité dans la communauté mathématique de celle attendue d'un étudiant.
+
+C'est un appui empirique particulièrement proche de notre contrat élargi : le résultat plus général existe, mais son usage peut être jugé incompatible avec la fonction de la question. L'étude ne formule pas notre phrase contractuelle ; elle montre un mécanisme de jugement et son imbrication avec les usages du mot « valide ».
+
+*** Gautreau — Le cas plus étroit de la circularité
+
+Alexis Gautreau, /Que révèle l’activité de validation de démonstration circulaire sur la compréhension de démonstration/, [[file:bib/Gautreau_2026_Demonstration_circulaire.pdf][document du corpus portant 2026 dans son nom]], [[docview:bib/Gautreau_2026_Demonstration_circulaire.pdf::8][PDF p. 8–9]].
+
+Le texte rapporte une prescription explicitement adressée aux élèves par un enseignant stagiaire : « En mathématiques, tu ne peux pas utiliser quelque chose que tu es en train de démontrer. » L'analyse distingue ensuite l'inutilité de certaines phrases de l'absence de statut théorique de la prémisse. Ce document atteste une règle effectivement énoncée, mais dans le cas de la circularité ; il n'atteste pas à lui seul toute l'extension aux résultats plus forts retenue ici.
+
+* C02 — Explicitation des étapes
+:PROPERTIES:
+:CUSTOM_ID: C02
+:END:
+
+** Énoncé
+
+Toute étape nécessaire pour établir la validité du raisonnement doit apparaître dans la rédaction.
+
+** Observations
+
+*** Une règle de production, non une règle automatique de notation
+
+La discussion a retenu ce contrat parce que « toutes les étapes doivent apparaître » correspond à une prescription effectivement reçue en tant qu'élève. Elle a aussi fait apparaître une dissociation : la formation à la correction peut inviter à accepter des étapes implicites et à ne pas les pénaliser. Ces deux normes peuvent coexister sans que la seconde efface la première.
+
+Le contrat n'est donc pas remplacé par « adapter les justifications au niveau de l'élève ». Cette dernière formule orienterait l'activité professionnelle du correcteur plutôt qu'elle ne prescrirait une conduite déterminée au rédacteur. Le mot « nécessaire » demande néanmoins un commentaire : il faut identifier le maillon concerné, les résultats admis et la granularité à laquelle on décrit la preuve.
+
+*** Une omission peut rester recevable
+
+Illustration construite : de \(2x+3=7\), passer directement à \(x=2\) laisse implicites la soustraction de 3 puis la division par 2. Une lecture exigeant de matérialiser ces transformations y voit une transgression ; une lecture qui les reconnaît immédiatement peut accepter la rédaction sans hésitation. Les opérations ne sont pas fausses, elles ne sont pas écrites séparément.
+
+À l'inverse, oublier une condition indispensable qui n'est pas disponible, ou sauter à une conclusion qui ne découle pas des hypothèses, n'est pas rendu légitime par le mot « implicite ». Le protocole doit distinguer un maillon reconstructible d'une lacune réelle. Il ne doit pas décider à la place des participants que toute reconstruction aisée entraînera une bonne note.
+
+*** Tensions et distinctions
+
+Ce contrat peut entrer en conflit avec [[#C11][l'économie]] : détailler toutes les transformations peut alourdir une rédaction. Il est distinct de [[#C08][la visibilité de la démarche]] : une factorisation annoncée puis vérifiée peut être entièrement justifiée sans que son mode de découverte soit exposé. Il est également distinct de [[#C03][l'origine]] : toutes les transformations peuvent être présentes sans qu'un théorème utilisé soit identifié.
+
+L'enquête peut faire apparaître des personnes qui enseignent la règle, repèrent une omission et ne la sanctionnent pas. Une absence de pénalisation ne prouve donc pas une ignorance du contrat, pas plus qu'une sanction ne mesure à elle seule son importance générale.
+
+** Références
+
+*** Öztürk et Güven (2022) — Un critère distinct portant sur les passages
+
+Tuğba Öztürk et Bülent Güven, /A study on pre-service mathematics teachers’ criteria of proof evaluation/, /LUMAT/, 10(1), 210–241, [[https://doi.org/10.31129/LUMAT.10.1.1649][DOI]]. [[file:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf][Article]], [[docview:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf::8][p. 217–218 ; PDF 8–9]].
+
+Les auteurs distinguent J2, « Expressing stages between the steps of proof », de J1, les explications des assertions, et de J4, l'emploi de définitions, axiomes et théorèmes appropriés. J2 constitue donc un appui spécifique, et pas seulement une évocation globale de la clarté. L'étude concerne 50 étudiants de première année en formation initiale à l'enseignement, non un échantillon d'enseignants en exercice. La grille de recherche n'établit pas que chaque participant transmet explicitement cette règle aux élèves.
+
+*** Weber (2008) et Moore (2016) — Ce qui peut rester implicite
+
+[[file:bib/Weber_2008_Valid_proof.pdf][Weber (2008)]], [[docview:bib/Weber_2008_Valid_proof.pdf::27][manuscrit p. 27–30]], montre que l'acceptation d'un passage implicite dépend notamment des résultats supposés connus. Ce passage est analysé plus précisément en [[#C01][C01]].
+
+Robert C. Moore, /Mathematics Professors’ Evaluation of Students’ Proofs: A Complex Teaching Practice/, /International Journal of Research in Undergraduate Mathematics Education/, 2, 246–278, [[https://doi.org/10.1007/s40753-016-0029-y][DOI]]. [[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Article]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::20][p. 265–269 ; PDF 20–24]].
+
+Les quatre universitaires ne traitent pas uniformément les justifications manquantes. Ils cherchent notamment à décider si le défaut traduit une omission rédactionnelle ou une incompréhension. La recherche soutient ainsi la distinction entre prescription, interprétation de la copie et décision de notation ; elle ne fournit pas un seuil universel d'explicitation.
+
+*** Lai, Weber et Mejía-Ramos (2012) — Le désaccord sur un ajout
+
+Référence en [[#C10][C10]], p. 159–162 et 166 : M3 ajoute une justification et partage les appréciations. L'étude concerne des preuves pédagogiques, pas la notation.
+
+* C03 — Origine des assertions
+:PROPERTIES:
+:CUSTOM_ID: C03
+:END:
+
+** Énoncé
+
+L’origine de toute assertion doit être clairement identifiable.
+
+** Observations
+
+*** Sens retenu pour « origine »
+
+L'origine peut être le cours, une donnée de l'exercice, une question précédente, une définition introduite, une supposition locale ou une conclusion obtenue quelques lignes auparavant. La rédaction doit permettre de reconnaître sur quoi repose l'entrée de l'assertion dans le travail. Le terme « assertion » est conservé pour la précision du dossier ; il inclut ici les assertions posées à titre d'hypothèse, sans affirmer qu'elles sont vraies hors de ce cadre.
+
+La phrase ne comporte pas la restriction « utilisée dans le raisonnement » : elle concerne aussi les assertions figurant dans un calcul. La désignation « origine », choisie dans la discussion, évite que le contrat exige du lecteur une interprétation préalable du terme technique « statut ».
+
+*** Respect et cas limites
+
+« D'après la question 2 », « par définition », « supposons maintenant » ou une transition déductive dont les prémisses sont identifiables peuvent manifester l'origine. Il n'est pas nécessaire d'ajouter une référence textuelle à chaque signe d'égalité lorsque la provenance est déjà manifeste. « Identifiable » ne signifie pas « accompagnée systématiquement d'une étiquette ».
+
+Une transgression caractéristique est l'apparition d'une propriété dont on ne sait pas si elle est donnée, conjecturée, admise ou démontrée. Le cas peut rester acceptable si un lecteur compétent reconnaît sans difficulté une identité connue ou reconstitue la provenance ; mais si cette origine est alors effectivement identifiable, il peut aussi s'agir d'un respect implicite du contrat, et non d'une violation. Cette frontière doit être décrite dans le codage plutôt que décidée par le seul comptage des mots « d'après ».
+
+Un résultat peut avoir une origine correctement indiquée et être mal appliqué. L'identification de la source ne garantit pas la validité de l'inférence. Inversement, une égalité correcte peut être donnée sans attribution explicite et n'occasionner aucune difficulté de compréhension.
+
+*** Articulation avec les autres contrats
+
+L'ancien point autonome sur la légitimation des assertions a été fusionné ici, conformément à la discussion. Cela n'autorise pas à confondre dans l'analyse « reconnaître la provenance » et « contrôler que la justification est mathématiquement suffisante ». La portée d'une hypothèse reste traitée séparément en [[#C04][C04]], et la pertinence de ce qui est invoqué en [[#C10][C10]].
+
+** Références
+
+*** Duval (1993) — Provenance et fonction des propositions
+
+Raymond Duval, /Argumenter, démontrer, expliquer : continuité ou rupture cognitive ?/, /Petit x/, 31, 37–61. [[file:bib/Duval_1993_Argumenter_demontrer_expliquer.pdf][Article]], [[docview:bib/Duval_1993_Argumenter_demontrer_expliquer.pdf::8][p. 44–46 ; PDF 8–10]].
+
+Duval distingue les fonctions des propositions dans un pas de déduction et leur statut théorique : hypothèses, résultats établis, énoncé tiers permettant l'inférence. Cette analyse fournit un appui conceptuel à notre exigence de provenance. Elle ne doit pas être importée comme si « statut » et « origine » étaient deux synonymes exacts : la formulation contractuelle est notre choix, tandis que la source distingue plusieurs fonctions.
+
+*** Gautreau — Une prémisse qui « vient de nulle part »
+
+[[file:bib/Gautreau_2026_Demonstration_circulaire.pdf][Gautreau, document du corpus]], [[docview:bib/Gautreau_2026_Demonstration_circulaire.pdf::8][PDF p. 8–9]].
+
+Dans les échanges analysés, l'objection à une prémisse peut porter sur le fait qu'aucune donnée antérieure ne l'autorise, alors que d'autres élèves s'appuient sur sa vérité apparente. Le texte permet de séparer la vérité d'une proposition de son droit à intervenir à cet endroit de la démonstration. C'est un appui empirique proche, dans une situation de circularité, non une enquête sur toutes les formes d'attribution d'origine.
+
+*** Öztürk et Güven (2022) — Justifications et résultats disponibles
+
+[[file:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf][Öztürk et Güven (2022)]], [[docview:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf::8][p. 217–218 ; PDF 8–9]]. Les catégories J1 et J4 rendent observables des attentes sur l'explication des assertions et les résultats employés. Elles recouvrent une partie de notre objet, mais sont plus larges que l'identification de l'origine. Leurs fréquences de codage ne sont pas des mesures de l'adhésion à notre contrat exact.
+
+* C04 — Portée des symboles et des hypothèses
+:PROPERTIES:
+:CUSTOM_ID: C04
+:END:
+
+** Énoncé
+
+Un symbole ou une hypothèse ne doit être utilisé qu’à l’intérieur de la portée dans laquelle il a été introduit.
+
+** Observations
+
+*** Une exigence différente de la provenance
+
+Savoir d'où vient une hypothèse ne suffit pas à déterminer où elle reste disponible. Une supposition introduite pour un cas, une preuve conditionnelle ou un raisonnement par l'absurde ne devient pas automatiquement une hypothèse de toute la démonstration. De même, le témoin d'une existence locale ne devient pas un objet global portant toutes les propriétés rencontrées ailleurs sous le même nom.
+
+La fin d'un bloc ne se réduit pas nécessairement à une fin de paragraphe. Elle peut être indiquée par la syntaxe, un quantificateur, les limites d'une expression ou des conventions de rédaction. Une conclusion correctement déchargée peut sortir du sous-raisonnement : après avoir obtenu Q sous l'hypothèse P, on peut établir P implique Q. Ce n'est pas utiliser P sans condition hors de sa portée.
+
+*** Une limite à ne pas escamoter
+
+Sous une interprétation fixée, une véritable fuite d'hypothèse ou de variable peut rendre l'inférence invalide. Il n'existe alors aucune raison de la rebaptiser « violation légitime ». Le lien avec l'axe de validité est ici particulièrement étroit ; le contrat est conservé conformément à la discussion, mais cette difficulté d'opérationnalisation est signalée.
+
+Les cas recevables concernent plutôt une portée peu matérialisée que le lecteur reconstruit, une nouvelle liaison implicite ou un résultat exporté après décharge. Un lecteur peut y voir une transgression rédactionnelle et un autre y reconnaître une convention normale. Le protocole devra distinguer ce désaccord de lecture d'une authentique utilisation indue des hypothèses.
+
+*** Variables locales, masquage et renommage
+
+Le réemploi d'une lettre dans deux portées distinctes n'est pas automatiquement une faute. Le masquage et la capture sont discutés en [[#C12][C12]] sans constituer de nouveaux contrats. Le présent contrat porte sur la disponibilité d'une liaison ; [[#C05][C05]] porte sur ce que désigne le symbole ; [[#C12][C12]] porte sur son introduction explicite. Ces dimensions sont voisines, mais ne doivent pas être codées comme une unique faute indifférenciée.
+
+** Références
+
+*** Epp (2011) — Variables liées et portée
+
+Susanna S. Epp, /Variables in Mathematics Education/, dans P. Blackburn et al. (dir.), /Tools for Teaching Logic/, LNAI 6680, 54–61, [[https://doi.org/10.1007/978-3-642-21350-2_7][DOI]]. [[https://sciences.ucf.edu/math/wp-content/uploads/sites/2/2014/10/Tools-for-Teaching-Logic.pdf#page=67][Texte intégral, p. 57–60 ; PDF des actes 67–70]].
+
+Epp analyse les erreurs produites lorsqu'une variable liée est considérée comme existant indépendamment de sa portée. Son appui est sémantique et didactique ; il n'établit pas une norme autonome de notation des copies.
+
+*** Durand-Guerrier et al. (2012) — Contrôle sémantique
+
+Viviane Durand-Guerrier, Paolo Boero, Nadia Douek, Susanna S. Epp et Denis Tanguay, /Argumentation and Proof in the Mathematics Classroom/, dans G. Hanna et M. de Villiers (dir.), /Proof and Proving in Mathematics Education/, 349–367, [[https://doi.org/10.1007/978-94-007-2129-6_15][DOI]]. [[file:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf][Chapitre]], [[docview:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf::7][p. 355 ; PDF 7]]. Le PDF fourni est une remise en accès ouvert portant une mention de droits de 2021.
+
+Le chapitre insiste sur le rôle de la quantification, explicite ou implicite, dans le contrôle sémantique de la preuve. Il soutient la nécessité d'analyser les liaisons plutôt que la seule apparence des lettres. Il ne justifie pas l'affirmation selon laquelle toute violation sémantique de portée serait un simple écart rédactionnel tolérable.
+
+* C05 — Unicité de la désignation
+:PROPERTIES:
+:CUSTOM_ID: C05
+:END:
+
+** Énoncé
+
+À tout moment de la rédaction, un même symbole doit désigner un unique objet, bien que plusieurs symboles puissent désigner le même objet.
+
+** Observations
+
+*** L'asymétrie retenue
+
+La prescription impose l'unicité du référent associé à un symbole, et non l'unicité du symbole associé à un référent. Deux points nommés A et B peuvent se révéler confondus ; deux expressions différentes peuvent désigner le même nombre. Ce n'est pas en soi une violation. En revanche, employer sans distinction le même nom pour deux objets simultanément mobilisés contrevient à la règle.
+
+La formulation « à tout moment » a été expressément préférée à une formulation technique en termes de portée. Elle est conservée. Elle ne doit pas être silencieusement transformée en interdiction absolue de tout réemploi successif d'une lettre dans l'ensemble d'un document.
+
+*** Exemple central de la discussion : la variable qui varie
+
+#+begin_quote
+On a \(y=f(x)\). Quand \(x\) augmente, \(y\) augmente, donc \(f\) est croissante.
+#+end_quote
+
+Le raisonnement fait travailler une variation de valeurs sous les mêmes symboles. Dans la lecture stricte discutée, qui attend des objets fixés et distingués, cela heurte le contrat. Une autre rédaction choisirait deux valeurs \(x_1<x_2\), puis comparerait \(f(x_1)\) et \(f(x_2)\).
+
+L'exemple n'est pas une preuve de croissance à partir de la seule égalité \(y=f(x)\). Pour qu'il porte sur le contrat plutôt que sur une inférence manquante, l'augmentation de y avec x doit avoir été effectivement établie, par exemple dans les étapes précédentes. Le commentaire porte sur la manière de nommer et de décrire ce raisonnement, non sur une autorisation de conclure sans argument.
+
+Le langage dynamique peut exprimer exactement l'idée mathématique visée et être intelligible sans effort. Sa recevabilité repose sur une interprétation de x comme place pour différentes valeurs, non comme nombre mystérieux changeant ses propriétés. Une lecture qui comprend « à tout moment » de façon locale peut aussi estimer que ce discours ne viole pas le contrat. Cette divergence doit rester visible : l'exemple est un cas de discussion du contrat, pas une violation incontestable sous toutes les sémantiques.
+
+*** Intérêt du contraste
+
+L'enquête peut opposer l'expression dynamique à l'expression par deux objets fixés, sans présupposer laquelle sera jugée plus précise ou plus lisible. Elle peut interroger l'acceptation d'un changement de perspective sémantique plutôt que seulement la détection d'une collision de noms. Le jugement favorable sur la seconde ne prouve pas davantage que l'enseignant autorise la généralisation à partir d'un test quelconque.
+
+Le masquage local correct ne sera pas assimilé automatiquement à une confusion de référents.
+
+** Références
+
+*** Epp (2011) — Le langage dynamique des fonctions
+
+[[https://doi.org/10.1007/978-3-642-21350-2_7][Epp (2011), Variables in Mathematics Education]], référence complète en [[#C04][C04]], p. 56–57. Epp oppose les lettres comme places de substitution à l'image d'objets qui changent ; elle relève aussi le langage dynamique des mathématiciens. C'est un appui très proche de l'exemple, pas une mesure de sa sanction par des correcteurs.
+
+*** Moore (2016) — Notation et interprétation de l'intention
+
+[[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Moore (2016)]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::21][p. 266–268 ; PDF 21–23]]. Les universitaires interprètent les notations à partir de ce qu'ils attribuent à l'intention et à la compréhension des étudiants. La recherche appuie donc l'intérêt d'examiner séparément la conformité de l'écriture et son interprétation. Elle ne comporte pas, dans les passages examinés, une expérience isolant notre règle exacte d'unicité du référent ou la phrase « quand x augmente ».
+
+* C06 — Conclusion dans les termes de la question
+:PROPERTIES:
+:CUSTOM_ID: C06
+:END:
+
+** Énoncé
+
+La conclusion doit être formulée dans les termes de l’énoncé.
+
+** Observations
+
+*** Ce qui distingue ce contrat d'une simple conformité à la tâche
+
+Il ne s'agit pas seulement de répondre à la bonne question. Une rédaction peut avoir établi exactement le résultat demandé dans un système de notations et ne pas le reformuler dans les termes de la situation initiale. L'exigence vise alors le retour du résultat au problème, et non sa correction logique.
+
+*** Exemple des éléphants, conservé de la discussion
+
+L'exercice définit \(u_n\) comme la population d'éléphants, exprimée en milliers, n années après l'année de référence. Il demande d'établir que, dans dix ans, cette population sera de 50 000 individus. La rédaction démontre correctement :
+
+\[
+u_{10}=50.
+\]
+
+La version qui s'arrête là peut être entièrement précise pour qui connaît la définition de la suite : les 50 milliers d'individus et les dix années sont déjà encodés. La version respectant explicitement le contrat ajoute : « Dans dix ans, la population d'éléphants sera donc de 50 000 individus. » Dans une modélisation, cette conclusion s'entend dans le cadre du modèle donné, et non comme une garantie sur l'évolution réelle de la population.
+
+L'absence de cette phrase finale n'est donc pas, par elle-même, une erreur d'unité, de calcul ou de raisonnement. Elle peut être acceptée comme une économie légitime lorsque la traduction est immédiate. Elle peut aussi être pénalisée au titre du retour demandé au contexte. Une erreur de conversion, par exemple conclure « 50 éléphants », serait un autre phénomène.
+
+*** Portée de la prescription
+
+« Dans les termes » ne signifie pas nécessairement recopier mot pour mot la question. Une conclusion équivalente en langage adapté satisfait l'intention du contrat. Le phénomène existe aussi dans des tâches internes aux mathématiques : après des calculs de coordonnées, conclure dans le vocabulaire géométrique demandé.
+
+Le contraste expérimental peut conserver toutes les étapes, tous les résultats et toutes les unités, en variant seulement la reformulation finale. Il est particulièrement utile pour distinguer ce contrat de l'ancien « faire exactement ce qui est demandé », abandonné parce que trop général.
+
+** Références
+
+*** Meyer et Schnell (2020) — Une conclusion qui répond explicitement
+
+Michael Meyer et Susanne Schnell, /What counts as a “good” argument in school?—how teachers grade students’ mathematical arguments/, /Educational Studies in Mathematics/, 105, 35–51, [[https://doi.org/10.1007/s10649-020-09974-z][DOI]]. [[file:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf][Article]], [[docview:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf::13][tableau 2, p. 47 ; PDF 13]].
+
+Le tableau des critères issus d'entretiens avec 16 enseignants du secondaire en Allemagne comporte l'existence d'éléments fonctionnels, illustrée par « conclusion as an explicit answer to the question ». Cet appui empirique est direct pour l'exigence de conclusion explicite. Il ne démontre pas à lui seul que les participants exigeraient la phrase sur les éléphants lorsque la réponse symbolique est déjà sans ambiguïté : ce contraste précis appartient à notre dispositif.
+
+*** Jupri et Drijvers (2016) — Interpréter le résultat dans la situation initiale
+
+Al Jupri et Paul Drijvers, /Student Difficulties in Mathematizing Word Problems in Algebra/, /Eurasia Journal of Mathematics, Science and Technology Education/, 12(9), 2481–2502, [[https://doi.org/10.12973/eurasia.2016.1299a][DOI]], [[https://www.ejmste.com/download/student-difficulties-in-mathematizing-word-problems-in-algebra-4613.pdf#page=4][texte intégral, p. 2484–2486 ; PDF 4–6]].
+
+Les auteurs distinguent la résolution du modèle et l'interprétation du résultat dans la situation initiale. Leur illustration passe de A=66 à l'aire du rectangle. Ce cadre étaye exactement la différence entre résultat symbolique et réponse contextualisée. L'étude porte principalement sur les difficultés de mathématisation ; elle ne mesure pas l'importance donnée par les correcteurs à une phrase finale redondante.
+
+* C07 — Cas particulier et résultat général
+:PROPERTIES:
+:CUSTOM_ID: C07
+:END:
+
+** Énoncé
+
+Un cas particulier ne peut pas servir à démontrer un résultat général.
+
+** Observations
+
+*** La prescription et sa tension assumée
+
+La formulation conserve délibérément la force de l'interdit scolaire discuté : un exemple ne remplace pas une preuve générale. Elle n'est pas réécrite pour ajouter une exception en faveur des exemples génériques. C'est précisément la possibilité d'une transgression féconde de cette règle littérale qui intéresse l'enquête.
+
+Vérifier quelques valeurs puis affirmer que le résultat vaut toujours ne suffit pas, en général, à établir une propriété universelle. Multiplier les vérifications ne transforme pas à lui seul une induction empirique en démonstration. Le cas d'un domaine fini exhaustivement parcouru doit être distingué : tous les cas ont alors été traités, et non un cas pris pour tous.
+
+*** Le raisonnement sur exemple générique
+
+Dans un exemple générique, un objet particulier sert de support à un raisonnement dont les raisons ne dépendent pas de ses propriétés accidentelles. Le texte peut conserver des nombres, un dessin déterminé ou le nom du représentant, tout en faisant apparaître une transformation valable pour toute la classe. L'absence de lettres abstraites n'est pas en soi un défaut de validité.
+
+Illustration construite : pour trois entiers consécutifs, prendre 6, 7 et 8, puis déplacer une unité du dernier vers le premier pour obtenir trois groupes de 7. Une simple constatation « 6+7+8=21 » ne prouve rien de général. En revanche, expliquer que le premier est toujours inférieur d'une unité au terme central et le dernier supérieur d'une unité fournit le mécanisme général, encore porté par ce cas particulier.
+
+Ce raisonnement peut violer la lecture littérale du contrat tout en ayant une portée démonstrative. Les conditions de généralité appartiennent aux observations et à l'analyse de validité ; elles ne deviennent pas un nouveau contrat « l'exemple générique doit respecter telles règles ».
+
+*** Enjeu pour l'enquête
+
+Il faut séparer trois rédactions : vérification numérique seule, exemple générique explicitant le mécanisme, démonstration littérale abstraite. Sinon, un rejet de la première pourrait être interprété à tort comme un rejet de toute preuve sur exemple générique. Le jugement favorable sur la seconde ne prouve pas davantage que l'enseignant autorise la généralisation à partir d'un test quelconque.
+
+L'allusion faite dans la discussion à des précédents historiques chez de grands mathématiciens français n'est pas assortie ici d'une attribution nominative : aucun nom ni critère historique précis n'est avancé sans source vérifiée.
+
+** Références
+
+*** Balacheff (1987) — Définition de l'exemple générique
+
+Nicolas Balacheff, /Processus de preuve et situations de validation/, /Educational Studies in Mathematics/ (1987), [[https://hal.science/hal-01619264][version déposée dans HAL]], [[file:bib/1987 Balacheff - ESM - Processus de preuve et situations de validation.pdf][PDF du corpus]], [[docview:bib/1987 Balacheff - ESM - Processus de preuve et situations de validation.pdf::20][PDF 20–22 ; pagination interne de la reprise 19–21/33]].
+
+Balacheff distingue empirisme naïf, expérience cruciale, exemple générique et expérience mentale. Dans l'exemple générique, des opérations sont réalisées sur un objet considéré comme représentant caractéristique d'une classe ; la formulation fait apparaître sa structure tout en restant attachée au particulier. C'est l'appui conceptuel direct à la tension conservée dans notre contrat. Les catégories de Balacheff décrivent des processus de preuve ; elles ne doivent pas être réduites à un classement uniforme de notes.
+
+*** Knuth et al. (2020) — Les enseignants et les exemples génériques
+
+Eric Knuth, Hangil Kim, Orit Zaslavsky, Rebecca Vinsonhaler, Damon Gaddis et Luis Fernandez, /Teachers’ Views about the Role of Examples in Proving-related Activities/, /Journal of Educational Research in Mathematics/, numéro spécial, 115–134, [[https://doi.org/10.29275/jerm.2020.08.sp.1.115][DOI]]. [[file:bib/Teachers_Views_Role_of_Examples_in_Proving_related_Activities_2020.pdf][Article]], [[docview:bib/Teachers_Views_Role_of_Examples_in_Proving_related_Activities_2020.pdf::3][p. 117 ; PDF 3]], [[docview:bib/Teachers_Views_Role_of_Examples_in_Proving_related_Activities_2020.pdf::9][p. 123–124 ; PDF 9–10]].
+
+L'enquête auprès de 54 enseignants de middle school examine notamment ce qu'ils pensent que les élèves comprendraient, produiraient ou trouveraient convaincant. Les deux justifications génériques présentées reçoivent, sur ces questions, des appréciations moins favorables que ne l'attendaient les auteurs. C'est un résultat sur des anticipations pédagogiques, pas une preuve que ces enseignants jugent tous les exemples génériques invalides. Cette nuance renforce l'intérêt de notre recueil séparé de jugements.
+
+*** Weber (2008) — Valider en s'appuyant sur des exemples
+
+[[file:bib/Weber_2008_Valid_proof.pdf][Weber (2008)]], [[docview:bib/Weber_2008_Valid_proof.pdf::23][manuscrit p. 23–26]], [[docview:bib/Weber_2008_Valid_proof.pdf::37][p. 37–38]]. Des mathématiciens emploient des exemples dans leur validation de pas d'une preuve. L'auteur distingue ce qu'ils font effectivement de l'explication de la conviction ainsi obtenue et laisse certaines hypothèses ouvertes. Cela documente l'écart possible entre interdiction générale adressée aux élèves et pratiques de lecture expertes, sans transformer toute conviction empirique en preuve.
+
+* C08 — Visibilité de la démarche suivie
+:PROPERTIES:
+:CUSTOM_ID: C08
+:END:
+
+** Énoncé
+
+La rédaction doit faire apparaître explicitement le raisonnement suivi.
+
+** Observations
+
+*** Ce que « suivi » désigne ici
+
+La discussion a retenu l'exigence de rendre visible la démarche qui a conduit à la solution, et non seulement une suite d'arguments permettant de la vérifier après coup. Ce commentaire est essentiel : sans lui, la phrase pourrait être lue comme un doublon de [[#C02][l'explicitation des étapes]] ou de [[#C09][la structure du texte]].
+
+La copie sert à l'enseignant non seulement de preuve d'un résultat, mais d'indice sur des connaissances et des procédures susceptibles d'être réutilisées. La demande peut donc viser la capacité à traiter une famille de problèmes. Elle n'implique pas pour autant que la seule copie donne accès à toute l'activité mentale effective de son auteur.
+
+*** Exemple de la factorisation, conservé de la discussion
+
+Un exercice de seconde demande de résoudre une équation du second degré. L'enseignant attend une démarche accessible à ce niveau, par exemple une complétion du carré. L'élève annonce directement une factorisation, la vérifie par développement, puis résout une équation produit nul.
+
+Illustration numérique de cet exemple :
+
+\[
+(x-2)(x-3)=x^2-5x+6.
+\]
+
+Après avoir effectué le développement qui vérifie cette identité, l'élève en déduit que \(x^2-5x+6=0\) équivaut à \((x-2)(x-3)=0\), puis conclut \(x=2\) ou \(x=3\). La justification peut être complète. Aucune explication de la découverte des facteurs 2 et 3 n'est pourtant fournie.
+
+Cette rédaction permet de vérifier la solution sans attester comment l'élève saurait retrouver une factorisation dans un autre exercice. Elle peut donc respecter C02 et violer C08 dans le sens retenu. Une recherche des facteurs explicitée, ou une transformation constructive par complétion du carré, répondrait à l'attente de démarche visible.
+
+*** Pourquoi la transgression peut être légitime
+
+Une preuve d'existence ou une vérification d'identité n'a pas logiquement besoin de raconter la découverte de son témoin. Une démarche découverte par essais, intuition ou outil peut être validée après coup. Le problème didactique n'est pas alors l'invalidité, mais ce que la copie permet d'inférer sur les compétences de l'élève.
+
+La préférence pour une méthode particulière ne doit pas être ajoutée subrepticement au contrat : plusieurs démarches explicitées peuvent le respecter. Il faut aussi distinguer la démarche réellement suivie d'une démarche reconstruite pour la rédaction. Enfin, ce contrat peut entrer en conflit avec [[#C11][l'économie]], lorsque des étapes heuristiques utiles à l'évaluation ne sont plus nécessaires à la preuve finale.
+
+** Références
+
+*** Moore (2016) — Une copie comme indice de compréhension
+
+[[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Moore (2016)]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::20][p. 265–268 ; PDF 20–23]].
+
+Les universitaires interrogés cherchent à interpréter la compréhension qui a produit les erreurs ou les omissions. Ils valorisent notamment la manifestation d'une compréhension de la preuve, au-delà de la seule correction formelle. C'est un appui empirique à la fonction diagnostique de la rédaction. L'article ne rapporte pas notre exemple de factorisation et ne permet pas d'affirmer qu'ils exigent tous de retracer la genèse de chaque résultat intermédiaire.
+
+*** Durand-Guerrier et al. (2012) — Genèse et produit final
+
+[[file:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf][Durand-Guerrier et al. (2012)]], référence complète en [[#C04][C04]], [[docview:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf::1][p. 349–350 ; PDF 1–2]], [[docview:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf::7][p. 355–356 ; PDF 7–8]].
+
+Le chapitre distingue l'exploration conduisant à une preuve des contraintes pesant sur le produit final ; il analyse aussi l'unité cognitive et la continuité structurelle entre argumentation et démonstration. Il étaye la distinction entre trouver, organiser et justifier. Il n'énonce pas une obligation universelle de reproduire la recherche dans la preuve rédigée : précisément, notre contrat peut demander davantage que la seule validation du produit final.
+
+*** Selden et Selden (2009) — Limite de la reconstruction
+
+Annie Selden et John Selden, /Habits of Mind in the Proving Process/, présentation au groupe de travail « Mathematical Habits of Mind », PME-NA 31, septembre 2009. [[https://www.researchgate.net/publication/268577843_Habits_of_Mind_in_the_Proving_Process_Presentation_at_Working_Group_4_on_Mathematical_Habits_of_Mind][Dépôt des auteurs ; résumé et présentation]].
+
+Le résumé distingue la succession d'actions du processus de preuve et la preuve finale, qui ne permet pas d'en reconstituer l'intégralité. Cet appui conceptuel invite à ne pas interpréter C08 comme une promesse d'accès transparent à la pensée. Il s'agit d'une communication, non d'une étude de notation du cas décrit ici.
+
+* C09 — Structure rendue explicite
+:PROPERTIES:
+:CUSTOM_ID: C09
+:END:
+
+** Énoncé
+
+Les choix de présentation et de vocabulaire doivent rendre explicite la structure du raisonnement.
+
+** Observations
+
+*** Des moyens de signaler l'architecture logique
+
+La prescription porte sur la matérialisation de relations : prémisses et conclusion, hypothèse locale, distinction de cas, sens d'une implication, étape de récurrence, conclusion d'une sous-preuve. Des connecteurs, des expressions techniques, des paragraphes, des alignements ou une indentation peuvent contribuer à cette matérialisation.
+
+Le « et » de la formulation ne signifie pas que vocabulaire technique et dispositif graphique doivent toujours être cumulés. Un seul de ces moyens peut suffire dans une situation donnée. Il n'impose pas non plus un gabarit graphique unique ou la présence systématique des mots « donc » et « puisque ».
+
+*** Contrastes possibles
+
+On peut comparer une rédaction dont les cas sont introduits et séparés à une rédaction présentant les mêmes hypothèses et inférences en un seul bloc. On peut conserver le contenu d'une implication et remplacer ses marqueurs discursifs par une simple juxtaposition. La transgression doit porter sur l'explicitation de l'organisation, non sur une modification dissimulée de la portée ou de la validité.
+
+Une présentation compacte peut rester parfaitement interprétable grâce aux conventions et à l'expérience du lecteur. Réciproquement, une mise en page élaborée peut rendre visible une structure incorrecte. Le contrat ne doit donc pas être reformulé en « le texte doit être lisible » : la lisibilité sera un jugement recueilli, pas le critère qui définit à l'avance le respect de la prescription.
+
+*** Distinctions à préserver
+
+C08 demande ce qui permet de suivre la démarche ayant conduit au résultat ; C09 demande l'architecture de ce qui est effectivement écrit. C02 porte sur la présence des maillons, pas sur leur signalisation. C04 porte sur les portées effectives : l'absence d'indentation ne constitue pas automatiquement une sortie de portée.
+
+L'exigence peut entrer en tension avec l'économie lorsque les annonces de plan ou la segmentation sont jugées redondantes. Cette tension doit être observée plutôt que supprimée par une normalisation préalable de toutes les rédactions.
+
+** Références
+
+*** Duval (1993) — Marques linguistiques de l'organisation
+
+[[file:bib/Duval_1993_Argumenter_demontrer_expliquer.pdf][Duval (1993)]], référence complète en [[#C03][C03]], [[docview:bib/Duval_1993_Argumenter_demontrer_expliquer.pdf::21][p. 57 ; PDF 21]].
+
+L'analyse des marques d'organisation distingue les fonctions de prémisse, de recours à un énoncé tiers et de conclusion. Duval montre que des expressions différentes peuvent marquer ces fonctions et qu'un même connecteur ne possède pas mécaniquement une fonction unique. Le contrat peut donc viser une organisation explicite sans imposer un lexique fermé.
+
+*** Meyer et Schnell (2020) et Moore (2016) — Des critères effectivement mobilisés
+
+[[file:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf][Meyer et Schnell (2020)]], [[docview:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf::13][tableau 2, p. 47 ; PDF 13]], distinguent notamment structure, présentation et langage dans les critères recueillis. [[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Moore (2016)]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::21][p. 266 ; PDF 21]], relève l'organisation et la fluidité parmi les préoccupations des correcteurs, avec un faible poids attribué à certaines imperfections dans la note.
+
+Ces études étayent l'existence d'attentes de présentation et de langage. Elles ne démontrent pas l'efficacité ou l'obligation d'une indentation particulière, qui demeure une manipulation propre à notre protocole.
+
+*** Lai, Weber et Mejía-Ramos (2012) — Mise en forme expérimentale
+
+Référence en [[#C10][C10]], p. 158–162 : M2 modifie la mise en forme. Ce précédent expérimental ne prescrit pas nos choix graphiques.
+
+* C10 — Usage effectif des justifications invoquées
+:PROPERTIES:
+:CUSTOM_ID: C10
+:END:
+
+** Énoncé
+
+Aucun élément ne doit être invoqué comme justification s’il n’est pas effectivement utilisé dans le raisonnement.
+
+** Observations
+
+*** Ce qui est interdit n'est pas simplement la longueur
+
+La prescription vise l'attribution d'une fonction justificative à un élément qui ne joue pas ce rôle. Elle ne proscrit pas toute remarque, tout commentaire ou toute information de contexte. Elle est donc conservée séparément du contrat d'économie, conformément à la discussion.
+
+Il faut distinguer « une assertion doit avoir une origine identifiable » et « ce qui est invoqué comme raison doit servir ». Un énoncé peut être vrai, parfaitement attribué au cours et inutile à l'inférence pour laquelle il est annoncé. À l'inverse, un lemme effectivement exploité peut être plus long qu'une autre méthode sans violer ce contrat.
+
+*** Cas de violation
+
+L'exemple discuté est celui d'une propriété, telle la continuité d'une fonction, invoquée alors que l'argument produit n'en fait aucun usage. Pour construire une variante contrôlée, il faut vérifier l'argument entier : écrire seulement « f est continue, donc f est croissante » créerait une inférence incorrecte, pas simplement une justification superflue.
+
+Illustration construite plus élémentaire : on sait qu'un entier n est premier et strictement positif. La rédaction dit « puisque n est premier et strictement positif, n²>0 », puis utilise seulement la positivité. La primalité est vraie et présentée comme justificative, mais aucune propriété des nombres premiers n'intervient. Retirer cette mention conserve ici l'argument.
+
+Le raisonnement avec une prémisse vraie superflue peut être valide. Le lecteur peut y voir une maladresse bénigne, un rappel utile de l'objet étudié ou une source de confusion quant aux raisons efficaces. L'enquête porte précisément sur ce jugement ; elle ne doit pas décider que le superflu entraîne nécessairement une note défavorable.
+
+*** Contrôle de l'interprétation
+
+Dans une situation moins élémentaire, un résultat jugé inutile par le chercheur peut servir une autre preuve que le participant reconstruit. Les commentaires ou entretiens sont donc utiles pour vérifier quelle inférence est effectivement lue. La simple présence de davantage d'hypothèses ne suffit pas à coder une violation sans analyser leur fonction.
+
+** Références
+
+*** Lai, Weber et Mejía-Ramos (2012) — Ajouts non pertinents
+
+Yvonne Lai, Keith Weber et Juan Pablo Mejía-Ramos, /Mathematicians’ Perspectives on Features of a Good Pedagogical Proof/, /Cognition and Instruction/, 30(2), 146–169, [[https://doi.org/10.1080/07370008.2012.661814][DOI]], [[https://www.researchgate.net/publication/254300538_Mathematicians'_Perspectives_on_Features_of_a_Good_Pedagogical_Proof][texte déposé par une auteure]], p. 158–166.
+
+Après une étude qualitative auprès de huit mathématiciens, 110 participants évaluent des variantes. M4 ajoute un calcul non pertinent ; M5 une hypothèse jugée inutile. Ces ajouts sont majoritairement dépréciés, notamment parce qu'ils font chercher une fonction inexistante. Les auteurs distinguent qualité pédagogique et validité. Leur cible, plus large que C10, inclut le superflu sans fonction justificative explicite.
+
+*** Meyer et Schnell (2020) — Nécessité et efficacité
+
+[[file:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf][Meyer et Schnell (2020)]], [[docview:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf::12][p. 46–48 ; PDF 12–14]].
+
+Des enseignants jugent certaines explications correctes mais inutiles, et le tableau 2 distingue notamment nécessité et efficacité. Cette observation permet de dissocier correction du contenu et appréciation de son usage. L'article ne code pas séparément notre sous-cas « présenté comme justification mais non exploité » ; l'ancrage est donc voisin, et non une identification mot à mot de notre contrat.
+
+*** Gautreau — Pertinence et validité ne se confondent pas
+
+[[file:bib/Gautreau_2026_Demonstration_circulaire.pdf][Gautreau, document du corpus]], [[docview:bib/Gautreau_2026_Demonstration_circulaire.pdf::8][PDF p. 8]]. L'auteur relève que certaines objections à une preuve circulaire dénoncent l'inutilité de passages sans expliquer son défaut logique. Cette distinction est un garde-fou pour notre analyse : l'inutilité d'un élément et l'invalidité d'une preuve ne sont pas des diagnostics interchangeables. Le cas étudié reste la circularité, non notre variante à prémisse vraie superflue.
+
+* C11 — Économie de la rédaction
+:PROPERTIES:
+:CUSTOM_ID: C11
+:END:
+
+** Énoncé
+
+La rédaction doit être aussi économique que possible, sans comporter d’étapes ou de développements inutiles.
+
+** Observations
+
+*** Une prescription qui ne se réduit pas à C10
+
+La discussion a retenu le mot « économique » et rejeté sa traduction en une condition logique artificielle du type « supprimer toute étape dont le retrait ne rend pas le raisonnement invalide ». L'économie concerne la manière d'exposer : longueur des développements, répétitions, granularité des transformations, détour par des étapes que le lecteur n'a pas besoin de voir séparément.
+
+Un développement peut être effectivement utilisé et néanmoins paraître trop détaillé. Ce n'est donc pas le même phénomène que l'invocation d'une propriété sans rôle dans la preuve. Il n'est pas davantage nécessaire qu'une rédaction choisisse le chemin mathématique le plus court parmi tous les chemins concevables.
+
+*** Conflit avec la demande de toutes les étapes
+
+L'exemple discuté est celui d'une rédaction scrupuleusement détaillée à laquelle on reproche sa longueur, notamment dans le supérieur. On peut exiger que les étapes apparaissent et, dans une autre situation ou au moment de corriger, reprocher de trop les développer. Le dossier conserve les deux prescriptions sans ajouter une clause qui les rendrait artificiellement compatibles.
+
+La rédaction peut légitimement transgresser une attente d'économie pour expliciter un passage délicat, rendre une procédure réutilisable, prévenir une confusion ou montrer à l'enseignant comment une solution a été trouvée. À l'inverse, une écriture compacte peut être adaptée à un lectorat qui partage les conventions et les résultats utilisés. La légitimité de ces choix est l'objet du jugement, pas une propriété déduite du nombre de lignes.
+
+*** Autres tensions
+
+L'économie peut entrer en conflit avec [[#C06][la reformulation finale]], [[#C08][l'exposition de la démarche]], [[#C09][les annonces de structure]] et [[#C13][l'explicitation des objets intermédiaires]]. Dire « le symétrique du complexe » peut être plus économique que déplier les affixes et les points, tout en heurtant une attente de respect de la nature des objets.
+
+Pour les comparaisons, il faut distinguer le détail justificateur, le détail heuristique et le détail sans fonction reconnue. Une préférence pour une version courte n'autorise pas à conclure que la personne refuse toute explicitation. Les conflits entre contrats font partie du phénomène à étudier.
+
+** Références
+
+*** Meyer et Schnell (2020) — Économie et nécessité dans l'évaluation
+
+[[file:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf][Meyer et Schnell (2020)]], [[docview:bib/Meyer_Schnell_2020_How_teachers_grade_students_mathematical_arguments.pdf::12][p. 46–48 ; PDF 12–14]]. Le tableau 2 fait explicitement figurer une présentation « clear, concise, efficient, well-illustrated, elegant ». Les exemples d'entretien montrent que l'élaboration théorique peut être appréciée comme inutile dans une tâche donnée. Il s'agit d'un appui empirique au critère d'économie, sans établir une longueur optimale universelle.
+
+*** Moore (2016) — Corriger sans nécessairement pénaliser
+
+[[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Moore (2016)]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::13][p. 258 ; PDF 13]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::21][p. 266–269 ; PDF 21–24]]. Les corrections portent entre autres sur des passages inutiles ; les remarques relatives à la qualité de l'écriture n'ont pas toutes un poids important dans la note. L'étude rend ainsi plausible la coexistence d'une exigence de rédaction et d'une faible sanction d'un écart, sans mesurer directement l'adhésion à notre phrase.
+
+*** Lai, Weber et Mejía-Ramos (2012) — Une tension documentée
+
+Référence en [[#C10][C10]], p. 158–166 : le rejet du superflu n'implique pas celui de tout détail. Voir C02 pour M3.
+
+* C12 — Déclaration des variables nouvelles
+:PROPERTIES:
+:CUSTOM_ID: C12
+:END:
+
+** Énoncé
+
+Toute variable nouvelle doit être explicitement introduite avant d’être utilisée.
+
+** Observations
+
+*** Introduction, hypothèse et reprise d'une notation
+
+Une introduction peut fixer le domaine et le rôle d'un objet : « soit x un réel », « choisissons un entier k tel que… », « posons u=x² ». Une variable déjà introduite dans la question n'est pas nouvelle du seul fait qu'elle apparaît pour la première fois dans la réponse. Les quantificateurs et les liaisons d'une somme ou d'une intégrale peuvent eux-mêmes introduire les variables : le contrat n'exige pas une phrase supplémentaire avant chaque variable liée.
+
+L'omission d'une déclaration peut être tolérée si le domaine et le rôle sont reconstruits sans ambiguïté. Mais une notation introduite par un lieur n'est pas, pour cette seule raison, une déclaration omise. Il faudra décrire précisément ce que la variante retire : nom, domaine, caractère arbitraire, choix d'un témoin ou définition.
+
+*** « Soit x>0 » et « supposons x>0 »
+
+La discussion distingue deux opérations : introduire un objet frais satisfaisant une condition, et ajouter une hypothèse sur un objet déjà disponible. Dans le second cas, les autres hypothèses sur cet objet restent utilisables. Dans le premier, il ne faut pas attribuer au nouvel objet les propriétés d'un objet antérieur seulement parce qu'ils portent la même lettre.
+
+Cette distinction est sémantique, pas une règle lexicale absolue du français mathématique. « Supposons » peut aussi introduire un objet dans certains usages ; le contexte doit permettre de comprendre l'opération. Le contrat retenu ne devient donc pas « employer obligatoirement soit ».
+
+*** Masquage, capture et renommage : discussion, non contrats supplémentaires
+
+Le masquage désigne le cas où une liaison locale reprend un nom déjà utilisé et masque l'ancienne liaison dans le bloc considéré. Ce phénomène peut être interprété sans erreur : le x intérieur n'hérite pas pour autant des hypothèses attachées au x extérieur. Le masquage n'est pas identique à une capture accidentelle lors d'une substitution.
+
+Renommer une variable liée, ou effectuer une alpha-conversion, préserve son rôle si l'opération respecte les liaisons. Une substitution qui lie accidentellement une variable auparavant libre peut modifier la signification : c'est alors un problème de validité, non un simple écart à une préférence rédactionnelle. Aucun contrat autonome interdisant masquage ou capture n'est ajouté.
+
+Exemple discuté : dans \(F(x)=\int_a^x f(t)\,dt\), x est un paramètre libre et t une variable liée. Changer correctement t en u ne change pas F. Employer x à plusieurs places appelle une analyse précise de la portée du lieur et des bornes ; ce n'est pas automatiquement une erreur sous toute convention. Le renommage sert à prévenir ou résoudre une collision, pas à instaurer un nouveau contrat.
+
+Autre exemple discuté : de « m est pair » et « n est impair », on ne peut pas choisir sans justification un même témoin k dans \(m=2k\) et \(n=2k+1\). Des témoins indépendants, notés par exemple k et l, évitent d'imposer la relation supplémentaire \(n=m+1\). Le problème ne tient pas à une interdiction esthétique de réutiliser la lettre, mais aux dépendances logiques créées.
+
+*** Enjeu pour l'enquête
+
+On cherchera des omissions de déclaration dont l'interprétation peut rester stable, et non seulement des erreurs de liaison. L'absence d'une formule introductive peut affecter un jugement sans altérer la validité ; une capture effective ne devient pas valide parce que l'intention est devinée. La séparation avec [[#C04][la portée]] et [[#C05][l'unicité de la désignation]] doit rester explicite dans l'analyse.
+
+** Références
+
+*** Epp (2011) — Introductions et variables muettes
+
+[[https://doi.org/10.1007/978-3-642-21350-2_7][Epp (2011)]], référence complète en [[#C04][C04]], p. 58–61. Epp traite les variables muettes, les témoins indépendants des définitions de parité et l'analogie avec les variables locales en programmation. Elle distingue aussi l'introduction dans une preuve du cas où l'énoncé a déjà introduit l'objet. Cet appui éclaire les commentaires ; il ne constitue pas une enquête isolant la pénalisation d'une déclaration manquante.
+
+*** Selden et Selden (2009) — Un schéma d'action à enseigner
+
+[[https://www.researchgate.net/publication/268577843_Habits_of_Mind_in_the_Proving_Process_Presentation_at_Working_Group_4_on_Mathematical_Habits_of_Mind][Selden et Selden (2009)]], référence en [[#C08][C08]], résumé de la communication. Écrire « Let x be a real number » pour commencer une preuve universelle y est décrit comme un schéma d'action bénéfique : x est arbitraire mais fixé. C'est un appui explicite à l'apprentissage d'une introduction de variable. Le passage vérifié ne permet pas d'attribuer aux auteurs une règle générale de retrait de points lorsque cette phrase manque.
+
+*** Documentation informatique — Précision terminologique seulement
+
+[[https://doc.rust-lang.org/rust-by-example/variable_bindings/scope.html][Rust By Example, « Scope and Shadowing »]], documentation officielle consultée le 28 septembre 2026. Elle distingue la portée d'une liaison et le masquage permis par une nouvelle liaison du même nom. Cette référence sert seulement à vérifier le vocabulaire informatique de /shadowing/ ; ce n'est pas une recherche en didactique, ni une justification pour ajouter un contrat d'interdiction du masquage.
+
+* C13 — Nature des objets manipulés
+:PROPERTIES:
+:CUSTOM_ID: C13
+:END:
+
+** Énoncé
+
+La nature des objets mathématiques manipulés doit être respectée.
+
+** Observations
+
+*** Ce que recouvre la « nature »
+
+La discussion conserve le mot scolaire « nature », plutôt que de remplacer la phrase par une règle de typage. Le commentaire peut néanmoins parler de types : nombre, point, vecteur, droite, cercle, suite, fonction, ensemble, assertion. Les opérations, relations et propriétés doivent être interprétées sur les objets auxquels elles s'appliquent.
+
+Il faut distinguer une erreur de catégorie, un raccourci rendu interprétable par une identification convenue et un changement explicite de structure mathématique. Le même syntagme peut être inapproprié dans un cadre scolaire fixé et parfaitement définissable dans un autre cadre ; le dossier ne transforme pas une convention d'enseignement en impossibilité mathématique absolue.
+
+*** Exemples retenus de la discussion
+
+- Additionner des points parce que l'on sait additionner leurs coordonnées : dans un cadre affine sans origine choisie, cette opération ne possède pas le même statut que l'addition de vecteurs. Une identification par un repère peut cependant permettre de définir une opération ; cette convention doit être distinguée d'une confusion non contrôlée.
+- Parler de la « moyenne de deux points » : cette formulation heurte certaines distinctions scolaires, alors qu'un milieu ou un barycentre de deux points peut être défini rigoureusement. L'exemple sert à étudier la reconnaissance d'une identification, pas à soutenir qu'aucune moyenne de points ne peut jamais avoir de sens.
+- Parler du « milieu d'un cercle » : le vocabulaire attendu est généralement celui du centre, alors que le milieu est associé à un segment. L'intention peut être immédiatement comprise sans que le terme soit accepté comme conforme.
+- Parler de la « raison » d'une suite qui n'est ni arithmétique ni géométrique : dans ce contexte scolaire, le terme renvoie à une structure particulière. Un quotient de termes consécutifs variable ne devient pas une raison constante par simple changement de nom.
+- Parler du « symétrique du nombre complexe z par rapport à l'axe des abscisses », au lieu de l'affixe du symétrique du point d'affixe z. Ce cas est central pour examiner la différence entre rigueur des catégories et lourdeur du discours.
+
+*** Une transgression éventuellement féconde
+
+Dans le dernier exemple, l'identification usuelle entre le plan complexe et les couples de réels peut rendre la phrase immédiatement interprétable ; la conjugaison décrit l'opération attendue. Déplier tous les intermédiaires « point d'affixe… », « affixe du point… » ajoute les relais, ou /proxies/, discutés dans l'échange. Une formulation courte peut mieux communiquer l'idée tout en heurtant la prescription scolaire stricte.
+
+Cette recevabilité ne s'étend pas à n'importe quel mélange de types. Une expression dénuée de sens dans les conventions retenues ne devient pas mathématiquement valide parce qu'un correcteur en répare mentalement l'intention. Il faut donc coder séparément le défaut littéral, l'interprétation ou l'identification mobilisée, et le raisonnement ainsi interprété.
+
+*** Enjeu pour l'enquête
+
+Le contraste doit indiquer les conventions disponibles et conserver les mêmes objets sous-jacents. Il peut révéler un conflit entre C13 et [[#C11][l'économie]], ou une tolérance à certains raccourcis seulement. Les exemples ne sont pas interchangeables : accepter « le symétrique d'un complexe » ne signifie pas accepter qu'une relation logique relie des objets quelconques ou qu'une suite possède une raison non définie.
+
+** Références
+
+*** Moore (2016) — Une erreur de catégorie reconnue, mais faiblement sanctionnée
+
+[[file:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf][Moore (2016)]], [[docview:bib/Moore_2016_Mathematics_Professors_Evaluation_of_Students_Proofs.pdf::21][p. 266–268 ; PDF 21–23]].
+
+À propos de la preuve 5, un professeur commente « Sets can’t imply sets », signale des problèmes de syntaxe et un mauvais emploi du quantificateur, mais propose néanmoins 8/10. Le passage constitue un appui empirique très pertinent : une notation jugée inadéquate peut coexister avec la reconnaissance d'une compréhension et une bonne note. Il ne montre pas que la formule mal typée est valide telle quelle ; il montre un traitement évaluatif distinct de son défaut.
+
+*** Öztürk et Güven (2022) — Objets géométriques et langage symbolique
+
+[[file:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf][Öztürk et Güven (2022)]], [[docview:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf::19][p. 228–230 ; PDF 19–21, figures 10–12]].
+
+Dans l'analyse du langage, les auteurs examinent notamment des notations confondant objets géométriques et mesures : par exemple un signe de parallélisme appliqué à des longueurs plutôt qu'aux segments concernés. Les futurs enseignants repèrent certains défauts et en omettent d'autres. Ces exemples documentent des distinctions de nature proches de notre contrat ; les catégories L1 et L2 restent cependant plus larges qu'une règle unique de typage.
+
+*** Limite de l'appui bibliographique
+
+Les exemples de complexes, de cercle, de points et de suites ci-dessus proviennent de notre discussion, non de ces deux enquêtes. Les recherches vérifiées justifient l'étude du phénomène et de sa sanction variable ; elles n'établissent pas que chacun de ces raccourcis serait traité de la même manière par les mêmes enseignants. C'est précisément une question à laisser ouverte au recueil de données.
