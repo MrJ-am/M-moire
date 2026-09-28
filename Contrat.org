@@ -377,7 +377,7 @@ Ces études étayent l'existence d'attentes de présentation et de langage. Elle
 
 Référence en le contrat sur l’usage effectif des justifications, p. 158–162 : M2 modifie la mise en forme. Ce précédent expérimental ne prescrit pas nos choix graphiques.
 
-* Aucun élément ne doit être invoqué comme justification s’il n’est pas effectivement utilisé dans le raisonnement.
+* Une justification ne doit invoquer que des informations effectivement utilisées dans le raisonnement.
 
 
 ** Ce qui est interdit n'est pas simplement la longueur
