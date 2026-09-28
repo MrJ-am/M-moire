@@ -202,7 +202,7 @@ Epp analyse les erreurs produites lorsqu'une variable liée est considérée com
 
 *** Durand-Guerrier et al. (2012) — Contrôle sémantique
 
-Viviane Durand-Guerrier, Paolo Boero, Nadia Douek, Susanna S. Epp et Denis Tanguay, /Argumentation and Proof in the Mathematics Classroom*, dans G. Hanna et M. de Villiers (dir.), /Proof and Proving in Mathematics Education/, 349–367, [[https://doi.org/10.1007/978-94-007-2129-6_15][DOI]]. [[file:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf][Chapitre]], [[docview:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf::7][p. 355 ; PDF 7]]. Le PDF fourni est une remise en accès ouvert portant une mention de droits de 2021.
+Viviane Durand-Guerrier, Paolo Boero, Nadia Douek, Susanna S. Epp et Denis Tanguay, /Argumentation and Proof in the Mathematics Classroom/, dans G. Hanna et M. de Villiers (dir.), /Proof and Proving in Mathematics Education/, 349–367, [[https://doi.org/10.1007/978-94-007-2129-6_15][DOI]]. [[file:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf][Chapitre]], [[docview:bib/Durand_Guerrier_et_al_2012_Argumentation_and_proof.pdf::7][p. 355 ; PDF 7]]. Le PDF fourni est une remise en accès ouvert portant une mention de droits de 2021.
 
 Le chapitre insiste sur le rôle de la quantification, explicite ou implicite, dans le contrôle sémantique de la preuve. Il soutient la nécessité d'analyser les liaisons plutôt que la seule apparence des lettres. Il ne justifie pas l'affirmation selon laquelle toute violation sémantique de portée serait un simple écart rédactionnel tolérable.
 
@@ -492,7 +492,7 @@ Après une étude qualitative auprès de huit mathématiciens, 110 participants 
 
 Des enseignants jugent certaines explications correctes mais inutiles, et le tableau 2 distingue notamment nécessité et efficacité. Cette observation permet de dissocier correction du contenu et appréciation de son usage. L'article ne code pas séparément notre sous-cas « présenté comme justification mais non exploité » ; l'ancrage est donc voisin, et non une identification mot à mot de notre contrat.
 
-*** Gautreau — Pertinence et validité ne se confondentent pas
+*** Gautreau — Pertinence et validité ne se confondent pas
 
 [[file:bib/Gautreau_2026_Demonstration_circulaire.pdf][Gautreau, document du corpus]], [[docview:bib/Gautreau_2026_Demonstration_circulaire.pdf::8][PDF p. 8]]. L'auteur relève que certaines objections à une preuve circulaire dénoncent l'inutilité de passages sans expliquer son défaut logique. Cette distinction est un garde-fou pour notre analyse : l'inutilité d'un élément et l'invalidité d'une preuve ne sont pas des diagnostics interchangeables. Le cas étudié reste la circularité, non notre variante à prémisse vraie superflue.
 
