@@ -141,7 +141,7 @@ Dans les échanges analysés, l'objection à une prémisse peut porter sur le fa
 
 [[file:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf][Öztürk et Güven (2022)]], [[docview:bib/Ozturk_Guven_2022_Criteria_proof_evaluation.pdf::8][p. 217–218 ; PDF 8–9]]. Les catégories J1 et J4 rendent observables des attentes sur l'explication des assertions et les résultats employés. Elles recouvrent une partie de notre objet, mais sont plus larges que l'identification de l'origine. Leurs fréquences de codage ne sont pas des mesures de l'adhésion à notre contrat exact.
 
-* Un symbole ou une hypothèse ne doit être utilisé qu’à l’intérieur de la portée dans laquelle il a été introduit.
+* Un symbole ou une hypothèse ne doit être utilisée qu’à l’intérieur de la portée dans laquelle elle a été introduite.
 
 
 ** Une exigence différente de la provenance
