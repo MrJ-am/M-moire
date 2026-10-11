@@ -1,0 +1,195 @@
+(in-package #:matheval)
+
+(define-condition validation-error (error)
+  ((status :initarg :status :initform 400 :reader validation-status)
+   (message :initarg :message :reader validation-message)))
+
+(defun refuser (message) (error 'validation-error :message message))
+
+(defun chaine-bornee (valeur maximum &optional (minimum 0))
+  ;; Zod effectivement verrouillé compte les points de code, y compris non BMP.
+  (unless (and (stringp valeur) (<= minimum (length valeur) maximum))
+    (refuser "Texte invalide.")) valeur)
+
+(defun entier-borne (valeur minimum maximum)
+  (unless (and (numberp valeur) (= valeur (truncate valeur)) (<= minimum valeur maximum))
+    (refuser "Entier invalide.")) (truncate valeur))
+
+(defun reel-borne (valeur minimum maximum)
+  (unless (and (numberp valeur) (<= minimum valeur maximum))
+    (refuser "Nombre invalide.")) valeur)
+
+(defun booleen (valeur)
+  (unless (member valeur '(:true :false)) (refuser "Booléen invalide.")) valeur)
+
+(defun parmi (valeur valeurs)
+  (unless (member valeur valeurs :test #'equal) (refuser "Valeur inconnue.")) valeur)
+
+(defun liste-json (valeur maximum &optional (minimum 0))
+  (unless (and (json-array-p valeur) (<= minimum (length (json-array-items valeur)) maximum))
+    (refuser "Liste invalide.")) (json-array-items valeur))
+
+(defun chiffre-ascii-p (c) (and c (char<= #\0 c #\9)))
+
+(defun identifiant (valeur)
+  (unless (and (stringp valeur) (>= (length valeur) 3)
+               (char= (char valeur 0) #\R) (every #'chiffre-ascii-p (subseq valeur 1 3))
+               (or (= (length valeur) 3)
+                   (and (> (length valeur) 4) (char= (char valeur 3) #\-)
+                        (every #'chiffre-ascii-p (subseq valeur 4)))))
+    (refuser "Identifiant de rédaction invalide.")) valeur)
+
+(defun hex-p (c) (and c (digit-char-p c 16)))
+
+(defun uuid-valide (valeur)
+  (unless (and (stringp valeur) (= 36 (length valeur))
+               (loop for c across valeur for i from 0
+                     always (if (member i '(8 13 18 23)) (char= c #\-) (hex-p c)))
+               (or (and (find (char valeur 14) "12345678") (find (char-downcase (char valeur 19)) "89ab"))
+                   (every (lambda (c) (find c "0-")) valeur)
+                   (every (lambda (c) (find (char-downcase c) "f-")) valeur)))
+    (refuser "UUID invalide.")) valeur)
+
+(defun version-corpus (valeur)
+  (unless (and (stringp valeur)
+               (= 2 (count #\. valeur))
+               (every #'plusp (mapcar #'length (uiop:split-string valeur :separator ".")))
+               (every (lambda (c) (or (char= c #\.) (chiffre-ascii-p c))) valeur))
+    (refuser "Version du corpus invalide.")) valeur)
+
+(defun schema (objet champs &optional facultatifs)
+  "Ordre normalisé identique à Zod. Clés inconnues refusées, absent distinct de null."
+  (unless (json-object-p objet) (refuser "Objet attendu."))
+  (unless (every (lambda (p) (assoc (car p) champs :test #'equal)) (json-object-entries objet))
+    (refuser "Champ inconnu."))
+  (vision::%make-json-object
+    (loop for (nom . validateur) in champs
+          append (multiple-value-bind (valeur present) (json-object-get objet nom)
+                   (cond (present (list (cons nom (funcall validateur valeur))))
+                         ((member nom facultatifs :test #'equal) nil)
+                         (t (refuser "Champ obligatoire absent.")))))))
+
+(defun valider-participation (objet)
+  (schema objet
+    (list (cons "id" #'uuid-valide)
+          (cons "secret" (lambda (v)
+                           (unless (and (stringp v) (= 64 (length v))
+                                        (every (lambda (c) (find c "0123456789abcdef")) v))
+                             (refuser "Secret de reprise invalide.")) v))
+          (cons "bankVersion" #'version-corpus)
+          (cons "levels" (lambda (v) (tableau (mapcar (lambda (l) (chaine-bornee l 30)) (liste-json v 7 1)))))
+          (cons "seed" (lambda (v) (entier-borne v 0 #xffffffff))))))
+
+(defun note (v)
+  (if (absence-p v) v
+      (progn (reel-borne v 0 3)
+             (unless (= (* 4 v) (truncate (* 4 v))) (refuser "Note hors quart de point.")) v)))
+
+(defun coordonnees (v)
+  (schema v (loop for k in '("x" "y" "z") collect
+                   (cons k (lambda (x) (reel-borne x -10 10))))))
+
+(defun axes-evalues (v)
+  (let ((axes (mapcar (lambda (x) (parmi x '("x" "y" "z"))) (liste-json v 3))))
+    (unless (= (length axes) (length (remove-duplicates axes :test #'equal)))
+      (refuser "Axe répété.")) (tableau axes)))
+
+(defun reponse (v)
+  (schema v (list (cons "note" #'note) (cons "initialNote" #'note)
+                  (cons "coordinates" #'coordonnees) (cons "evaluatedAxes" #'axes-evalues))))
+
+(defun registre-json (objet cle valeur)
+  (unless (json-object-p objet) (refuser "Objet de correspondance attendu."))
+  (vision::%make-json-object (loop for (k . v) in (json-object-entries objet)
+                                  collect (cons (funcall cle k) (funcall valeur v)))))
+
+(defun progression (v)
+  (schema v (list (cons "mode" (lambda (x) (parmi x '("training" "running" "finished"))))
+                  (cons "index" (lambda (x) (entier-borne x 0 19)))
+                  (cons "selected" (lambda (x) (chaine-bornee x 40)))
+                  (cons "exposed" (lambda (x) (registre-json x (lambda (k) (chaine-bornee k 40))
+                                                                (lambda (n) (entier-borne n 1 100)))))
+                  (cons "reader" #'booleen)
+                  (cons "tour" (lambda (x) (entier-borne x -1 7))))))
+
+(defun date-iso (v)
+  "Zod verrouillé : UTC Z, secondes obligatoires et fraction facultative."
+  (unless (and (stringp v) (>= (length v) 20) (char= (char v (1- (length v))) #\Z))
+    (refuser "Date ISO invalide."))
+  (labels ((entier (a b)
+             (unless (every #'chiffre-ascii-p (subseq v a b)) (refuser "Date ISO invalide."))
+             (parse-integer v :start a :end b)))
+    (unless (and (char= (char v 4) #\-) (char= (char v 7) #\-)
+                 (char= (char v 10) #\T) (char= (char v 13) #\:))
+      (refuser "Date ISO invalide."))
+    (let* ((annee (entier 0 4)) (mois (entier 5 7)) (jour (entier 8 10))
+           (bissextile (and (zerop (mod annee 4)) (or (not (zerop (mod annee 100))) (zerop (mod annee 400))))))
+      (unless (and (<= 1 mois 12) (<= 1 jour (if (= mois 2) (if bissextile 29 28)
+                                            (if (member mois '(4 6 9 11)) 30 31)))
+                   (<= (entier 11 13) 23) (<= (entier 14 16) 59))
+        (refuser "Date ISO invalide.")))
+    (unless (and (char= (char v 16) #\:) (<= (entier 17 19) 59)
+                   (or (= (length v) 20)
+                       (and (> (length v) 21) (char= (char v 19) #\.)
+                            (every #'chiffre-ascii-p (subseq v 20 (1- (length v)))))))
+      (refuser "Date ISO invalide."))) v)
+
+(defun interaction (v)
+  (schema v (list
+    (cons "event" (lambda (x) (parmi x '("grade" "place" "question" "skip" "finish" "close" "open" "reveal" "confirm-position" "compare" "orbit"))))
+    (cons "questionId" #'identifiant) (cons "productionId" #'identifiant)
+    (cons "at" #'date-iso) (cons "elapsedMs" (lambda (x) (entier-borne x 0 31536000000)))
+    (cons "value" #'note) (cons "initial" #'booleen)
+    (cons "axis" (lambda (x) (parmi x '("x" "y" "z"))))
+    (cons "coordinates" #'coordonnees)
+    (cons "source" (lambda (x) (parmi x '("next-production")))))
+    '("value" "initial" "axis" "coordinates" "source")))
+
+(defun instantane (v)
+  (schema v (list (cons "answers" (lambda (x) (registre-json x #'identifiant #'reponse)))
+                  (cons "skippedQuestions" (lambda (x) (tableau (mapcar #'identifiant (liste-json x 20)))))
+                  (cons "progress" #'progression))))
+
+(defun valider-sauvegarde (objet)
+  (schema objet (list (cons "revision" (lambda (v) (entier-borne v 1 2147483647)))
+                      (cons "final" #'booleen) (cons "snapshot" #'instantane)
+                      (cons "events" (lambda (v) (tableau (mapcar #'interaction (liste-json v 20000))))))))
+
+(defun valider-rattachements (donnees participation corpus)
+  "Contrat validateCheckpoint : pas d'identité Log dans une participation pseudonyme."
+  (let* ((ordre (json-array-items (champ participation "question_order")))
+         (questions (remove-if-not (lambda (q) (member (champ q "id") ordre :test #'equal))
+                                    (json-array-items (champ corpus "questions"))))
+         (productions (make-hash-table :test #'equal))
+         (snapshot (champ donnees "snapshot")) (progress (champ snapshot "progress"))
+         (passes (json-array-items (champ snapshot "skippedQuestions")))
+         (evenements (json-array-items (champ donnees "events"))))
+    (dolist (q questions)
+      (dolist (p (json-array-items (champ q "productions")))
+        (setf (gethash (champ p "id") productions) (champ q "id"))))
+    (dolist (r (json-object-entries (champ snapshot "answers")))
+      (unless (gethash (car r) productions) (refuser "Rédaction inconnue dans cette participation."))
+      (when (and (absence-p (champ (cdr r) "note")) (not (absence-p (champ (cdr r) "initialNote"))))
+        (refuser "Une note initiale exige une note.")))
+    (unless (and (= (length passes) (length (remove-duplicates passes :test #'equal)))
+                 (every (lambda (q) (member q ordre :test #'equal)) passes))
+      (refuser "Question passée inconnue."))
+    (when (>= (champ progress "index") (length ordre)) (refuser "Position de reprise invalide."))
+    (dolist (entree (json-object-entries (champ progress "exposed")))
+      (unless (and (equal (car entree) "practice") (= (cdr entree) 1))
+        (let ((q (find (car entree) questions :key (lambda (q) (champ q "id")) :test #'equal)))
+          (unless (and q (<= (cdr entree) (length (json-array-items (champ q "productions")))))
+            (refuser "Progression invalide.")))))
+    (unless (equal (champ progress "mode") "training")
+      (unless (equal (gethash (champ progress "selected") productions) (nth (champ progress "index") ordre))
+        (refuser "Rédaction de reprise invalide.")))
+    (when (and (eq (champ donnees "final") :true) (not (equal (champ progress "mode") "finished")))
+      (refuser "Terminez le parcours avant de valider."))
+    (dolist (e evenements)
+      (unless (and (member (champ e "questionId") ordre :test #'equal)
+                   (equal (gethash (champ e "productionId") productions) (champ e "questionId")))
+        (refuser "Interaction étrangère à cette participation.")))
+    (loop for (a b) on evenements while b
+          when (< (champ b "elapsedMs") (champ a "elapsedMs"))
+          do (refuser "Chronologie des interactions invalide."))
+    productions))

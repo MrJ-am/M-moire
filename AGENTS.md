@@ -1,17 +1,20 @@
 # Règles de travail de l'agent
 
-<!-- coordination-commune:v1 -->
-## Coordination commune
+## Assemblage central
 
-- Identifiant de ce projet : `memoire`. À chaque reprise (y compris après compaction), lire aussi le [AGENTS.md distant de référence](https://github.com/MrJ-am/M-moire/blob/master/AGENTS.md), même sur une ancienne branche.
-- Avant de travailler, consulter dans le dépôt privé `MrJ-am/vps-infrastructure`, **branche `main` actuelle**, [coordination/CONTRATS.org](https://github.com/MrJ-am/vps-infrastructure/blob/main/coordination/CONTRATS.org) et [coordination/REGISTRE.org](https://github.com/MrJ-am/vps-infrastructure/blob/main/coordination/REGISTRE.org). Lire le protocole au début du registre à la première utilisation ; ensuite, charger la synthèse et les messages destinés à `memoire`. Ne pas charger les archives par défaut.
-- Reconsulter avant toute modification d'un contrat partagé, avant publication et à la clôture. La commande `python3 scripts/coordination.py lire memoire`, dans une copie fraîche du dépôt VPS, produit la vue ciblée. Les outils GitHub permettent aussi cette lecture sans clone ni SSH.
-- Publier les impacts globaux pour tous les projets ; pour un impact ciblé, nommer explicitement les destinataires et les actions. Informer avant le changement puis consigner le résultat avec commit et preuves. Une demande n'est pas un changement exécuté.
-- Acquitter uniquement pour `memoire`, après lecture réelle, avec l'empreinte du message et le dépôt@commit du contexte. Distinguer LU, BLOQUE et DONE ; DONE exige une preuve. Suivre le protocole pour publier la réponse sur le main VPS sans écraser les autres écritures.
-- Si le registre est inaccessible, le dire, poursuivre les tâches indépendantes et suspendre seulement les changements partagés dont les préconditions restent inconnues. Ne pas inventer d'accusé ni demander à l'utilisateur de transporter les messages entre projets.
-- Les consignes locales continuent de s'appliquer. Le registre ne donne aucun droit supplémentaire de publication ou d'administration. Après les mises à jour, vérifier l'archivage des échanges intégralement traités ; ne jamais effacer un message non acquitté.
+La mission du 11 octobre 2026 remplace la coordination par messages et les
+publications autonomes. Source centrale : [contrat v2](https://github.com/MrJ-am/vps-infrastructure/blob/main/coordination/CONTRATS.org),
+[manifeste](https://github.com/MrJ-am/vps-infrastructure/blob/main/assemblage/manifest.json)
+et [reprise](https://github.com/MrJ-am/vps-infrastructure/blob/main/assemblage/REPRISE.md).
+Ce dépôt conserve sources, contrats et tests ; toutes les exécutions CI/CD et
+publications sont orchestrées dans vps-infrastructure à une révision exacte.
+Aucun acquittement ni validation entre conversations. Les bibliothèques métier
+ASDF ne démarrent aucun service/connexion/migration au chargement ; le serveur
+commun possède le cycle de vie. Les projets statiques restent statiques.
+Préserver données, secrets, contrats, écritures concurrentes et retour arrière.
+Publier les commits de composants avant leur référencement central ; aucune
+modification de licence ou visibilité, aucun PR, aucun push forcé.
 
-<!-- /coordination-commune:v1 -->
 
 ## Frontière entre Matheval et l'infrastructure VPS
 
@@ -26,9 +29,8 @@
   réseau, de SSH, de l'activation de NixOS et de PostgreSQL (instance, bases,
   rôles, règles d'accès et sauvegardes locales). Ne pas administrer ces
   éléments depuis le projet mémoire ni exécuter `nixos-rebuild` ici.
-- Matheval conserve l'application, `deploy/matheval.nix`, son service et ses
-  comptes Unix, les données, le schéma, les migrations, les publications et
-  l'export chiffré `matheval-backup` avec son workflow Actions. Toute évolution
+- Matheval conserve l'application, `deploy/matheval.nix`, ses contrats, les données, le schéma, les migrations, les sources et
+  le schéma. Les publications et exports chiffrés sont orchestrés dans VPS Infrastructure. Toute évolution
   du module NixOS doit être intégrée explicitement par le projet VPS.
 - Le module applicatif ne déclare ni `services.postgresql` ni
   `services.postgresqlBackup`. Son client de sauvegarde suit
