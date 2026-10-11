@@ -1,0 +1,87 @@
+#+title: Regards — rédactions mathématiques
+
+* Le site
+
+Regards propose aux enseignants de lire et noter des rédactions, puis de les situer sur trois axes indépendants : Confus–Lisible, Vague–Précis et Fautif–Valide. Le parcours comprend une aide initiale facultative, des aides contextuelles déclenchées une seule fois et réinitialisables, une lecture progressive, trois barres à billes numérotées et une vue libre en trois dimensions.
+
+La note va de 0 à 3 par quarts de point. Chaque coordonnée va de −10 à +10 en interne ; les axes affichent seulement le repère du milieu. Le zéro correspond à un attendu contextualisé. Les réponses sont sauvegardées progressivement dans PostgreSQL par le service de collecte. Une copie locale permet la reprise dans le même navigateur et les retransmissions après une interruption réseau. La validation finale confirme leur réception.
+
+* Organisation
+
+| Chemin | Rôle |
+|--------+------|
+| ~docs/src/Survey.elm~ | État Elm du parcours, navigation, aide progressive et vues |
+| ~docs/src/Survey/Model.elm~ | Données, coordonnées, complétude et sérialisation |
+| ~docs/site/space.js~ | Projection SVG, billes, rotation et gestes |
+| ~docs/site/session.js~ | Tirage reproductible des questions et des rédactions |
+| ~docs/site/enquete.js~ | Éléments de navigateur et animations |
+| ~docs/site/collection.js~ | Sauvegarde progressive, validation et reprise |
+| ~server/~ | API de collecte, PostgreSQL et accès administrateur |
+| ~docs/site/admin/~ | Tableau de bord et consultation des réponses |
+| ~docs/site/enquete.css~ | Design et adaptation aux écrans |
+| ~docs/site/index.html~, ~enquete.html~ | Deux entrées identiques du parcours |
+| ~docs/src/Main.elm~, ~docs/site/prototype.html~ | Prototype antérieur conservé |
+| [[file:research/questions.org][research/questions.org]] | Source éditoriale des questions, textes, propriétés et tableaux de contrats |
+| [[file:research/contrats.org][research/contrats.org]] | Source des définitions et références PDF paginées ; renvois inverses générés |
+| ~research/bank.json~, ~codebook.json~, ~audit.json~ | Sorties générées : données internes, codes et audit |
+| [[file:research/protocole.org][research/protocole.org]] | Méthode ; effectifs et liste des paires générés |
+| ~docs/scripts/~ | Construction et validation des données |
+| ~docs/tests/~ | Tests Elm et tests de navigateur |
+| ~.github/workflows/compile-test.yml~ | Vérifications et publication sur le VPS |
+
+Le serveur public sert uniquement les ressources de ~docs/site/~ ; les résultats passent par l’API protégée. La construction de la banque publique conserve une liste explicite de champs et exclut les codes, corrigés et annotations de recherche. Le dépôt source étant public, cette exclusion ne constitue pas une confidentialité des sources internes.
+
+* Développer et vérifier
+
+Depuis ~docs/~, avec Node.js 22.12 ou plus récent, Python 3.10 ou plus récent et ~pdfinfo~ (paquet ~poppler-utils~) :
+
+#+begin_src sh
+npm ci
+npm run build:main
+npm run dev -- --host 0.0.0.0
+#+end_src
+
+La compilation met à jour le prototype historique et le parcours Regards, puis construit la banque publique. L’aperçu Vite utilise le port 4173 et transmet l’API au service Node.js sur le port 3000. Dans un second terminal, depuis la racine du dépôt, installer les dépendances de ~server/~ puis lancer le service avec l’URL d’une base PostgreSQL de développement :
+
+#+begin_src sh
+npm --prefix server ci
+DATABASE_URL='postgresql://utilisateur:mot-de-passe@127.0.0.1/matheval_dev' PUBLIC_ORIGIN='http://127.0.0.1:4173' npm --prefix server start
+#+end_src
+
+Remplacer l’URL de base par les paramètres locaux. ~PUBLIC_ORIGIN~ doit correspondre exactement à l’origine ouverte dans le navigateur, notamment si l’aperçu est consulté depuis un autre appareil. Le site publié utilise Nginx et Node.js ; Vite n’y intervient pas.
+
+#+begin_src sh
+npm run build:data
+npm run check:data
+npm run test:data
+node scripts/test-survey.cjs
+npm run test:logic
+npm run test:e2e:install
+npm run test:e2e
+#+end_src
+
+Les tests de navigateur lancent leur propre service Node.js, avec une base PostgreSQL définie par ~BROWSER_DATABASE_URL~ dont le nom se termine par ~_test~. Arrêter l’aperçu Vite avant de les lancer : un service déjà présent sur le port 4173 est refusé. Les bases et commandes de test sont détaillées dans [[file:deploy/README.org][le guide de déploiement]]. Pour Guix, utiliser ~npm run test:e2e:guix~. Les commandes standard n’appliquent pas de correctif spécifique à Guix.
+
+Éditer uniquement les textes et tableaux dans [[file:research/questions.org][questions.org]], et les définitions dans [[file:research/contrats.org][contrats.org]]. Après modification, ~npm run build:data~ produit les JSON, l’audit, les effectifs et les renvois des contrats aux rédactions. Les blocs générés sont balisés. ~npm run dev~ régénère les données avant d’ouvrir l’aperçu.
+
+~npm run check:data~ reconstruit les sorties en mémoire, vérifie les liens relatifs et les pages PDF, et échoue si un fichier généré diverge. Ce contrôle est exécuté en CI avant toute reconstruction : une correction manuelle du JSON ne peut donc pas masquer une source Org restée ancienne. Les erreurs de structure, de code, de cellule ou d’appariement bloquent la génération. Les identifiants de question et rédaction doivent rester stables au sein d’une version ; un changement de corpus exige une nouvelle version pour l’analyse des exports.
+
+* Collecte et administration
+
+La collecte conserve la version de banque, les niveaux, la graine et les ordres de présentation, les notes initiales et révisées, les coordonnées et leurs axes évalués, les questions passées et un journal horodaté des interactions. Les préférences d’aide restent locales au navigateur et ne sont pas transmises à la collecte. Une coordonnée à zéro dont l’axe n’est pas dans ~evaluatedAxes~ représente une absence de jugement, pas une réponse zéro.
+
+Le détail des choix méthodologiques et des limites de collecte se trouve dans ~research/protocole.org~.
+
+* Format éditorial Org
+
+Les propriétés ~CUSTOM_ID~, ~NIVEAU~, ~DOMAINE~ et ~FAMILLE~ identifient les questions. ~CIBLES~ porte les liens vers les contrats et contrôles ; les cellules du tableau nommé ~contrats-Rxx~ portent seules le codage (respecté, non respecté, discutable ou non pertinent). Les définitions sont dans le référentiel, les analyses dans les rédactions. Les tags servent au filtrage et ne remplacent pas ces propriétés.
+
+Les blocs ~verse~ conservent exactement les espaces et les retours à la ligne. Le sous-ensemble accepté est décrit par la structure de [[file:research/questions.org][questions.org]] : titres, propriétés explicites, tableaux, blocs verse et paragraphes d’analyse. Le compilateur n’exécute aucun code Babel et refuse les structures de données inattendues. Dans les textes publics, le rendu prend en charge les paragraphes, lignes, listes simples, gras Markdown et formules LaTeX déjà utilisés par le site ; il ne réalise pas un export général d’Org.
+
+Les ancres inter-fichiers utilisent ~CUSTOM_ID~ ; les liens PDF paginés utilisent ~docview~. Ces syntaxes sont décrites dans les [[https://orgmode.org/manual/External-Links.html][liens externes du manuel Org]]. Le lien ordinaire portant le titre d’une source reste utilisable avec un autre lecteur de PDF.
+
+* Hébergement sur VPS
+
+Le questionnaire est publié sous https://principiipetit.io/matheval/ et son administration sous /matheval/admin/. Le service Node.js et PostgreSQL sont décrits dans [[file:deploy/README.org][le guide de déploiement et de sauvegarde]]. Le tableau de bord expose les effectifs, les statistiques par rédaction, les corpus versionnés et les réponses individuelles.
+
+Les accès SSH vérifiés, l'état de publication et le message pour continuer dans ChatGPT Work sont consignés dans [[file:deploy/REPRISE.org][le document de reprise]].
