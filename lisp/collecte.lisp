@@ -62,8 +62,9 @@
 
 (defun id-ressource (id)
   ;; L'ancien filtre hex/traits d'union acceptait des UUID invalides, puis donnait 500.
-  (handler-case (uuid-valide id)
-    (validation-error () (refuser-acces 404 "Participation introuvable."))))
+  ;; Les UUID historiques sont lus sans imposer les bits version/variant de
+  ;; la validation de création Zod. Ne jamais réidentifier une participation.
+  (unless (uuid-syntaxe-p id) (refuser-acces 404 "Participation introuvable.")) id)
 
 (defun vue-session (p)
   (let ((banque (champ p "bank")))

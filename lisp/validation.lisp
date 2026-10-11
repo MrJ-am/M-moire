@@ -41,10 +41,13 @@
 
 (defun hex-p (c) (and c (digit-char-p c 16)))
 
-(defun uuid-valide (valeur)
-  (unless (and (stringp valeur) (= 36 (length valeur))
+(defun uuid-syntaxe-p (valeur)
+  (and (stringp valeur) (= 36 (length valeur))
                (loop for c across valeur for i from 0
-                     always (if (member i '(8 13 18 23)) (char= c #\-) (hex-p c)))
+                     always (if (member i '(8 13 18 23)) (char= c #\-) (hex-p c)))))
+
+(defun uuid-valide (valeur)
+  (unless (and (uuid-syntaxe-p valeur)
                (or (and (find (char valeur 14) "12345678") (find (char-downcase (char valeur 19)) "89ab"))
                    (every (lambda (c) (find c "0-")) valeur)
                    (every (lambda (c) (find (char-downcase c) "f-")) valeur)))
