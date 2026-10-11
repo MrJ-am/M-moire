@@ -10,22 +10,22 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
   const d = await driver(page);
   await start(page, d);
   await page.locator('#grade').evaluate(el => { el.value = '2'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'saved');
-  const id = await page.locator('reading-card').getAttribute('production-id');
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'saved');
+  const id = await page.locator('#reading-card').getAttribute('production-id');
   await page.reload();
-  await expect(page.locator('reading-card')).toHaveAttribute('production-id', id);
+  await expect(page.locator('#reading-card')).toHaveAttribute('production-id', id);
   await expect(page.locator('#grade')).toHaveValue('2');
   await page.route('**/api/sessions/**', route => route.request().method() === 'PUT' ? route.abort('failed') : route.continue());
   await page.locator('#grade').evaluate(el => { el.value = '1'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'error');
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'error');
   await page.reload();
   await expect(page.locator('#grade')).toHaveValue('1');
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'error');
-  await expect.poll(() => page.evaluate(() => document.querySelector('reading-card').getBoundingClientRect().bottom <= document.querySelector('.save-status').getBoundingClientRect().top)).toBe(true);
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'error');
+  await expect.poll(() => page.evaluate(() => (()=>{const r=document.querySelector('#reading-card').getBoundingClientRect(),s=document.querySelector('#reading-card [data-testid="save-status"]').getBoundingClientRect();return s.top>=r.top&&s.bottom<=r.bottom;})())).toBe(true);
   await page.screenshot({ path: test.info().outputPath('reprise-reseau-mobile.png'), fullPage: true });
   await page.unroute('**/api/sessions/**');
   await page.getByRole('button', { name: 'Réessayer l’enregistrement' }).click();
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'saved');
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'saved');
 });
 
 test('une confirmation perdue se retrouve au rechargement sans créer une seconde participation', async ({ page }) => {
@@ -34,12 +34,12 @@ test('une confirmation perdue se retrouve au rechargement sans créer une second
   while (await page.locator('#next-production').count()) {
     await page.locator('#grade').evaluate(el => { el.value = '1.5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.locator('#validate-reading').click();
-    await expect(page.locator('reading-card')).toHaveCount(0);
+    await expect(page.locator('#reading-card')).toHaveCount(0);
     await page.locator('#next-production').click();
     await page.getByRole('button', { name: 'Passer quand même', exact: true }).click();
-    await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
+    await expect(page.locator('#reading-card, [data-testid="finish-panel-mrjam"]')).toBeVisible();
   }
-  await expect(page.locator('context-help')).toHaveCount(0);
+  await expect(page.locator('[data-testid="context-help"]')).toHaveCount(0);
   const id = await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id);
   await page.route('**/api/sessions/**', async route => {
     if (route.request().method() === 'PUT' && route.request().postDataJSON().final) {
@@ -50,12 +50,12 @@ test('une confirmation perdue se retrouve au rechargement sans créer une second
     } else await route.continue();
   });
   await page.getByRole('button', { name: 'Valider ma participation', exact: true }).click();
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'submit-error');
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'submit-error');
   await expect(page.getByRole('button', { name: 'Revenir aux questions', exact: true })).toBeDisabled();
   await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toHaveCount(0);
   await page.unroute('**/api/sessions/**');
   await page.reload();
-  await expect(page.locator('.save-status')).toHaveAttribute('data-status', 'completed');
+  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'completed');
   await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id)).toBe(id);
 });
@@ -97,7 +97,7 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
   await expect(page.getByText('Participations commencées', { exact: true })).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('tableau-de-bord-admin.png'), fullPage: true });
   await page.getByRole('button', { name: 'Énoncés et rédactions', exact: true }).click();
-  await expect(page.locator('.question-card')).toHaveCount(20);
+  await expect(page.locator('[data-testid="question-card"]')).toHaveCount(20);
   await page.getByRole('button', { name: 'Consulter l’énoncé et les résultats →' }).first().click();
   await expect(page.getByRole('heading', { name: 'Réponse de référence', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Analyse de conception', exact: true }).first()).toBeVisible();
@@ -106,7 +106,7 @@ test('administration : connexion, statistiques, corpus complet, réponses et dé
   await expect(page.getByRole('table')).toBeVisible();
   await page.getByRole('button', { name: id.slice(0, 8), exact: true }).click();
   await expect(page.getByRole('heading', { name: /Participation/ }).first()).toBeVisible();
-  const answer = page.locator('.production').filter({ has: page.getByRole('heading', { name: production.id, exact: true }) });
+  const answer = page.locator('[data-testid="production"]').filter({ has: page.getByRole('heading', { name: production.id, exact: true }) });
   await expect(answer.getByRole('cell')).toHaveText(['1', '0', '0', 'Non évalué', 'Non évalué']);
   await page.screenshot({ path: test.info().outputPath('participation-admin.png'), fullPage: true });
   await page.getByRole('button', { name: 'Déconnexion', exact: true }).click();

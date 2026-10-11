@@ -32,17 +32,18 @@ test('activation ElmUI : confirmation, secret hors URL et requête protégée', 
 test('les dialogues isolent le fond, gardent le focus et le restituent', async ({ page }) => {
   const d = await driver(page);
   await start(page, d);
-  await expect.poll(() => page.locator('#axes-panel').evaluate(el => Boolean(el.closest('[inert]')))).toBe(true);
+  await expect.poll(() => page.locator('#reading-card').evaluate(el => el.contains(document.activeElement))).toBe(true);
+  await expect.poll(() => page.locator('#axis-x [data-mrjam-poignee]').first().evaluate(el => { el.focus();return Boolean(document.querySelector('#reading-card')?.matches(':modal') && document.querySelector('#reading-card').contains(document.activeElement)); })).toBe(true);
   await page.locator('#grade').evaluate(el => { el.value = '2'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.locator('#validate-reading').focus();
   for (let i = 0; i < 7; i++) {
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => document.querySelector('reading-card').contains(document.activeElement))).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('#reading-card').contains(document.activeElement))).toBe(true);
   }
   await close(page, d);
-  await expect.poll(() => page.locator('#axes-panel').evaluate(el => Boolean(el.closest('[inert]')))).toBe(false);
+  await expect.poll(() => page.locator('#axis-x [data-mrjam-poignee]').first().evaluate(el => { el.focus();return document.activeElement === el; })).toBe(true);
   await page.getByRole('button', { name: 'Rédaction 2', exact: true }).click();
-  await expect.poll(() => page.locator('reading-card').evaluate(el =>
+  await expect.poll(() => page.locator('#reading-card').evaluate(el =>
     el.getAnimations().every(a => a.playState !== 'finished' || a.effect.getComputedTiming().fill !== 'forwards')
   )).toBe(true);
   await page.locator('#grade').evaluate(el => { el.value = '1'; el.dispatchEvent(new Event('input', { bubbles: true })); });

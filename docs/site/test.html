@@ -7,9 +7,11 @@
   </head>
   <body>
     <div id="elm-test"></div>
-    <script src="test.js"></script>
+    <script src="demo-card.js?v=410215550439"></script>
+    <script src="assets/mrjam/animations.js?v=6e34281068e4"></script>
     <script>
-      Elm.DemoCard.init({ node: document.getElementById("elm-test") });
+      const application = Elm.DemoCard.init({ node: document.getElementById("elm-test"), flags: matchMedia('(prefers-reduced-motion: reduce)').matches });
+      window.MrJamAnimations.relier(application.ports.reductionAnimations, { initiale: false });
     </script>
   </body>
 </html>

@@ -15,8 +15,8 @@ async function grade(page, quarters) {
 }
 async function close(page) {
   await page.locator('#validate-reading').click();
-  await expect(page.locator('reading-card')).toHaveCount(0);
-  const contextual = page.locator('context-help');
+  await expect(page.locator('#reading-card')).toHaveCount(0);
+  const contextual = page.locator('[data-testid="context-help"]');
   if (await contextual.count()) await contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }).click();
 }
 // ElmUI actualise aria-checked au prochain rendu, pas pendant le clic natif.
@@ -29,42 +29,42 @@ async function start(page, level = '3e') {
   await page.goto('./');
   await cocherNiveau(page, level);
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
-  await expect(page.locator('.help-dialog')).toBeVisible();
+  await expect(page.locator('#help-dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
-  await expect(page.locator('context-help')).toBeVisible();
+  await expect(page.locator('[data-testid="context-help"]')).toBeVisible();
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
-  await expect(page.locator('reading-card')).toBeVisible();
-  expect(await page.locator('.orb').count()).toBeGreaterThanOrEqual(2);
-  await expect(page.locator('#grade')).toHaveClass(/ungraded/);
+  await expect(page.locator('#reading-card')).toBeVisible();
+  expect(await page.locator('[data-mrjam-bille]').count()).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('#grade')).toHaveAttribute('aria-valuetext','Non noté');
 }
 
 test('aide facultative, contextuelle et réinitialisable', async ({ page }) => {
   await page.goto('./');
   await cocherNiveau(page, '3e');
   await page.getByRole('button', { name: 'Commencer', exact: true }).click();
-  await expect(page.locator('.help-dialog')).toBeVisible();
-  await expect(page.locator('.help-dialog')).toContainText('Vous allez être amené');
+  await expect(page.locator('#help-dialog')).toBeVisible();
+  await expect(page.locator('#help-dialog')).toContainText('Vous allez être amené');
   await page.getByRole('button', { name: 'Passer l’aide', exact: true }).click();
-  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+  await expect(page.locator('#help-dialog, [data-testid="context-help"]')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Aide sur la fiche de rédaction', exact: true }).click();
-  await expect(page.locator('context-help')).toContainText('dans l’ordre de votre choix');
-  await page.locator('context-help').getByRole('button', { name: 'Fermer', exact: true }).click();
+  await expect(page.locator('[data-testid="context-help"]')).toContainText('dans l’ordre de votre choix');
+  await page.locator('[data-testid="context-help"]').getByRole('button', { name: 'Fermer', exact: true }).click();
   await grade(page, 6);
   await page.locator('#validate-reading').click();
-  await expect(page.locator('.reader')).toHaveCount(0);
-  const axesHelp = page.locator('context-help');
+  await expect(page.locator('#reading-card')).toHaveCount(0);
+  const axesHelp = page.locator('[data-testid="context-help"]');
   if (await axesHelp.count()) await axesHelp.getByRole('button', { name: 'Compris', exact: true }).click();
 
   await page.getByRole('button', { name: 'Ouvrir le menu', exact: true }).click();
   await page.getByRole('button', { name: 'Réinitialiser l’aide', exact: true }).click();
-  await expect(page.locator('.help-dialog')).toBeVisible();
+  await expect(page.locator('#help-dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Suivant', exact: true }).click();
-  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+  await expect(page.locator('#help-dialog, [data-testid="context-help"]')).toHaveCount(0);
   await page.getByRole('button', { name: /Rédaction 1\. Appuyer pour lire/ }).click();
-  await expect(page.locator('context-help')).toContainText('Déplacez ce curseur');
+  await expect(page.locator('[data-testid="context-help"]')).toContainText('Déplacez ce curseur');
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
-  await expect(page.locator('.help-dialog, context-help')).toHaveCount(0);
+  await expect(page.locator('#help-dialog, [data-testid="context-help"]')).toHaveCount(0);
   await expect(page.locator('#validate-reading')).toHaveText(/Fermer/);
 });
 
@@ -76,31 +76,31 @@ test('les aides contextuelles apparaissent une seule fois à l’étape concern�
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
   await grade(page, 6);
   await page.locator('#validate-reading').click();
-  await expect(page.locator('context-help')).toContainText('Déplacez les trois curseurs');
+  await expect(page.locator('[data-testid="context-help"]')).toContainText('Déplacez les trois curseurs');
   await page.getByRole('button', { name: 'Compris', exact: true }).click();
   await thumb(page, 'x').press('ArrowRight');
-  await expect(page.locator('context-help')).toHaveCount(0);
+  await expect(page.locator('[data-testid="context-help"]')).toHaveCount(0);
 });
 async function coordinates(orb) {
   return orb.evaluate(el => ['x', 'y', 'z'].map(a => Number(el.dataset[a])));
 }
 async function finishBySkipping(page) {
   while (await page.locator('#next-production').count()) {
-    if (await page.locator('reading-card').count()) { await grade(page, 6); await close(page); }
+    if (await page.locator('#reading-card').count()) { await grade(page, 6); await close(page); }
     await page.locator('#next-production').click();
     await page.getByRole('button', { name: 'Passer quand même', exact: true }).click();
-    await expect(page.locator('reading-card, .finish-panel-mrjam')).toBeVisible();
+    await expect(page.locator('#reading-card, [data-testid="finish-panel-mrjam"]')).toBeVisible();
   }
 }
 
 test('trois curseurs indépendants, note révisable et enregistrement traçable', async ({ page }) => {
   await start(page);
-  await expect(page.locator('reading-card input')).toHaveCount(1);
+  await expect(page.locator('#reading-card input')).toHaveCount(1);
   await expect(page.locator('#grade')).toHaveAttribute('step', '0.25');
   await expect(page.locator('main')).not.toContainText(/contrat|rédaction de référence|−10|\+10/i);
-  const firstId = await page.locator('reading-card').getAttribute('production-id');
+  const firstId = await page.locator('#reading-card').getAttribute('production-id');
   await grade(page, 9); await close(page);
-  const first = page.locator(`.orb[data-id="${firstId}"]`);
+  const first = page.locator(`[data-mrjam-bille][data-id="${firstId}"]`);
   for (let i = 0; i < 2; i++) await thumb(page, 'x').press('Shift+ArrowRight');
   await expect.poll(() => coordinates(first)).toEqual([2, 0, 0]);
   for (let i = 0; i < 2; i++) await thumb(page, 'y').press('Shift+ArrowRight');
@@ -111,13 +111,13 @@ test('trois curseurs indépendants, note révisable et enregistrement traçable'
   await expect.poll(() => coordinates(first)).toEqual([2, 2, 3]);
   await page.getByRole('button', { name: 'Rédaction 2', exact: true }).click();
   await expect(page.locator('#reader-title')).toHaveText('Rédaction 2');
-  expect(await page.locator('.orb').count()).toBeGreaterThanOrEqual(2);
+  expect(await page.locator('[data-mrjam-bille]').count()).toBeGreaterThanOrEqual(2);
   await grade(page, 0); await close(page);
   await thumb(page, 'x', 1).click();
   await expect(page.locator('#grade')).toHaveValue('2.25');
   await grade(page, 6); await close(page);
   await page.getByRole('button', { name: 'Comparer', exact: true }).click();
-  await expect(page.locator('.comparison-columns rich-text')).toHaveCount(2);
+  await expect(page.locator('[data-testid="comparison-columns"] [data-mrjam-document]')).toHaveCount(2);
   await page.getByRole('button', { name: 'Fermer la comparaison', exact: true }).click();
   await finishBySkipping(page);
   const exported = await require('./collection.cjs').submitted(page, () => page.getByRole('button', { name: 'Valider ma participation', exact: true }).click());
@@ -136,7 +136,7 @@ test('trois curseurs indépendants, note révisable et enregistrement traçable'
 test('la saisie ne saute pas, le centre se confirme et la caméra garde les coordonnées', async ({ page }) => {
   await start(page, '5e');
   await grade(page, 6);
-  const knob = await page.locator('.grade-knob').boundingBox();
+  const knob = await page.locator('[data-testid="grade-knob"]').boundingBox();
   await page.mouse.move(knob.x + knob.width / 2 + 45, knob.y + knob.height / 2);
   await page.mouse.down();
   await expect(page.locator('#grade')).toHaveValue('1.5');
@@ -146,36 +146,36 @@ test('la saisie ne saute pas, le centre se confirme et la caméra garde les coor
   expect(note).toBeGreaterThan(1.5); expect(note).toBeLessThan(2.5);
   await close(page);
   await page.locator('#confirm-position').click();
-  await expect(page.locator('.orb').first()).not.toHaveClass(/pending/);
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual([0, 0, 0]);
-  const firstId = await page.locator('.orb').first().getAttribute('data-id');
+  await expect(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true })).toHaveAttribute('data-attente','false');
+  await expect.poll(() => coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }))).toEqual([0, 0, 0]);
+  const firstId = await page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }).getAttribute('data-id');
   const box = await thumb(page, 'x').boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 25, { steps: 5 });
   await page.mouse.up();
-  await expect(page.locator('reading-card')).toHaveCount(0);
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual([0, 0, 0]);
+  await expect(page.locator('#reading-card')).toHaveCount(0);
+  await expect.poll(() => coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }))).toEqual([0, 0, 0]);
   await page.mouse.move(box.x + box.width / 2 + 17, box.y + box.height / 2);
   await page.mouse.down();
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual([0, 0, 0]);
+  await expect.poll(() => coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }))).toEqual([0, 0, 0]);
   await page.mouse.move(box.x + box.width / 2 + 67, box.y + box.height / 2, { steps: 8 });
-  await expect.poll(async () => (await coordinates(page.locator('.orb').first()))[0]).toBeGreaterThan(0);
+  await expect.poll(async () => (await coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true })))[0]).toBeGreaterThan(0);
   await page.mouse.up();
-  const before = await coordinates(page.locator('.orb').first());
+  const before = await coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }));
   expect(before[1]).toBe(0); expect(before[2]).toBe(0);
   const space = await page.locator('#space').boundingBox();
   await page.mouse.move(space.x + space.width - 35, space.y + 60);
   await page.mouse.down(); await page.mouse.move(space.x + space.width - 110, space.y + 100, { steps: 8 }); await page.mouse.up();
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual(before);
+  await expect.poll(() => coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }))).toEqual(before);
   await page.locator('#next-production').click();
     await page.getByRole('button', { name: 'Passer quand même', exact: true }).click();
   await grade(page, 5); await close(page);
   await page.getByRole('button', { name: '← Question précédente', exact: true }).click();
-  await expect(page.locator('reading-card')).toHaveAttribute('production-id', firstId);
+  await expect(page.locator('#reading-card')).toHaveAttribute('production-id', firstId);
   await expect(page.locator('#grade')).toHaveValue(String(note));
   await close(page);
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual(before);
+  await expect.poll(() => coordinates(page.locator('#space').getByRole('button', { name:'Rédaction 1. Appuyer pour lire.',exact:true }))).toEqual(before);
 });
 
 test('billes proches dégagées, cliquables et toujours à leur vraie coordonnée', async ({ page }) => {
@@ -207,7 +207,7 @@ test('curseurs au-dessus sur téléphone et lecture après rotation de l’écra
   await start(page, '5e');
   const question = await page.locator('#question-panel').boundingBox();
   await expect(page.locator('#question-panel')).toBeInViewport({ ratio: 1 });
-  const reader = await page.locator('reading-card').boundingBox();
+  const reader = await page.locator('#reading-card').boundingBox();
   expect(reader.width).toBeGreaterThan(350);
   expect(reader.y).toBeGreaterThanOrEqual(Math.min(844 * .32, question.y + question.height));
   expect(reader.height).toBeGreaterThan(500);
@@ -219,13 +219,13 @@ test('curseurs au-dessus sur téléphone et lecture après rotation de l’écra
   expect(bars.height).toBeLessThan(350);
   // Le lecteur réduit temporairement l'énoncé : remesurer après sa fermeture.
   const enonce = await page.locator('#question-panel').boundingBox();
-  const redactions = await page.locator('.production-strip').boundingBox();
+  const redactions = await page.getByTestId('production-strip').boundingBox();
   expect(scene.y - enonce.y - enonce.height).toBeLessThan(redactions.height + bars.height + 26);
   await thumb(page, 'z').press('Shift+ArrowRight');
   await page.screenshot({ path: test.info().outputPath('axes-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 844, height: 390 });
-  await expect.poll(() => coordinates(page.locator('.orb').first())).toEqual([0, 0, 1]);
-  await page.locator('.orb').first().press('Enter');
+  await expect.poll(() => coordinates(page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}))).toEqual([0, 0, 1]);
+  await page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}).press('Enter');
   await expect(page.locator('#grade')).toHaveValue('2');
   await expect(page.locator('#validate-reading')).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -237,17 +237,17 @@ test('présentation épurée et proportions adaptées aux trois tailles d’écr
   await thumb(page, 'x').press('Shift+ArrowRight');
   await thumb(page, 'y').press('Shift+ArrowRight');
   await thumb(page, 'z').press('Shift+ArrowLeft');
-  await expect(page.locator('.question-meta')).toHaveText(/^Question \d+ \/ \d+\s*5e$/);
+  await expect(page.getByTestId('question-meta')).toHaveText(/^Question \d+ \/ \d+\s*5e$/);
   await expect(page.locator('main')).not.toContainText('Les pointillés situent la rédaction sélectionnée');
   await expect(page.locator('main')).not.toContainText('Faites glisser pour tourner · touchez une bille pour lire');
-  await expect(page.locator('.orb-caption').first()).toHaveText('1');
-  await expect(page.locator('.orb').first()).toHaveAttribute('aria-label', 'Rédaction 1. Appuyer pour lire.');
+  await expect(page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}).getByTestId('orb-caption')).toHaveText('1');
+  await expect(page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true})).toHaveAttribute('aria-label', 'Rédaction 1. Appuyer pour lire.');
   await expect(page.locator('#space marker, #space [marker-start], #space [marker-end]')).toHaveCount(0);
 
   for (const viewport of [{ width: 390, height: 844 }, { width: 820, height: 1180 }, { width: 1363, height: 936 }]) {
     await page.setViewportSize(viewport);
-    await expect.poll(() => page.locator('#space').evaluate(el => el.style.getPropertyValue('--orb-size'))).toBeTruthy();
-    const strip = await page.locator('.production-strip').boundingBox();
+    await expect.poll(() => page.locator('#space [data-mrjam-bille]').first().evaluate(el => el.clientWidth)).toBeTruthy();
+    const strip = await page.getByTestId('production-strip').boundingBox();
     const bars = await page.locator('#axes-panel').boundingBox();
     const scene = await page.locator('#space').boundingBox();
     expect(strip.y + strip.height).toBeLessThanOrEqual(Math.min(bars.y, scene.y) + 1);
@@ -261,19 +261,19 @@ test('présentation épurée et proportions adaptées aux trois tailles d’écr
     }
     // No rectangular surface between the scene and the shared page background.
     expect(await page.locator('#space').evaluate(el => {
-      for (let node = el; node && !node.classList.contains('evaluation-layout'); node = node.parentElement) {
+      for (let node = el; node && node.dataset.testid !== 'evaluation-layout'; node = node.parentElement) {
         const css = getComputedStyle(node);
         if (css.backgroundColor !== 'rgba(0, 0, 0, 0)' || css.backgroundImage !== 'none' || css.boxShadow !== 'none' || css.borderTopWidth !== '0px') return false;
       }
       return true;
     })).toBe(true);
-    await expect.poll(async () => (await page.locator('.orb').first().boundingBox()).width).toBeLessThan(Math.min(scene.width, scene.height) * .25);
-    const orb = await page.locator('.orb').first().boundingBox(), number = await page.locator('.orb-caption strong').first().boundingBox();
+    await expect.poll(async () => (await page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}).boundingBox()).width).toBeLessThan(Math.min(scene.width, scene.height) * .25);
+    const orb = await page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}).boundingBox(), number = await page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}).getByTestId('orb-caption').boundingBox();
     expect(orb.width).toBeGreaterThanOrEqual(44);
     expect(Math.abs(number.x + number.width / 2 - orb.x - orb.width / 2)).toBeLessThan(1.5);
     expect(Math.abs(number.y + number.height / 2 - orb.y - orb.height / 2)).toBeLessThan(1.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    expect(await coordinates(page.locator('.orb').first())).toEqual([1, 1, -1]);
+    expect(await coordinates(page.getByRole('button', {name:'Rédaction 1. Appuyer pour lire.',exact:true}))).toEqual([1, 1, -1]);
     await page.screenshot({ path: test.info().outputPath(`presentation-${viewport.width}.png`), fullPage: true });
   }
   await page.getByRole('button', { name: 'Rédaction 1', exact: true }).click();
@@ -295,16 +295,16 @@ test('les portées indentées survivent au chargement, à la lecture et à la co
   await start(page, 'Études supérieures');
   const seen = [];
   for (let i = 0; i < 2; i++) {
-    const card = page.locator('reading-card');
+    const card = page.locator('#reading-card');
     const pid = await card.getAttribute('production-id');
     seen.push(pid);
-    const rich = card.locator('rich-text');
-    await expect(rich).toHaveAttribute('content', question.productions.find(p => p.id === pid).content);
+    const rich = card.locator('[data-mrjam-document]');
+    await expect(rich).toHaveAttribute('data-mrjam-document', question.productions.find(p => p.id === pid).content);
     if (pid === 'R17-7') {
       for (const width of [390, 1363]) {
         await page.setViewportSize({ width, height: 936 });
         const geometry = await rich.evaluate(el => {
-          const lines = [...el.querySelectorAll('.proof-line')];
+          const lines = [...el.querySelectorAll('[data-mrjam-portee]')];
           return lines.map(line => ({
             indent: parseFloat(getComputedStyle(line).paddingLeft),
             width: line.clientWidth, scroll: line.scrollWidth,
@@ -322,16 +322,16 @@ test('les portées indentées survivent au chargement, à la lecture et à la co
       }
       await expect(rich.locator('.katex-error')).toHaveCount(0);
     } else {
-      await expect(rich.locator('.proof-line')).toHaveCount(0);
+      await expect(rich.locator('[data-mrjam-portee]')).toHaveCount(0);
     }
     await grade(page, 8); await close(page);
     if (i === 0) await page.getByRole('button', { name: 'Rédaction 2', exact: true }).click();
   }
   expect(seen.sort()).toEqual(['R17-6', 'R17-7']);
   await page.getByRole('button', { name: 'Comparer', exact: true }).click();
-  const comparison = page.locator('.comparison-columns rich-text');
+  const comparison = page.locator('[data-testid="comparison-columns"] [data-mrjam-document]');
   await expect(comparison).toHaveCount(2);
-  await expect(page.locator('.comparison-columns .proof-line')).toHaveCount(8);
-  const content = await comparison.evaluateAll(elements => elements.map(el => el.getAttribute('content')));
+  await expect(page.locator('[data-testid="comparison-columns"] [data-mrjam-portee]')).toHaveCount(8);
+  const content = await comparison.evaluateAll(elements => elements.map(el => el.getAttribute('data-mrjam-document')));
   expect(content.sort()).toEqual(question.productions.map(p => p.content).sort());
 });

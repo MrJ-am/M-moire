@@ -148,21 +148,21 @@ test.describe('mobile emulation', () => {
   });
 
   test('mobile: une carte ouverte reste scrollable si son contenu devient long', async ({ page }) => {
+    // Le contenu appartient au modèle Elm : injecter le JSON de fixture
+    // avant chargement, au lieu de muter l'ancien custom element retiré.
+    await page.route('**/data/exercise-001.json', async route => {
+      const response = await route.fetch();
+      const contenu = await response.json();
+      contenu.productions.find(p => p.badge === 'D').content =
+        Array.from({ length: 80 }, (_, i) => 'Ligne ' + (i + 1) + ' : contenu de test.').join('\n\n');
+      await route.fulfill({ response, json: contenu });
+    });
     await page.goto('prototype.html');
     await page.waitForTimeout(220);
 
     const cardD = page.getByTestId('card-D');
     await cardD.tap();
     await page.waitForTimeout(260);
-
-    await cardD.evaluate(el => {
-      const richTexts = el.querySelectorAll('rich-text');
-      const target = richTexts[richTexts.length - 1];
-      target.setAttribute(
-        'content',
-        Array.from({ length: 80 }, (_, i) => 'Ligne ' + (i + 1) + ' : contenu de test.').join('\n\n')
-      );
-    });
 
     const scrollState = await cardD.evaluate(el => {
       el.scrollTop = Math.max(1, el.scrollHeight - el.clientHeight);
@@ -229,7 +229,7 @@ test('contenu externe Markdown + LaTeX charge et rendu par KaTeX', async ({ page
 
   await page.goto('prototype.html');
   await expect(page.getByTestId('card-A')).toBeVisible();
-  await expect(page.locator('rich-text')).toHaveCount(9);
+  await expect(page.locator('[data-mrjam-document]')).toHaveCount(9);
   await expect(page.locator('.katex').first()).toBeVisible();
 
   const renderedText = await page.getByTestId('card-B').innerText();

@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 (async () => {
-  const { dragValue, layoutThumbs } = await import('../site/slider-layout.js');
-  const { placerBilles } = await import('../site/space-layout.js');
+  const { dragValue, layoutThumbs } = await import('../tests/references/slider-layout.js');
+  const { placerBilles } = await import('../tests/references/space-layout.js');
   for (const [largeur,hauteur] of [[264,350],[366,464],[820,650]]) {
     for (const [x,y] of [[largeur/2,hauteur/2],[0,0],[largeur,hauteur]]) {
       const points=Array.from({length:6},(_,id)=>({id,x,y}));

@@ -11,11 +11,11 @@ test('gestes tactiles Android : glissement, défilement et rédaction suivante',
   const value = await first.getAttribute('data-value');
   const y = thumb(page, 'y'); await y.scrollIntoViewIfNeeded();
   // Scroll from the empty area, not from the control being manipulated.
-  const field = await page.locator('#axis-y .slider-field').boundingBox();
+  const field = await page.locator('#axis-y [data-testid="slider-field"]').boundingBox();
   const beforeScroll = await page.evaluate(() => scrollY), p = { x: field.x + 8, y: field.y + 8 };
   await d.down(p); await d.move({ x: p.x + 2, y: p.y - 90 }); await d.up();
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(beforeScroll);
-  await expect(page.locator('reading-card')).toHaveCount(0);
+  await expect(page.locator('#reading-card')).toHaveCount(0);
   await expect(y).toHaveAttribute('data-value', '0');
   await expect(first).toHaveAttribute('data-value', value);
   await d.click(page.getByRole('button', { name: 'Rédaction 2', exact: true }));
@@ -35,15 +35,15 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
       await page.goto('./');
       await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
       await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
-      await expect(page.locator('.help-dialog')).toBeVisible();
+      await expect(page.locator('#help-dialog')).toBeVisible();
       await d.click(page.getByRole('button', { name: 'Suivant', exact: true }));
-      await expect(page.locator('context-help')).toBeVisible();
+      await expect(page.locator('[data-testid="context-help"]')).toBeVisible();
       await d.click(page.getByRole('button', { name: 'Compris', exact: true }));
       await note(page, d); await close(page, d);
       await page.setViewportSize(viewport);
       const x = thumb(page, 'x'); await x.scrollIntoViewIfNeeded(); await settled(x);
       const p = await center(x), scroll = await page.evaluate(() => scrollY);
-      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y + 10)?.closest('.slider-thumb')?.getAttribute('aria-label'), p)).toBe('Rédaction 1 · Lisibilité');
+      expect(await page.evaluate(p => document.elementFromPoint(p.x, p.y + 10)?.closest('[data-testid="slider-thumb"]')?.getAttribute('aria-label'), p)).toBe('Rédaction 1 · Lisibilité');
       // Off-centre grab, then a curved diagonal path beyond the highlighted rail,
       // as in 431097.mp4. A perfectly horizontal swipe missed this regression.
       await d.down({ x: p.x, y: p.y + 10 });
@@ -72,25 +72,25 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 534, height: 405 }
 
 test('la note suit aussi une trajectoire tactile qui commence verticalement', async ({ page }) => {
   const d = await driver(page, true); await start(page, d);
-  const p = await center(page.locator('.grade-knob'));
+  const p = await center(page.locator('[data-testid="grade-knob"]'));
   await d.down(p); await d.move({ x: p.x + 2, y: p.y - 10 });
   await d.move({ x: p.x + 40, y: p.y - 50 }); await d.up();
-  await expect(page.locator('#grade')).not.toHaveClass(/ungraded/);
+  await expect(page.locator('#grade')).not.toHaveAttribute('aria-valuetext','Non noté');
   expect(Number(await page.locator('#grade').inputValue())).toBeGreaterThan(1.5);
   await expect(page.locator('#validate-reading')).toBeEnabled();
 });
 
 test('un geste tactile annulé ne valide ni la note ni la coordonnée', async ({ page }) => {
   const d = await driver(page, true); await start(page, d);
-  const knob = page.locator('.grade-knob'), p = await center(knob);
+  const knob = page.locator('[data-testid="grade-knob"]'), p = await center(knob);
   await d.down(p); await d.move({ x: p.x + 30, y: p.y }); await d.cancel();
   await expect(page.locator('#grade')).toHaveValue('1.5');
-  await expect(page.locator('#grade')).toHaveClass(/ungraded/);
+  await expect(page.locator('#grade')).toHaveAttribute('aria-valuetext','Non noté');
   await expect(page.locator('#validate-reading')).toBeEnabled();
   await note(page, d); await close(page, d);
   const x = thumb(page, 'x'); await x.scrollIntoViewIfNeeded(); const q = await center(x);
   await d.down(q); await d.move({ x: q.x + 30, y: q.y }); await d.cancel();
   await expect(x).toHaveAttribute('data-value', '0');
-  await expect(x).toHaveClass(/pending/);
-  await expect(page.locator('reading-card')).toHaveCount(0);
+  await expect(x).toHaveAttribute('aria-valuetext', 'À placer');
+  await expect(page.locator('#reading-card')).toHaveCount(0);
 });

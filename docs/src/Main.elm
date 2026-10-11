@@ -1,23 +1,26 @@
-module Main exposing (main)
+port module Main exposing (main)
 
-import Animator
-import Animator.Inline
 import BoardLogic
 import Browser
 import Browser.Dom as Dom
 import Browser.Events
 import Dict exposing (Dict)
 import Element as Interface
-import Html exposing (Html, div, h1, h2, h3, p, span, text)
-import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick, preventDefaultOn, stopPropagationOn)
+import Html exposing (Html)
 import Http
 import Json.Decode as Decode
 import MrJam
-import MrJam.Disposition as Disposition
+import MrJam.Manipulation as Reperes
+import MrJam.Mathematiques as Math
+import MrJam.TableSpatiale as Table
+import MrJam.Transitions as T
+import Presentation as P
 import Process
 import Task
 import Time
+
+
+port reductionAnimations : (Bool -> message) -> Sub message
 
 
 type alias Position =
@@ -84,7 +87,7 @@ type alias Model =
     , contentError : Maybe String
     , selectedPropositionId : Maybe Int
     , expandedPropositionId : Maybe Int
-    , zoomTimeline : Animator.Timeline ExpandedState
+    , zoomTimeline : T.Transition ExpandedState
     , dragging : Maybe DragState
     , suppressNextOpen : Bool
     , boardRect : Maybe BoardRect
@@ -104,7 +107,8 @@ type Msg
     | GotBoardRect (Result Dom.Error Dom.Element)
     | GotViewport (Result Dom.Error Dom.Viewport)
     | WindowResized Int Int
-    | AnimatorTick Time.Posix
+    | TransitionTick Time.Posix
+    | ReduireAnimations Bool
 
 
 miniatureWidth : Float
@@ -122,22 +126,12 @@ miniScale =
     0.33
 
 
-miniCardWidth : Float
-miniCardWidth =
-    miniatureWidth * miniScale
-
-
-miniCardHeight : Float
-miniCardHeight =
-    miniatureHeight * miniScale
-
-
 expandedMargin : Float
 expandedMargin =
     12
 
 
-main : Program () Model Msg
+main : Program Bool Model Msg
 main =
     Browser.element
         { init = init
@@ -147,14 +141,14 @@ main =
         }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : Bool -> ( Model, Cmd Msg )
+init reduite =
     ( { exercise = Nothing
       , propositions = []
       , contentError = Nothing
       , selectedPropositionId = Nothing
       , expandedPropositionId = Nothing
-      , zoomTimeline = Animator.init AllMini
+      , zoomTimeline = T.initialiser AllMini |> T.reduire reduite
       , dragging = Nothing
       , suppressNextOpen = False
       , boardRect = Nothing
@@ -235,25 +229,17 @@ withInitialPositions propositions =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Animator.toSubscription AnimatorTick model animator
+        [ T.abonnement TransitionTick model.zoomTimeline
+        , reductionAnimations ReduireAnimations
         , Browser.Events.onResize WindowResized
         , Browser.Events.onMouseMove mouseMoveDecoder
         , Browser.Events.onMouseUp (Decode.succeed PointerUp)
         ]
 
 
-animator : Animator.Animator Model
-animator =
-    Animator.animator
-        |> Animator.watching .zoomTimeline
-            (\newTimeline currentModel ->
-                { currentModel | zoomTimeline = newTimeline }
-            )
-
-
-animateExpanded : ExpandedState -> Animator.Timeline ExpandedState -> Animator.Timeline ExpandedState
+animateExpanded : ExpandedState -> T.Transition ExpandedState -> T.Transition ExpandedState
 animateExpanded target timeline =
-    Animator.go (Animator.millis 220) target timeline
+    T.aller 220 target timeline
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -427,8 +413,11 @@ update msg model =
             , Task.perform (\_ -> RefreshBoardRect) (Process.sleep 24)
             )
 
-        AnimatorTick now ->
-            ( Animator.update now animator model, Cmd.none )
+        TransitionTick now ->
+            ( { model | zoomTimeline = T.mettreAJour now model.zoomTimeline }, Cmd.none )
+
+        ReduireAnimations reduite ->
+            ( { model | zoomTimeline = T.reduire reduite model.zoomTimeline }, Cmd.none )
 
 
 updatePropositionPosition : Int -> Position -> List Proposition -> List Proposition
@@ -454,126 +443,48 @@ propositionPosition propositionId propositions =
 
 view : Model -> Html Msg
 view model =
-    Disposition.cadre
-        [ Interface.htmlAttribute (attribute "data-testid" "app-root")
-        , Interface.htmlAttribute (style "height" "100dvh")
-        , Interface.htmlAttribute (style "max-height" "100dvh")
-        , Interface.htmlAttribute (style "overflow" "hidden")
+    Table.cadre P.marque
+        { largeur = model.viewport.width, hauteur = model.viewport.height }
+        [ topHeader model
+        , boardView model
         ]
-        (Interface.column [ Interface.width Interface.fill, Interface.height Interface.fill, Interface.padding 12, Interface.spacing 12 ]
-            [ topHeader model
-            , Interface.el [ Interface.width Interface.fill, Interface.height Interface.fill, Interface.htmlAttribute (style "min-height" "0") ] (Interface.html (boardView model))
-            ]
-        )
 
 
 topHeader : Model -> Interface.Element msg
 topHeader model =
-    Disposition.panneau [ Interface.htmlAttribute (attribute "data-testid" "header") ]
+    P.disposition.panneau [ Reperes.test "header" ]
         (case model.exercise of
             Just exercise ->
                 [ MrJam.sousTitre exercise.title
-                , Interface.html (richText exercise.statement)
-                , MrJam.texteSecondaire ("Sélection : " ++ selectedBadgeLabel model.selectedPropositionId model.propositions ++ " | Placées : " ++ String.fromInt (placedCount model.propositions) ++ "/" ++ String.fromInt (List.length model.propositions))
+                , Math.document exercise.statement
+                , P.commun.texteSecondaire ("Sélection : " ++ selectedBadgeLabel model.selectedPropositionId model.propositions ++ " | Placées : " ++ String.fromInt (placedCount model.propositions) ++ "/" ++ String.fromInt (List.length model.propositions))
                 ]
 
             Nothing ->
-                [ MrJam.sousTitre "Évaluation de productions d’élèves", MrJam.texteSecondaire (Maybe.withDefault "Chargement des productions…" model.contentError) ]
+                [ MrJam.sousTitre "Évaluation de productions d’élèves", P.commun.texteSecondaire (Maybe.withDefault "Chargement des productions…" model.contentError) ]
         )
 
 
 placedCount : List Proposition -> Int
 placedCount propositions =
-    propositions
-        |> List.filter (\item -> item.pos /= Nothing)
-        |> List.length
+    propositions |> List.filter (\item -> item.pos /= Nothing) |> List.length
 
 
-boardView : Model -> Html Msg
+boardView : Model -> Interface.Element Msg
 boardView model =
     let
-        touchMoveAttributes =
-            case model.dragging of
-                Just _ ->
-                    [ onBoardTouchMove ]
-
-                Nothing ->
-                    []
+        dimensions =
+            model.boardRect
+                |> Maybe.map (\rect -> { largeur = round rect.width, hauteur = round rect.height })
+                |> Maybe.withDefault { largeur = model.viewport.width - 24, hauteur = model.viewport.height - 160 }
     in
-    div
-        ([ id "board"
-         , attribute "data-testid" "board"
-         , onBoardTouchEnd
-         , onBoardTouchCancel
-         , onClick CloseCard
-         , style "position" "relative"
-         , style "z-index" "2"
-         , style "height" "100%"
-         , style "min-height" "0"
-         , style "width" "100%"
-         , style "overflow"
-            (if boardHasZoomingCard model then
-                "visible"
-
-             else
-                "hidden"
-            )
-         , style "touch-action"
-            (case model.dragging of
-                Just _ ->
-                    "none"
-
-                Nothing ->
-                    "auto"
-            )
-         ]
-            ++ touchMoveAttributes
-        )
-        ([ axisLines ]
-            ++ List.map (viewCard model) model.propositions
-            ++ [ boardLegend ]
-        )
-
-
-boardLegend : Html msg
-boardLegend =
-    div
-        [ style "position" "absolute"
-        , style "left" "10px"
-        , style "right" "10px"
-        , style "bottom" "8px"
-        , style "display" "flex"
-        , style "justify-content" "space-between"
-        , style "font-size" "12px"
-        , style "color" "#4c5d7f"
-        ]
-        [ span [] [ text "Precision faible" ]
-        , span [] [ text "Rigueur elevee" ]
-        ]
-
-
-axisLines : Html msg
-axisLines =
-    div []
-        [ div
-            [ style "position" "absolute"
-            , style "left" "0"
-            , style "right" "0"
-            , style "top" "50%"
-            , style "height" "1px"
-            , style "background" "#b9c9e6"
-            ]
-            []
-        , div
-            [ style "position" "absolute"
-            , style "top" "0"
-            , style "bottom" "0"
-            , style "left" "50%"
-            , style "width" "1px"
-            , style "background" "#b9c9e6"
-            ]
-            []
-        ]
+    Table.plan dimensions
+        (Just ( "Precision faible", "Rigueur elevee" ))
+        (model.dragging /= Nothing)
+        PointerMove
+        PointerUp
+        CloseCard
+        (List.map (\item -> ( String.fromInt item.id, viewCard model item )) model.propositions)
 
 
 stateContainsCard : Int -> ExpandedState -> Bool
@@ -588,16 +499,8 @@ stateContainsCard propositionId expandedState =
 
 cardIsZooming : Model -> Int -> Bool
 cardIsZooming model propositionId =
-    stateContainsCard propositionId (Animator.current model.zoomTimeline)
-        || stateContainsCard propositionId (Animator.arrived model.zoomTimeline)
-
-
-boardHasZoomingCard : Model -> Bool
-boardHasZoomingCard model =
-    Animator.current model.zoomTimeline
-        /= AllMini
-        || Animator.arrived model.zoomTimeline
-        /= AllMini
+    stateContainsCard propositionId (T.courant model.zoomTimeline)
+        || stateContainsCard propositionId (T.arrive model.zoomTimeline)
 
 
 expandedCenter : Model -> Position
@@ -626,181 +529,57 @@ expandedCardHeight model =
     Basics.max miniatureHeight (toFloat model.viewport.height - 2 * expandedMargin)
 
 
-cardMovement : Int -> Float -> Float -> ExpandedState -> Animator.Movement
-cardMovement propositionId miniValue expandedValue expandedState =
-    if stateContainsCard propositionId expandedState then
-        Animator.at expandedValue |> Animator.arriveSmoothly 0.75
+cardValue : Model -> Int -> Float -> Float -> Float
+cardValue model propositionId miniValue expandedValue =
+    T.nombre
+        (\etat ->
+            if stateContainsCard propositionId etat then
+                expandedValue
 
-    else
-        Animator.at miniValue |> Animator.arriveSmoothly 0.75
+            else
+                miniValue
+        )
+        model.zoomTimeline
 
 
-viewCard : Model -> Proposition -> Html Msg
+viewCard : Model -> Proposition -> Interface.Element Msg
 viewCard model item =
     case item.pos of
         Nothing ->
-            text ""
+            Interface.none
 
         Just pos ->
             let
-                isExpanded =
-                    model.expandedPropositionId == Just item.id
-
-                isSelected =
-                    model.selectedPropositionId == Just item.id
-
-                isDragging =
-                    case model.dragging of
-                        Just dragState ->
-                            dragState.propositionId == item.id
-
-                        Nothing ->
-                            False
-
-                isZooming =
-                    cardIsZooming model item.id
-
-                targetCenter =
+                centre =
                     expandedCenter model
 
-                cursorStyle =
-                    if isExpanded then
-                        "zoom-out"
-
-                    else if isZooming then
-                        "default"
-
-                    else if isDragging then
-                        "grabbing"
-
-                    else
-                        "grab"
-
-                interactionAttributes =
-                    if isExpanded || isZooming then
-                        [ stopPropagationOn "click" (Decode.succeed ( CloseCard, True )) ]
-
-                    else
-                        [ preventDefaultOn "mousedown"
-                            (Decode.map
-                                (\( x, y ) -> ( StartDrag item.id x y, True ))
-                                mousePointDecoder
-                            )
-                        , onMiniTouchStart item.id
-                        , stopPropagationOn "click" (Decode.succeed ( OpenCard item.id, True ))
-                        ]
+                dimensions =
+                    model.boardRect |> Maybe.withDefault { x = 0, y = 0, width = toFloat (model.viewport.width - 24), height = toFloat (model.viewport.height - 160) }
             in
-            div
-                [ style "position" "absolute"
-                , Animator.Inline.style model.zoomTimeline
-                    "left"
-                    (\value -> String.fromFloat value ++ "%")
-                    (cardMovement item.id (pos.x * 100) (targetCenter.x * 100))
-                , Animator.Inline.style model.zoomTimeline
-                    "top"
-                    (\value -> String.fromFloat value ++ "%")
-                    (cardMovement item.id (pos.y * 100) (targetCenter.y * 100))
-                , style "width" "0"
-                , style "height" "0"
-                , style "display" "flex"
-                , style "align-items" "center"
-                , style "justify-content" "center"
-                , style "overflow" "visible"
-                , style "pointer-events" "none"
-                , style "z-index"
-                    (if isZooming then
-                        "100"
-
-                     else if isDragging then
-                        "80"
-
-                     else if isSelected then
-                        "40"
-
-                     else
-                        "30"
-                    )
-                , attribute "data-testid" ("anchor-" ++ item.badge)
-                ]
-                [ div
-                    (interactionAttributes
-                        ++ [ Animator.Inline.scale model.zoomTimeline
-                                (cardMovement item.id miniScale 1)
-                           , Animator.Inline.style model.zoomTimeline
-                                "width"
-                                (\value -> String.fromFloat value ++ "px")
-                                (cardMovement item.id miniatureWidth (expandedCardWidth model))
-                           , Animator.Inline.style model.zoomTimeline
-                                "height"
-                                (\value -> String.fromFloat value ++ "px")
-                                (cardMovement item.id miniatureHeight (expandedCardHeight model))
-                           , style "transform-origin" "center center"
-                           , style "flex" "0 0 auto"
-                           , style "position" "relative"
-                           , style "overflow"
-                                (if isZooming then
-                                    "auto"
-
-                                 else
-                                    "hidden"
-                                )
-                           , style "cursor" cursorStyle
-                           , style "user-select"
-                                (if isExpanded then
-                                    "text"
-
-                                 else
-                                    "none"
-                                )
-                           , style "touch-action"
-                                (if isExpanded then
-                                    "pan-y"
-
-                                 else
-                                    "none"
-                                )
-                           , style "outline" "none"
-                           , style "pointer-events" "auto"
-                           , attribute "data-testid" ("card-" ++ item.badge)
-                           , attribute "data-state"
-                                (if isExpanded then
-                                    "expanded"
-
-                                 else
-                                    "mini"
-                                )
-                           , attribute "data-zooming"
-                                (if isZooming then
-                                    "true"
-
-                                 else
-                                    "false"
-                                )
-                           ]
-                    )
-                    [ viewCardContent item ]
-                ]
+            Table.carte
+                { repere = item.badge
+                , x = cardValue model item.id (pos.x * dimensions.width) (centre.x * dimensions.width)
+                , y = cardValue model item.id (pos.y * dimensions.height) (centre.y * dimensions.height)
+                , largeur = cardValue model item.id miniatureWidth (expandedCardWidth model)
+                , hauteur = cardValue model item.id miniatureHeight (expandedCardHeight model)
+                , echelle = cardValue model item.id miniScale 1
+                , ouverte = model.expandedPropositionId == Just item.id
+                , mouvement = cardIsZooming model item.id
+                , commencer = StartDrag item.id
+                , ouvrir = OpenCard item.id
+                , fermer = CloseCard
+                , contenu = viewCardContent item
+                }
 
 
-viewCardContent : Proposition -> Html msg
+viewCardContent : Proposition -> Interface.Element msg
 viewCardContent item =
-    Disposition.fragment
-        (Disposition.panneau [ Interface.height Interface.fill ]
-            [ MrJam.actions [ Disposition.etiquette item.badge, MrJam.sousTitre item.title ]
-            , MrJam.texteSecondaire item.subtitle
-            , Interface.html (richText item.preview)
-            , Interface.html (richText item.content)
-            ]
-        )
-
-
-richText : String -> Html msg
-richText source =
-    Html.node "rich-text"
-        [ attribute "content" source
-        , style "display" "block"
+    P.disposition.panneau [ Interface.height Interface.fill ]
+        [ MrJam.actions [ P.disposition.etiquette item.badge, MrJam.sousTitre item.title ]
+        , P.commun.texteSecondaire item.subtitle
+        , Math.document item.preview
+        , Math.document item.content
         ]
-        []
 
 
 selectedBadgeLabel : Maybe Int -> List Proposition -> String
@@ -818,55 +597,8 @@ propositionById propositionId propositions =
         |> List.head
 
 
-onMiniTouchStart : Int -> Html.Attribute Msg
-onMiniTouchStart propositionId =
-    on "touchstart"
-        (Decode.map
-            (\( clientX, clientY ) -> StartDrag propositionId clientX clientY)
-            touchPointDecoder
-        )
-
-
-onBoardTouchMove : Html.Attribute Msg
-onBoardTouchMove =
-    preventDefaultOn "touchmove"
-        (Decode.map
-            (\( clientX, clientY ) -> ( PointerMove clientX clientY, True ))
-            touchPointDecoder
-        )
-
-
-onBoardTouchEnd : Html.Attribute Msg
-onBoardTouchEnd =
-    on "touchend" (Decode.succeed PointerUp)
-
-
-onBoardTouchCancel : Html.Attribute Msg
-onBoardTouchCancel =
-    on "touchcancel" (Decode.succeed PointerUp)
-
-
 mouseMoveDecoder : Decode.Decoder Msg
 mouseMoveDecoder =
     Decode.map2 PointerMove
         (Decode.field "clientX" Decode.float)
         (Decode.field "clientY" Decode.float)
-
-
-mousePointDecoder : Decode.Decoder ( Float, Float )
-mousePointDecoder =
-    Decode.map2 Tuple.pair
-        (Decode.field "clientX" Decode.float)
-        (Decode.field "clientY" Decode.float)
-
-
-touchPointDecoder : Decode.Decoder ( Float, Float )
-touchPointDecoder =
-    Decode.oneOf
-        [ Decode.map2 Tuple.pair
-            (Decode.at [ "touches", "0", "clientX" ] Decode.float)
-            (Decode.at [ "touches", "0", "clientY" ] Decode.float)
-        , Decode.map2 Tuple.pair
-            (Decode.at [ "changedTouches", "0", "clientX" ] Decode.float)
-            (Decode.at [ "changedTouches", "0", "clientY" ] Decode.float)
-        ]

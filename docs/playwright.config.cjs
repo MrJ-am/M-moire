@@ -1,5 +1,4 @@
 const { defineConfig, devices } = require('@playwright/test');
-const { createHash } = require('node:crypto');
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:4173';
 const launchOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE, args: ['--no-sandbox', '--disable-dev-shm-usage'] } : {};
 
@@ -16,13 +15,8 @@ module.exports = defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure'
   },
-  webServer: {
-    command: 'node ../server/src/index.mjs',
-    url: `${origin}/matheval/api/health`,
-    reuseExistingServer: false,
-    env: { ...process.env, PORT: '4173', PUBLIC_ORIGIN: origin, BASE_PATH: '/matheval', NODE_ENV: 'test', DATABASE_URL: process.env.BROWSER_DATABASE_URL || 'postgres://postgres@127.0.0.1:55432/matheval_browser_test', ADMIN_SETUP_TOKEN_HASH: createHash('sha256').update('a'.repeat(64)).digest('hex') },
-    timeout: 30000
-  },
+  // Le serveur et PostgreSQL isolés sont possédés par la commande centrale
+  // tests/matheval-navigateur.py. Aucun backend Node lancé par Playwright.
   projects: [
     {
       name: 'firefox',
@@ -34,7 +28,7 @@ module.exports = defineConfig({
     },
     {
       name: 'chromium',
-      testMatch: ['**/survey-gestures.spec.js', '**/navigation-libre.spec.js', '**/collection-admin.spec.js', '**/style-mrjam.spec.js', '**/portage-complet.spec.js'],
+      testMatch: ['**/survey.spec.js', '**/survey-gestures.spec.js', '**/navigation-libre.spec.js', '**/collection-admin.spec.js', '**/style-mrjam.spec.js', '**/portage-complet.spec.js', '**/cartes-continuite.spec.js', '**/lecteur-commun.spec.js', '**/espace-commun.spec.js'],
       use: { ...devices['Desktop Chrome'], browserName: 'chromium', launchOptions }
     },
     {

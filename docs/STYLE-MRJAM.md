@@ -19,7 +19,7 @@ style à sa révision verrouillée. Les règles résolvent les symboles (alias/e
 vérifient frontières et échappatoires ; tests positifs/négatifs et fixture rejetée.
 Aucun contournement par exclusions générales ou suppressions régénérées.
 
-Qualifiés localement : interruptions/inversions rapides, état/focus/clavier,
+À qualifier sur le candidat exact : interruptions/inversions rapides, état/focus/clavier,
 reduced-motion et arrêt du rafraîchissement inutile. Une action métier n’attend
 pas une décoration. Préserver fonctionnalités, accessibilité et identité visuelle.
 Une analyse statique ne prouve pas ces parcours navigateur.
@@ -31,9 +31,10 @@ réservée à la promotion du candidat qualifié et à ses sondes/préconditions
 aucune campagne de développement distante, aucun workflow composant ou acquittement.
 
 Matheval conserve Main, Survey, prototype et administration, le parcours,
-clavier/tactile, dimensions et ressources. KaTeX et projection/interaction3D
-sont des candidats d’adaptateurs spécialisés à auditer, pas une autorisation
-pour conserver la présentation générale dans les feuilles CSS ou WebAnimations.
+clavier/tactile, dimensions et ressources. Le rendu scientifique, la lecture/note et la projection/interaction3D passent
+par Mathematiques, Lectures, Curseurs, Espace et AxesSpatiaux communs. Seuls
+leurs adaptateurs privés étroits et contrôlés raccordent KaTeX/SVG/pointeurs.
+Les références géométriques historiques restent dans tests/references, hors site.
 Les quatre entrées restent construites centralement selon l’impact. Préserver
 zéro/absence, dates, pseudonymat, secret de reprise et participations ouvertes.
 Lire tests/e2e/README.org. Aucune refonte graphique gratuite.

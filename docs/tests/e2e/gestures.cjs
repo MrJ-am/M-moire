@@ -36,24 +36,24 @@ async function drag(d, locator, dx, dy = 0) {
   await d.down(p); await d.move({ x: p.x + dx, y: p.y + dy }); await d.up();
 }
 async function note(page, d, dx = 35) {
-  await settled(page.locator('reading-card'));
-  await drag(d, page.locator('.grade-knob'), dx);
-  await expect(page.locator('#grade')).not.toHaveClass(/ungraded/);
+  await settled(page.locator('#reading-card'));
+  await drag(d, page.locator('[data-testid="grade-knob"]'), dx);
+  await expect(page.locator('#grade')).not.toHaveAttribute('aria-valuetext','Non noté');
 }
 async function close(page, d) {
   await d.click(page.locator('#validate-reading'));
-  await expect(page.locator('reading-card')).toHaveCount(0);
-  const contextual = page.locator('context-help');
+  await expect(page.locator('#reading-card')).toHaveCount(0);
+  const contextual = page.locator('[data-testid="context-help"]');
   if (await contextual.count()) await d.click(contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }));
 }
 async function start(page, d) {
   await page.goto('./');
   await d.click(page.getByRole('checkbox', { name: '5e', exact: true }));
   await d.click(page.getByRole('button', { name: 'Commencer', exact: true }));
-  await expect(page.locator('.help-dialog')).toBeVisible();
+  await expect(page.locator('#help-dialog')).toBeVisible();
   await d.click(page.getByRole('button', { name: 'Suivant', exact: true }));
-  await expect(page.locator('context-help')).toBeVisible();
+  await expect(page.locator('[data-testid="context-help"]')).toBeVisible();
   await d.click(page.getByRole('button', { name: 'Compris', exact: true }));
-  await settled(page.locator('reading-card'));
+  await settled(page.locator('#reading-card'));
 }
 module.exports = { thumb, center, settled, driver, drag, note, close, start };

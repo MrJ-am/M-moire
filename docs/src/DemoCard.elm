@@ -1,17 +1,19 @@
-module DemoCard exposing (main)
+port module DemoCard exposing (main)
 
-import Animator
-import Animator.Inline
 import Browser
 import Browser.Events
 import Element as Interface
-import Html exposing (Html, div, h2, p, text)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
+import Html exposing (Html)
 import Json.Decode as Decode
 import MrJam
-import MrJam.Disposition as Disposition
+import MrJam.Ecran as Ecran
+import MrJam.TableSpatiale as Table
+import MrJam.Transitions as T
+import Presentation as P
 import Time
+
+
+port reductionAnimations : (Bool -> message) -> Sub message
 
 
 type ZoomState
@@ -29,7 +31,7 @@ type alias DragState =
 
 
 type alias Model =
-    { zoomTimeline : Animator.Timeline ZoomState
+    { zoomTimeline : T.Transition ZoomState
     , cardX : Float
     , cardY : Float
     , dragging : Maybe DragState
@@ -46,10 +48,11 @@ type Msg
     | GlobalMouseMove Float Float
     | GlobalMouseUp
     | WindowResized Int Int
-    | AnimatorTick Time.Posix
+    | TransitionTick Time.Posix
+    | ReduireAnimations Bool
 
 
-main : Program () Model Msg
+main : Program Bool Model Msg
 main =
     Browser.element
         { init = init
@@ -59,9 +62,9 @@ main =
         }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { zoomTimeline = Animator.init Mini
+init : Bool -> ( Model, Cmd Msg )
+init reduite =
+    ( { zoomTimeline = T.initialiser Mini |> T.reduire reduite
       , cardX = 0.5
       , cardY = 0.5
       , dragging = Nothing
@@ -69,27 +72,19 @@ init _ =
       , viewportHeight = 800
       , suppressNextOpen = False
       }
-    , Cmd.none
+    , Ecran.initiale (\ecran -> WindowResized ecran.largeur ecran.hauteur)
     )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Animator.toSubscription AnimatorTick model animator
+        [ T.abonnement TransitionTick model.zoomTimeline
+        , reductionAnimations ReduireAnimations
         , Browser.Events.onMouseMove mouseMoveDecoder
         , Browser.Events.onMouseUp (Decode.succeed GlobalMouseUp)
         , Browser.Events.onResize WindowResized
         ]
-
-
-animator : Animator.Animator Model
-animator =
-    Animator.animator
-        |> Animator.watching .zoomTimeline
-            (\newZoom currentModel ->
-                { currentModel | zoomTimeline = newZoom }
-            )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -172,78 +167,84 @@ update msg model =
         WindowResized width height ->
             ( { model | viewportWidth = width, viewportHeight = height }, Cmd.none )
 
-        AnimatorTick now ->
-            ( Animator.update now animator model, Cmd.none )
+        TransitionTick now ->
+            ( { model | zoomTimeline = T.mettreAJour now model.zoomTimeline }, Cmd.none )
+
+        ReduireAnimations reduite ->
+            ( { model | zoomTimeline = T.reduire reduite model.zoomTimeline }, Cmd.none )
 
 
-animateZoom : ZoomState -> Animator.Timeline ZoomState -> Animator.Timeline ZoomState
+animateZoom : ZoomState -> T.Transition ZoomState -> T.Transition ZoomState
 animateZoom target timeline =
-    Animator.go (Animator.millis 220) target timeline
+    T.aller 220 target timeline
 
 
 view : Model -> Html Msg
 view model =
-    Disposition.cadre [ Interface.htmlAttribute (style "height" "100vh"), Interface.htmlAttribute (onClick Close) ]
-        (Interface.html (viewCard model))
-
-
-viewCard : Model -> Html Msg
-viewCard model =
     let
-        cursorStyle =
-            if model.dragging /= Nothing then
-                "grabbing"
+        dimensions =
+            { largeur = model.viewportWidth - 24, hauteur = model.viewportHeight - 24 }
 
-            else
-                "grab"
+        echelle =
+            T.nombre
+                (\etat ->
+                    if etat == Maxi then
+                        1
+
+                    else
+                        0.25
+                )
+                model.zoomTimeline
+
+        largeur =
+            min 1100 (toFloat model.viewportWidth * 0.94)
+
+        hauteur =
+            min (toFloat model.viewportHeight * 0.92)
+                (if model.viewportWidth < 600 then
+                    360
+
+                 else
+                    240
+                )
     in
-    div
-        [ preventDefaultOn "mousedown"
-            (Decode.map
-                (\( x, y ) -> ( StartDrag x y, True ))
-                mousePointDecoder
-            )
-        , stopPropagationOn "click" (Decode.succeed ( Open, True ))
-        , style "position" "absolute"
-        , style "left" (String.fromFloat (model.cardX * 100) ++ "%")
-        , style "top" (String.fromFloat (model.cardY * 100) ++ "%")
-        , Animator.Inline.scale model.zoomTimeline
-            (\zoom ->
-                case zoom of
-                    Mini ->
-                        Animator.at 0.25 |> Animator.arriveSmoothly 0.75
-
-                    Maxi ->
-                        Animator.at 1 |> Animator.arriveSmoothly 0.75
-            )
-        , style "transform-origin" "center center"
-        , style "width" "min(1100px, 94vw)"
-        , style "max-height" "92vh"
-        , style "overflow" "auto"
-        , style "cursor" cursorStyle
-        , style "user-select" "none"
-        ]
-        [ Disposition.fragment
-            (MrJam.section "Proposition A"
-                [ MrJam.paragraphe "On part de cos(2x) = sin(x), puis on écrit 1 - 2sin²(x) = sin(x)."
-                , MrJam.paragraphe "On obtient 2sin²(x) + sin(x) - 1 = 0, puis (2sin(x)-1)(sin(x)+1)=0."
-                , MrJam.paragraphe "Solutions sur [0;2π[ : x = π/6, 5π/6, 3π/2."
-                , MrJam.texteSecondaire "Cliquer sur la fiche pour agrandir. Cliquer ailleurs pour réduire. Maintenir et glisser pour déplacer."
-                ]
-            )
+    Table.cadre P.marque
+        { largeur = model.viewportWidth, hauteur = model.viewportHeight }
+        [ Table.plan dimensions
+            Nothing
+            (model.dragging /= Nothing)
+            GlobalMouseMove
+            GlobalMouseUp
+            Close
+            [ ( "demo"
+              , Table.carte
+                    { repere = "demo"
+                    , x = model.cardX * toFloat dimensions.largeur
+                    , y = model.cardY * toFloat dimensions.hauteur
+                    , largeur = largeur
+                    , hauteur = hauteur
+                    , echelle = echelle
+                    , ouverte = T.courant model.zoomTimeline == Maxi
+                    , mouvement = T.actif model.zoomTimeline
+                    , commencer = StartDrag
+                    , ouvrir = Open
+                    , fermer = Close
+                    , contenu =
+                        P.commun.section "Proposition A"
+                            [ MrJam.paragraphe "On part de cos(2x) = sin(x), puis on écrit 1 - 2sin²(x) = sin(x)."
+                            , MrJam.paragraphe "On obtient 2sin²(x) + sin(x) - 1 = 0, puis (2sin(x)-1)(sin(x)+1)=0."
+                            , MrJam.paragraphe "Solutions sur [0;2π[ : x = π/6, 5π/6, 3π/2."
+                            , P.commun.texteSecondaire "Cliquer sur la fiche pour agrandir. Cliquer ailleurs pour réduire. Maintenir et glisser pour déplacer."
+                            ]
+                    }
+              )
+            ]
         ]
 
 
 mouseMoveDecoder : Decode.Decoder Msg
 mouseMoveDecoder =
     Decode.map2 GlobalMouseMove
-        (Decode.field "clientX" Decode.float)
-        (Decode.field "clientY" Decode.float)
-
-
-mousePointDecoder : Decode.Decoder ( Float, Float )
-mousePointDecoder =
-    Decode.map2 Tuple.pair
         (Decode.field "clientX" Decode.float)
         (Decode.field "clientY" Decode.float)
 

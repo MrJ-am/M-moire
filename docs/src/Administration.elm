@@ -8,13 +8,14 @@ Les clés JSON ci-dessous appartiennent au contrat de collecte existant.
 import Browser
 import Element as UI exposing (Element)
 import Html exposing (Html)
-import Html.Attributes as A
-import Html.Events as Evenements
 import Json.Decode as D
 import Json.Encode as E
 import MrJam as M
 import MrJam.Disposition as Disposition
+import MrJam.Manipulation as Manipulation
+import MrJam.Mathematiques as Math
 import MrJam.Tableaux as Tableaux
+import Presentation as P
 import Url
 
 
@@ -418,12 +419,12 @@ jointure valeurs =
 
 repere : String -> UI.Attribute message
 repere nom =
-    UI.htmlAttribute (A.class nom)
+    Manipulation.test nom
 
 
 riche : String -> Element Message
 riche contenu =
-    UI.el [ UI.width UI.fill ] (UI.html (Html.node "rich-text" [ A.attribute "content" contenu ] []))
+    Math.document contenu
 
 
 texte : String -> Element Message
@@ -438,7 +439,7 @@ chiffre cle valeur =
 
 boutonVue : String -> Vue -> Element Message
 boutonVue libelle vue =
-    M.boutonSecondaire libelle (Naviguer vue)
+    P.commun.boutonSecondaire libelle (Naviguer vue)
 
 
 questions : Modele -> List E.Value
@@ -456,60 +457,47 @@ statProduction identifiant modele =
     objet (modele.appliques.version ++ ":" ++ identifiant) (objet "productions" modele.statistiques)
 
 
-validerAuClavier : D.Decoder ( Message, Bool )
-validerAuClavier =
-    D.map2 Tuple.pair (D.field "key" D.string) (D.at [ "target", "tagName" ] D.string)
-        |> D.andThen
-            (\( touche, cible ) ->
-                if touche == "Enter" && cible == "INPUT" then
-                    D.succeed ( SeConnecter, True )
-
-                else
-                    D.fail "Autre touche"
-            )
-
-
 afficher : Modele -> Html Message
 afficher modele =
     case modele.compte of
         Nothing ->
-            M.page "Matheval · Administration"
-                [ UI.el [ UI.width UI.fill, UI.htmlAttribute (Evenements.preventDefaultOn "keydown" validerAuClavier) ]
-                    (M.section
+            P.commun.page "Matheval · Administration"
+                [ M.soumissionDansChamps SeConnecter
+                    (P.commun.section
                         (if modele.activation then
                             "Bienvenue dans votre administration."
 
                          else
                             "Retrouver les regards."
                         )
-                        [ M.texteSecondaire
+                        [ P.commun.texteSecondaire
                             (if modele.activation then
                                 "Choisissez votre identifiant et un mot de passe d’au moins 14 caractères. Ce lien d’activation ne fonctionne qu’une fois."
 
                              else
                                 "Connectez-vous pour consulter le corpus et les réponses des enseignants."
                             )
-                        , M.identifiant "Identifiant" modele.identifiant ModifierIdentifiant
+                        , P.commun.identifiant "Identifiant" modele.identifiant ModifierIdentifiant
                         , (if modele.activation then
-                            M.nouveauMotDePasse
+                            P.commun.nouveauMotDePasse
 
                            else
-                            M.motDePasse
+                            P.commun.motDePasse
                           )
                             "Mot de passe"
                             modele.secret
                             ModifierSecret
                         , if modele.activation then
-                            M.nouveauMotDePasse "Confirmer le mot de passe" modele.confirmation ModifierConfirmation
+                            P.commun.nouveauMotDePasse "Confirmer le mot de passe" modele.confirmation ModifierConfirmation
 
                           else
                             UI.none
                         , afficherErreur modele
                         , if modele.enCours then
-                            M.boutonEnCours "Connexion en cours…"
+                            P.commun.boutonEnCours "Connexion en cours…"
 
                           else
-                            M.bouton
+                            P.commun.bouton
                                 (if modele.activation then
                                     "Créer mon accès"
 
@@ -518,20 +506,20 @@ afficher modele =
                                 )
                                 SeConnecter
                         , if modele.activation then
-                            M.boutonSecondaire "J’ai déjà un compte" ConnexionOrdinaire
+                            P.commun.boutonSecondaire "J’ai déjà un compte" ConnexionOrdinaire
 
                           else
                             UI.none
-                        , M.lien "Accéder au questionnaire" "../"
+                        , P.commun.lien "Accéder au questionnaire" "../"
                         ]
                     )
                 ]
 
         Just compte ->
-            M.page (titre modele)
-                [ M.actions [ boutonVue "Vue d’ensemble" TableauDeBord, boutonVue "Énoncés et rédactions" Corpus, boutonVue "Participations" Participations, M.boutonSecondaire "Déconnexion" SeDeconnecter ]
-                , M.texteSecondaire ("Connecté : " ++ compte)
-                , M.actions [ M.lienExterne "Ouvrir le questionnaire ↗" "../", M.lien "Exporter les réponses CSV" ("../api/admin/exports/responses.csv?" ++ parametres modele.appliques) ]
+            P.commun.page (titre modele)
+                [ M.actions [ boutonVue "Vue d’ensemble" TableauDeBord, boutonVue "Énoncés et rédactions" Corpus, boutonVue "Participations" Participations, P.commun.boutonSecondaire "Déconnexion" SeDeconnecter ]
+                , P.commun.texteSecondaire ("Connecté : " ++ compte)
+                , M.actions [ P.commun.lienExterne "Ouvrir le questionnaire ↗" "../", P.commun.lien "Exporter les réponses CSV" ("../api/admin/exports/responses.csv?" ++ parametres modele.appliques) ]
                 , if List.member modele.vue [ TableauDeBord, Corpus, Participations ] then
                     afficherFiltres modele
 
@@ -539,10 +527,10 @@ afficher modele =
                     UI.none
                 , afficherErreur modele
                 , if modele.erreur /= "" then
-                    M.boutonSecondaire "Réessayer" (Naviguer modele.vue)
+                    P.commun.boutonSecondaire "Réessayer" (Naviguer modele.vue)
 
                   else if modele.attente > 0 then
-                    M.texteSecondaire "Chargement des résultats…"
+                    P.commun.texteSecondaire "Chargement des résultats…"
 
                   else
                     afficherContenu modele
@@ -555,7 +543,7 @@ afficherErreur modele =
         UI.none
 
     else
-        M.avis M.Erreur modele.erreur
+        P.commun.avis M.Erreur modele.erreur
 
 
 titre : Modele -> String
@@ -602,17 +590,17 @@ afficherFiltres modele =
                 []
                 (questions modele)
     in
-    M.carte
+    P.commun.carte
         [ UI.wrappedRow [ UI.width UI.fill, UI.spacing 12 ]
             (List.map (UI.el [ UI.width (UI.minimum 150 UI.fill) ])
-                [ M.selecteur "Version du corpus" (List.map (\v -> ( v, v )) modele.versions) f.version (ModifierFiltre "version")
-                , M.selecteur "Participations" [ ( "", "Toutes" ), ( "completed", "Validées" ), ( "incomplete", "Non validées" ) ] f.statut (ModifierFiltre "status")
-                , M.selecteur "Niveaux enseignés" (( "", "Tous" ) :: List.map (\v -> ( v, v )) niveaux) f.niveau (ModifierFiltre "level")
+                [ P.commun.selecteur "Version du corpus" (List.map (\v -> ( v, v )) modele.versions) f.version (ModifierFiltre "version")
+                , P.commun.selecteur "Participations" [ ( "", "Toutes" ), ( "completed", "Validées" ), ( "incomplete", "Non validées" ) ] f.statut (ModifierFiltre "status")
+                , P.commun.selecteur "Niveaux enseignés" (( "", "Tous" ) :: List.map (\v -> ( v, v )) niveaux) f.niveau (ModifierFiltre "level")
                 , Disposition.date "Depuis" f.depuis (ModifierFiltre "from")
                 , Disposition.date "Jusqu’au" f.jusque (ModifierFiltre "to")
                 ]
             )
-        , M.bouton "Appliquer" Appliquer
+        , P.commun.bouton "Appliquer" Appliquer
         ]
 
 
@@ -640,17 +628,17 @@ afficherContenu modele =
 
 table : String -> List String -> List (List (Element Message)) -> Element Message
 table libelle entetes lignes =
-    Tableaux.tableau libelle (List.indexedMap (\i nom -> Tableaux.colonne nom (\ligne -> List.drop i ligne |> List.head |> Maybe.withDefault UI.none)) entetes) lignes
+    P.tableaux.tableau libelle (List.indexedMap (\i nom -> Tableaux.colonne nom (\ligne -> List.drop i ligne |> List.head |> Maybe.withDefault UI.none)) entetes) lignes
 
 
 mesures : E.Value -> Element Message
 mesures donnees =
-    M.texteSecondaire ("n = " ++ String.fromInt (entier "n" donnees) ++ " · Moyenne " ++ texteValeur (objet "mean" donnees) ++ " · Médiane " ++ texteValeur (objet "median" donnees) ++ " · Quartiles " ++ texteValeur (objet "q1" donnees) ++ " · " ++ texteValeur (objet "q3" donnees))
+    P.commun.texteSecondaire ("n = " ++ String.fromInt (entier "n" donnees) ++ " · Moyenne " ++ texteValeur (objet "mean" donnees) ++ " · Médiane " ++ texteValeur (objet "median" donnees) ++ " · Quartiles " ++ texteValeur (objet "q1" donnees) ++ " · " ++ texteValeur (objet "q3" donnees))
 
 
 distribution : String -> E.Value -> Element Message
 distribution libelle donnees =
-    Disposition.histogramme libelle (List.map (\d -> ( texteValeur (objet "value" d), nombre (objet "count" d) )) (liste "distribution" donnees))
+    P.disposition.histogramme libelle (List.map (\d -> ( texteValeur (objet "value" d), nombre (objet "count" d) )) (liste "distribution" donnees))
 
 
 tableauDeBord : Modele -> Element Message
@@ -661,12 +649,12 @@ tableauDeBord modele =
     in
     M.pile
         [ UI.wrappedRow [ UI.width UI.fill, UI.spacing 12 ]
-            (List.map (\( nom, cle ) -> UI.el [ UI.width (UI.minimum 210 UI.fill) ] (M.section nom [ chiffre cle s ])) [ ( "Participations commencées", "started" ), ( "Avec des réponses", "answered" ), ( "Participations validées", "completed" ), ( "Rédactions évaluées", "evaluations" ) ])
-        , M.texteSecondaire (texteValeur (E.float (100 * nombre (objet "completionRate" s))) ++ " % validées · " ++ String.fromInt (entier "incomplete" s) ++ " participation(s) non validée(s)")
-        , M.section "Participations dans le temps" [ Disposition.histogramme "Participations commencées par jour" (liste "daily" s |> List.reverse |> List.take 30 |> List.reverse |> List.map (\d -> ( String.dropLeft 5 (chaine "date" d), nombre (objet "started" d) ))), M.texteSecondaire "Les 30 derniers jours comportant des participations dans la sélection." ]
-        , M.section "Niveaux enseignés" [ Disposition.histogramme "Niveaux enseignés" (List.map (\( n, v ) -> ( n, nombre v )) (paires (objet "levels" s))) ]
-        , M.section "Distribution des notes" [ mesures (objet "grades" (objet "summary" s)), distribution "Notes sur trois points" (objet "grades" (objet "summary" s)), M.texteSecondaire "Une note zéro compte comme une réponse. Les notes manquantes sont exclues." ]
-        , M.texteSecondaire "Les effectifs comptent des participations, pas des personnes identifiées. Un enseignant peut participer plusieurs fois et déclarer plusieurs niveaux. Les filtres s’appliquent à tous les résultats et à l’export."
+            (List.map (\( nom, cle ) -> UI.el [ UI.width (UI.minimum 210 UI.fill) ] (P.commun.section nom [ chiffre cle s ])) [ ( "Participations commencées", "started" ), ( "Avec des réponses", "answered" ), ( "Participations validées", "completed" ), ( "Rédactions évaluées", "evaluations" ) ])
+        , P.commun.texteSecondaire (texteValeur (E.float (100 * nombre (objet "completionRate" s))) ++ " % validées · " ++ String.fromInt (entier "incomplete" s) ++ " participation(s) non validée(s)")
+        , P.commun.section "Participations dans le temps" [ P.disposition.histogramme "Participations commencées par jour" (liste "daily" s |> List.reverse |> List.take 30 |> List.reverse |> List.map (\d -> ( String.dropLeft 5 (chaine "date" d), nombre (objet "started" d) ))), P.commun.texteSecondaire "Les 30 derniers jours comportant des participations dans la sélection." ]
+        , P.commun.section "Niveaux enseignés" [ P.disposition.histogramme "Niveaux enseignés" (List.map (\( n, v ) -> ( n, nombre v )) (paires (objet "levels" s))) ]
+        , P.commun.section "Distribution des notes" [ mesures (objet "grades" (objet "summary" s)), distribution "Notes sur trois points" (objet "grades" (objet "summary" s)), P.commun.texteSecondaire "Une note zéro compte comme une réponse. Les notes manquantes sont exclues." ]
+        , P.commun.texteSecondaire "Les effectifs comptent des participations, pas des personnes identifiées. Un enseignant peut participer plusieurs fois et déclarer plusieurs niveaux. Les filtres s’appliquent à tous les résultats et à l’export."
         ]
 
 
@@ -677,18 +665,18 @@ catalogue modele =
             questions modele |> List.filter (\q -> String.contains (String.toLower modele.recherche) (String.toLower (String.join " " (List.map (\k -> chaine k q) [ "id", "title", "level", "domain", "statement" ]))))
     in
     M.pile
-        (M.recherche "Rechercher dans le corpus" modele.recherche Rechercher
+        (P.commun.recherche "Rechercher dans le corpus" modele.recherche Rechercher
             :: (if List.isEmpty visibles then
-                    [ M.texteSecondaire "Aucun énoncé ne correspond à cette recherche." ]
+                    [ P.commun.texteSecondaire "Aucun énoncé ne correspond à cette recherche." ]
 
                 else
                     List.map
                         (\q ->
-                            Disposition.panneau [ repere "question-card" ]
-                                [ Disposition.etiquette (chaine "id" q ++ " · " ++ chaine "level" q)
+                            P.disposition.panneau [ repere "question-card" ]
+                                [ P.disposition.etiquette (chaine "id" q ++ " · " ++ chaine "level" q)
                                 , M.sousTitre (chaine "title" q)
-                                , M.texteSecondaire (chaine "domain" q)
-                                , M.texteSecondaire (String.fromInt (List.length (liste "productions" q)) ++ " rédactions · " ++ String.fromInt (List.sum (List.map (\p -> entier "n" (objet "grades" (statProduction (chaine "id" p) modele))) (liste "productions" q))) ++ " évaluations")
+                                , P.commun.texteSecondaire (chaine "domain" q)
+                                , P.commun.texteSecondaire (String.fromInt (List.length (liste "productions" q)) ++ " rédactions · " ++ String.fromInt (List.sum (List.map (\p -> entier "n" (objet "grades" (statProduction (chaine "id" p) modele))) (liste "productions" q))) ++ " évaluations")
                                 , boutonVue "Consulter l’énoncé et les résultats →" (Question (chaine "id" q))
                                 ]
                         )
@@ -706,7 +694,7 @@ axes donnees =
                     a =
                         objet cle (objet "axes" donnees)
                 in
-                M.section libelle [ mesures a, distribution libelle a, M.texteSecondaire "Valeurs regroupées par pas de 2 ; seuls les axes évalués sont comptés." ]
+                P.commun.section libelle [ mesures a, distribution libelle a, P.commun.texteSecondaire "Valeurs regroupées par pas de 2 ; seuls les axes évalués sont comptés." ]
             )
             [ ( "x", "Confus → Lisible" ), ( "y", "Vague → Précis" ), ( "z", "Fautif → Valide" ) ]
         )
@@ -715,7 +703,7 @@ axes donnees =
 detailQuestion : E.Value -> Modele -> Element Message
 detailQuestion q modele =
     M.pile
-        ([ boutonVue "← Tous les énoncés" Corpus, M.section "Énoncé" [ riche (chaine "statement" q) ], M.section "Réponse de référence" [ riche (chaine "referenceAnswer" q) ] ]
+        ([ boutonVue "← Tous les énoncés" Corpus, P.commun.section "Énoncé" [ riche (chaine "statement" q) ], P.commun.section "Réponse de référence" [ riche (chaine "referenceAnswer" q) ] ]
             ++ List.map
                 (\p ->
                     let
@@ -728,15 +716,15 @@ detailQuestion q modele =
                         recherche =
                             objet "research" p
                     in
-                    Disposition.panneau [ repere "production" ]
+                    P.disposition.panneau [ repere "production" ]
                         [ M.sousTitre identifiant
                         , boutonVue "Réponses individuelles" (Reponses (chaine "id" q) identifiant)
                         , riche (chaine "content" p)
-                        , M.section "Analyse de conception" [ riche (chaine "analysis" recherche), M.texteSecondaire ("Cibles : " ++ jointure (liste "targets" recherche)), table "Contrats examinés" [ "Contrat", "Codage de conception" ] (List.map (\( k, v ) -> [ texte k, texte (texteValeur v) ]) (paires (objet "contracts" recherche))) ]
+                        , P.commun.section "Analyse de conception" [ riche (chaine "analysis" recherche), P.commun.texteSecondaire ("Cibles : " ++ jointure (liste "targets" recherche)), table "Contrats examinés" [ "Contrat", "Codage de conception" ] (List.map (\( k, v ) -> [ texte k, texte (texteValeur v) ]) (paires (objet "contracts" recherche))) ]
                         , M.sousTitre "Notes attribuées"
                         , mesures (objet "grades" s)
                         , distribution ("Notes " ++ identifiant) (objet "grades" s)
-                        , M.texteSecondaire ("Note initiale moyenne : " ++ texteValeur (objet "mean" (objet "initialGrades" s)) ++ " · Révisions : " ++ String.fromInt (entier "changed" (objet "revisions" s)) ++ " · Écart moyen final − initial : " ++ texteValeur (objet "mean" (objet "revisions" s)))
+                        , P.commun.texteSecondaire ("Note initiale moyenne : " ++ texteValeur (objet "mean" (objet "initialGrades" s)) ++ " · Révisions : " ++ String.fromInt (entier "changed" (objet "revisions" s)) ++ " · Écart moyen final − initial : " ++ texteValeur (objet "mean" (objet "revisions" s)))
                         , axes s
                         ]
                 )
@@ -765,8 +753,8 @@ reponsesProduction questionId productionId modele =
     in
     M.pile
         [ boutonVue "← Énoncé et statistiques" (Question questionId)
-        , M.carte [ riche (chaine "content" p) ]
-        , M.section (String.fromInt (List.length modele.reponses) ++ " réponses enregistrées")
+        , P.commun.carte [ riche (chaine "content" p) ]
+        , P.commun.section (String.fromInt (List.length modele.reponses) ++ " réponses enregistrées")
             [ table "Réponses individuelles"
                 [ "Participation", "Validation", "Note initiale", "Note", "Lisibilité", "Précision", "Validité" ]
                 (List.map
@@ -796,7 +784,7 @@ participations modele =
         d =
             modele.details
     in
-    M.section (String.fromInt (entier "total" d) ++ " participations")
+    P.commun.section (String.fromInt (entier "total" d) ++ " participations")
         [ table "Participations enregistrées"
             [ "Participation", "Début", "Niveaux", "Évaluations", "Statut" ]
             (List.map
@@ -805,7 +793,7 @@ participations modele =
                     , texte (chaine "started_at" p)
                     , texte (jointure (liste "levels" p))
                     , chiffre "answers" p
-                    , Disposition.etiquette
+                    , P.disposition.etiquette
                         (if chaine "completed_at" p == "" then
                             "Non validée"
 
@@ -819,16 +807,16 @@ participations modele =
         , if entier "pages" d > 1 then
             M.actions
                 [ if modele.numeroPage <= 1 then
-                    M.boutonInactif "← Précédent"
+                    P.commun.boutonInactif "← Précédent"
 
                   else
-                    M.boutonSecondaire "← Précédent" (ChangerPage (modele.numeroPage - 1))
+                    P.commun.boutonSecondaire "← Précédent" (ChangerPage (modele.numeroPage - 1))
                 , texte (String.fromInt modele.numeroPage ++ " / " ++ String.fromInt (entier "pages" d))
                 , if modele.numeroPage >= entier "pages" d then
-                    M.boutonInactif "Suivant →"
+                    P.commun.boutonInactif "Suivant →"
 
                   else
-                    M.boutonSecondaire "Suivant →" (ChangerPage (modele.numeroPage + 1))
+                    P.commun.boutonSecondaire "Suivant →" (ChangerPage (modele.numeroPage + 1))
                 ]
 
           else
@@ -844,11 +832,11 @@ participation p =
     in
     M.pile
         ([ boutonVue "← Toutes les participations" Participations
-         , M.carte [ texte ("Début : " ++ chaine "startedAt" p ++ " · Validation : " ++ texteValeur (objet "completedAt" p)), texte ("Corpus : " ++ chaine "bankVersion" p ++ " · Niveaux : " ++ jointure (liste "levels" p)), texte (chaine "id" p), M.texteSecondaire ("Graine du tirage : " ++ texteValeur (objet "seed" p) ++ " · " ++ String.fromInt (List.length (liste "events" p)) ++ " interactions · Questions passées : " ++ jointure (liste "skippedQuestions" instantane)) ]
+         , P.commun.carte [ texte ("Début : " ++ chaine "startedAt" p ++ " · Validation : " ++ texteValeur (objet "completedAt" p)), texte ("Corpus : " ++ chaine "bankVersion" p ++ " · Niveaux : " ++ jointure (liste "levels" p)), texte (chaine "id" p), P.commun.texteSecondaire ("Graine du tirage : " ++ texteValeur (objet "seed" p) ++ " · " ++ String.fromInt (List.length (liste "events" p)) ++ " interactions · Questions passées : " ++ jointure (liste "skippedQuestions" instantane)) ]
          ]
             ++ List.map
                 (\q ->
-                    M.section (chaine "id" q ++ " · " ++ chaine "level" q)
+                    P.commun.section (chaine "id" q ++ " · " ++ chaine "level" q)
                         (riche (chaine "statement" q)
                             :: List.map
                                 (\v ->
@@ -856,11 +844,11 @@ participation p =
                                         a =
                                             objet (chaine "id" v) (objet "answers" instantane)
                                     in
-                                    Disposition.panneau [ repere "production" ]
+                                    P.disposition.panneau [ repere "production" ]
                                         [ M.sousTitre (chaine "id" v)
                                         , riche (chaine "content" v)
                                         , if E.encode 0 a == "null" then
-                                            M.texteSecondaire "Aucune réponse enregistrée."
+                                            P.commun.texteSecondaire "Aucune réponse enregistrée."
 
                                           else
                                             table "Évaluation enregistrée" [ "Note initiale", "Note", "Lisibilité", "Précision", "Validité" ] [ [ chiffre "initialNote" a, chiffre "note" a ] ++ valeursAxes "evaluatedAxes" a (objet "coordinates" a) ]
@@ -870,8 +858,8 @@ participation p =
                         )
                 )
                 (liste "questions" p)
-            ++ [ M.section "Journal du parcours"
-                    [ M.texteSecondaire "Les durées décrivent les interactions du navigateur ; elles ne mesurent pas le temps de réflexion."
+            ++ [ P.commun.section "Journal du parcours"
+                    [ P.commun.texteSecondaire "Les durées décrivent les interactions du navigateur ; elles ne mesurent pas le temps de réflexion."
                     , table "Interactions"
                         [ "Depuis le début", "Événement", "Question", "Rédaction", "Détail" ]
                         (List.map
