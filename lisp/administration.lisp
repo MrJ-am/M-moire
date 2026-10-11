@@ -101,9 +101,9 @@
           (refuser-acces 404 "Corpus inconnu.")))))
 
 (defun participation-scientifique (contexte secret id)
-  (id-ressource id)
   (avec-science contexte secret
     (lambda (c admin) (declare (ignore admin))
+      (id-ressource id)
       (let ((p (or (participation c id) (refuser-acces 404 "Participation inconnue."))))
         (vision::%make-json-object (append (json-object-entries (vue-session p))
                                          (list (cons "events" (tableau (evenements c id))))))))))
