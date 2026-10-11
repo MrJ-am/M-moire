@@ -51,7 +51,9 @@
                                                "distribution" (distribution valeurs 2 -10 10))))))))
 
 (defun cellule-csv (valeur)
-  (let ((texte (if (or (null valeur) (absence-p valeur)) "" (princ-to-string valeur))))
+  (let ((texte (cond ((or (null valeur) (absence-p valeur)) "")
+                     ((numberp valeur) (mrjam-native:json-js valeur))
+                     (t (princ-to-string valeur)))))
     (with-output-to-string (s)
       (write-char #\" s)
       (when (and (plusp (length texte)) (find (char texte 0) '(#\= #\+ #\@ #\Tab #\Return)))

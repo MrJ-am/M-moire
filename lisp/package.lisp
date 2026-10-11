@@ -6,7 +6,13 @@
   (:export #:generateur-32 #:melanger #:preparer-session #:resume #:distribution
            #:resumer-reponses #:export-csv #:valider-participation
            #:valider-sauvegarde #:valider-rattachements
-           #:validation-error #:validation-status #:validation-message))
+           #:validation-error #:validation-status #:validation-message
+           #:contexte #:faire-contexte #:importer-corpus #:creer-session
+           #:lire-session #:lire-evenements #:sauvegarder-session
+           #:activer-administrateur #:connecter-administrateur #:administrateur-courant
+           #:deconnecter-administrateur #:corpus-scientifiques #:corpus-scientifique
+           #:participation-scientifique #:reponses-scientifiques #:participations-scientifiques
+           #:statistiques-scientifiques #:export-scientifique))
 
 (in-package #:matheval)
 
