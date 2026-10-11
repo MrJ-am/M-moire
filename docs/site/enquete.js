@@ -96,6 +96,9 @@ async function closeReader(id) {
       { transform: `translate(${to.x + to.width / 2 - from.x - from.width / 2}px,${to.y + to.height / 2 - from.y - from.height / 2}px) scale(${to.width / from.width},${to.height / from.height})`, borderRadius: '50%', opacity: .65 }
     ], { duration: 420, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' });
     await anim.finished.catch(() => {});
+    // Elm peut réutiliser le lecteur immédiatement pour la rédaction suivante.
+    // Le remplissage final de fermeture ne doit pas conserver son échelle.
+    requestAnimationFrame(() => anim.cancel());
   }
   send({ type: 'closed' });
   requestAnimationFrame(() => orb?.focus({ preventScroll: true }));

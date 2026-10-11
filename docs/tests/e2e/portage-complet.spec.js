@@ -42,6 +42,9 @@ test('les dialogues isolent le fond, gardent le focus et le restituent', async (
   await close(page, d);
   await expect.poll(() => page.locator('#axes-panel').evaluate(el => Boolean(el.closest('[inert]')))).toBe(false);
   await page.getByRole('button', { name: 'Rédaction 2', exact: true }).click();
+  await expect.poll(() => page.locator('reading-card').evaluate(el =>
+    el.getAnimations().every(a => a.playState !== 'finished' || a.effect.getComputedTiming().fill !== 'forwards')
+  )).toBe(true);
   await page.locator('#grade').evaluate(el => { el.value = '1'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await close(page, d);
   const comparer = page.getByRole('button', { name: 'Comparer', exact: true });
