@@ -44,7 +44,12 @@ async function close(page, d) {
   await d.click(page.locator('#validate-reading'));
   await expect(page.locator('#reading-card')).toHaveCount(0);
   const contextual = page.locator('[data-testid="context-help"]');
-  if (await contextual.count()) await d.click(contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }));
+  if (await contextual.count()) {
+    await d.click(contextual.getByRole('button', { name: /Compris|Fermer/, exact: false }));
+    // Le tap CDP peut revenir avant le rendu Elm qui retire l'aide et déplace
+    // les axes. Attendre cet état métier, sans délai fixe ni attente décorative.
+    await expect(contextual).toHaveCount(0);
+  }
 }
 async function start(page, d) {
   await page.goto('./');
