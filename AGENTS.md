@@ -57,9 +57,15 @@ le tactile, le clavier et le texte sélectionnable `MrJ.am`. Écrire en françai
 les noms sous notre contrôle ; garder les identifiants et contrats externes.
 La seule synchronisation autorisée est Git, sans copie vendor divergente.
 
-Développement Lisp : cl-mcp pour structure/introspection/ASDF/tests ; cl-tron-mcp
-via Swank dès l’évaluation destinée au débogage suspendu. Même image SBCL de tâche,
-pool désactivé, PID/marqueur/objet croisés prouvés ; mutations sérialisées et effets
-inspectés avant reprise/restart. Sources enregistrées avant compilation ; validation
-finale propre. Outils de développement sans production/public, MCP métier distinct.
-Pas de serveur MCP/débogueur réécrit, fusion ou cl-harness.
+Développement Lisp : architecture C actuelle, métier/cl-mcp sans pool/Swank dans
+l’image de tâche ; Tron séparé via le pont central. CL-MCP pour le travail ordinaire,
+Tron dès l’appel devant conserver le contexte. Commandes locales/fallback Tron
+hors travail métier ; cibles et comportements testés distingués dans le guide
+central référencé ci-dessus. Après reconnexion, vérifier PID/marqueur/état partagé
+et invalider anciennes références. Édition structurelle facultative ; sources
+canoniques avant compilation. Pendant une suspension, réparation seulement,
+pile DEBUG/thread/niveau et restart choisi par sens/position actuelle, effets
+vérifiés ; timeout sans preuve d’annulation. Validation propre distincte permise,
+image saine préservée. Qualifier synthétique jamais utilisé comme sonde de santé.
+Outils hors production/public, MCP métier distinct ; aucun serveur/débogueur
+réécrit, fusion ou cl-harness. Aucun appel MCP artificiel pour les autres formats.
