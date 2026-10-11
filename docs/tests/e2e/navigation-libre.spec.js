@@ -54,6 +54,11 @@ test('chaque bille suit la caméra, même après reconnexion et redimensionnemen
   await page.locator('#space').evaluate(e=>{const parent=e.parentNode,suivant=e.nextSibling;e.remove();parent.insertBefore(e,suivant);});
   const scene=page.locator('#space');
   await expect(scene.locator('[data-testid="orb-layer"]')).toHaveCount(1);
+  // La première press focalise la scène et Chromium peut alors faire défiler
+  // la page (3 px dans la trace c9b1b0cee044). Établir le focus avant la mesure
+  // isole le retour de caméra ; la précision géométrique reste inchangée.
+  await scene.focus();
+  await expect(scene).toBeFocused();
   const lire=()=>scene.locator('[data-mrjam-bille]').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{id:e.dataset.id,x:r.x+r.width/2,y:r.y+r.height/2,coord:[e.dataset.x,e.dataset.y,e.dataset.z]};}).sort((a,b)=>a.id.localeCompare(b.id)));
   const avant=await lire();
   for (let i=0;i<12;i++) await scene.press('ArrowRight');
