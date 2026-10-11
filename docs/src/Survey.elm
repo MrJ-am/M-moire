@@ -1305,6 +1305,13 @@ viewEvaluation m shown a =
                         4
                     )
                 , Interface.alignTop
+                , Interface.spacing
+                    (if large then
+                        16
+
+                     else
+                        4
+                    )
                 ]
                 [ if large then
                     P.commun.texteSecondaire ("Vos repères · Rédaction " ++ String.fromInt (number m.selected m))
@@ -1368,7 +1375,7 @@ viewEvaluation m shown a =
                     320
 
                 else
-                    370
+                    450
 
             else
                 clamp 350 650 (round (toFloat m.ecran.hauteur * 0.55))

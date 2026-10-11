@@ -9,23 +9,27 @@ test('la reprise retrouve la note sauvegardée et une panne ne confirme jamais u
   await page.setViewportSize({ width: 390, height: 844 });
   const d = await driver(page);
   await start(page, d);
-  await page.locator('#grade').evaluate(el => { el.value = '2'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'saved');
   const id = await page.locator('#reading-card').getAttribute('production-id');
+  const [confirmation] = await Promise.all([
+    page.waitForResponse(response => response.request().method() === 'PUT' && response.url().includes('/api/sessions/') && response.request().postDataJSON()?.snapshot?.answers?.[id]?.note === 2),
+    page.locator('#grade').evaluate(el => { el.value = '2'; el.dispatchEvent(new Event('input', { bubbles: true })); })
+  ]);
+  expect(confirmation.status()).toBe(200);
+  await expect(page.getByTestId('save-status').getByText('Réponses enregistrées.', {exact:true})).toBeVisible();
   await page.reload();
   await expect(page.locator('#reading-card')).toHaveAttribute('production-id', id);
   await expect(page.locator('#grade')).toHaveValue('2');
   await page.route('**/api/sessions/**', route => route.request().method() === 'PUT' ? route.abort('failed') : route.continue());
   await page.locator('#grade').evaluate(el => { el.value = '1'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'error');
+  await expect(page.getByTestId('save-status').getByText('Enregistrement en attente. Vos réponses sont conservées sur cet appareil.', {exact:true})).toBeVisible();
   await page.reload();
   await expect(page.locator('#grade')).toHaveValue('1');
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'error');
+  await expect(page.getByTestId('save-status').getByText('Enregistrement en attente. Vos réponses sont conservées sur cet appareil.', {exact:true})).toBeVisible();
   await expect.poll(() => page.evaluate(() => (()=>{const r=document.querySelector('#reading-card').getBoundingClientRect(),s=document.querySelector('#reading-card [data-testid="save-status"]').getBoundingClientRect();return s.top>=r.top&&s.bottom<=r.bottom;})())).toBe(true);
   await page.screenshot({ path: test.info().outputPath('reprise-reseau-mobile.png'), fullPage: true });
   await page.unroute('**/api/sessions/**');
   await page.getByRole('button', { name: 'Réessayer l’enregistrement' }).click();
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'saved');
+  await expect(page.getByTestId('save-status').getByText('Réponses enregistrées.', {exact:true})).toBeVisible();
 });
 
 test('une confirmation perdue se retrouve au rechargement sans créer une seconde participation', async ({ page }) => {
@@ -50,12 +54,12 @@ test('une confirmation perdue se retrouve au rechargement sans créer une second
     } else await route.continue();
   });
   await page.getByRole('button', { name: 'Valider ma participation', exact: true }).click();
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'submit-error');
+  await expect(page.getByTestId('save-status').getByText('Enregistrement en attente. Vos réponses sont conservées sur cet appareil.', {exact:true})).toBeVisible();
   await expect(page.getByRole('button', { name: 'Revenir aux questions', exact: true })).toBeDisabled();
   await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toHaveCount(0);
   await page.unroute('**/api/sessions/**');
   await page.reload();
-  await expect(page.locator('[data-testid="save-status"]')).toHaveAttribute('data-status', 'completed');
+  await expect(page.getByTestId('save-status').getByText('Participation enregistrée et validée.', {exact:true})).toBeVisible();
   await expect(page.getByText('Vos réponses ont bien été reçues.', { exact: false })).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('matheval-participation-v1')).id)).toBe(id);
 });
