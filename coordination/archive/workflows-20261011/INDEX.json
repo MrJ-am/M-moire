@@ -1,0 +1,30 @@
+{
+  "revision_avant": "2a822502329e1bce35f6e49ecbac00a135ab235e",
+  "raison": "Mission du propriétaire du 11 octobre 2026 : aucune CI/CD satellite ni relais. Recettes exactes archivées, fonctions utiles transférées avant retrait.",
+  "workflows": [
+    {
+      "chemin_original": ".github/workflows/atelier-style.yml",
+      "archive": "coordination/archive/workflows-20261011/atelier-style.yml.archive",
+      "sha256": "4497dcf64c2e203a80fe2413d96928af5d988c3ed106e88b94f1718f1f227c5b",
+      "fonction_centrale": "corpus conservé, sources et révisions de style centrales ; atelier historique remplacé"
+    },
+    {
+      "chemin_original": ".github/workflows/backup.yml",
+      "archive": "coordination/archive/workflows-20261011/backup.yml.archive",
+      "sha256": "98fd585139124b995c9775f8d6b9baa4016118eedfbe876522f26a717b7b3c3d",
+      "fonction_centrale": "sauvegarde chiffrée VPS et monolithe-reference ; ancienne activation externe volontairement suspendue non réactivée"
+    },
+    {
+      "chemin_original": ".github/workflows/compile-test.yml",
+      "archive": "coordination/archive/workflows-20261011/compile-test.yml.archive",
+      "sha256": "945b1ee90985875d23ed9d822be38ec00e45be83f5654fcbcb0a996b49ba0e02",
+      "fonction_centrale": "matheval-pures, matheval-reference, matheval-postgresql, matheval-interface, matheval-navigateur et module Nix central"
+    },
+    {
+      "chemin_original": ".github/workflows/verifier-style.yml",
+      "archive": "coordination/archive/workflows-20261011/verifier-style.yml.archive",
+      "sha256": "5cc59bc73ce5fd76def2d68d9eefe84cb90702021edd6d6892845ca9215a492f",
+      "fonction_centrale": "candidat Matheval exact et suite navigateur centrale"
+    }
+  ]
+}
