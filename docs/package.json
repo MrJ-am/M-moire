@@ -18,8 +18,8 @@
     "test:construction": "node --test tests/construction/*.test.cjs"
   },
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
     "@lydell/elm": "0.19.1-14",
+    "@playwright/test": "1.61.0",
     "elm-format": "^0.8.8",
     "elm-test": "^0.19.1-revision16",
     "vite": "^8.3.0"

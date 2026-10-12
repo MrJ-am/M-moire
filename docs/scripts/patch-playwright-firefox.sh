@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FIREFOX_DIR="$HOME/.cache/ms-playwright/firefox-1509/firefox"
-FIREFOX_BIN="$FIREFOX_DIR/firefox"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+# Résolution par le SDK verrouillé : ni révision copiée ni téléchargement.
+FIREFOX_BIN="$(cd "$SCRIPT_DIR/.." && node -e 'process.stdout.write(require("playwright").firefox.executablePath())')"
+FIREFOX_DIR="$(dirname -- "$FIREFOX_BIN")"
 FIREFOX_REAL="$FIREFOX_DIR/firefox.real"
 LD_SO="/gnu/store/z1kd5nisk0mqacsyrdbzm0cbp6wvgsrs-profile/lib/ld-linux-x86-64.so.2"
 LIBS="/gnu/store/z1kd5nisk0mqacsyrdbzm0cbp6wvgsrs-profile/lib:/gnu/store/zzpbp6rr43smwxzvzd4qd317z5j7qblj-gcc-11.4.0-lib/lib"
 
 if [[ ! -d "$FIREFOX_DIR" ]]; then
   echo "Firefox Playwright introuvable dans $FIREFOX_DIR" >&2
-  echo "Lance d'abord: npx playwright install firefox" >&2
+  echo "Préparer le navigateur verrouillé depuis vps-infrastructure." >&2
   exit 1
 fi
 
